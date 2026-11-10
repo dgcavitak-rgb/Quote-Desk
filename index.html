@@ -258,7 +258,7 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
       <div class="row between"><h2 id="eCaseNo">New case</h2><span class="pill" id="eTerritory"></span></div>
       <label>Project name <em>required</em><input id="eProject" placeholder="Enter project name" maxlength="120"></label>
       <label class="pplab">Partner <em>required</em><input id="ePartner" placeholder="Search partner, or add a new one" maxlength="120" autocomplete="off"><span class="picked no" id="ePicked">Pick from the partner list</span></label>
-      <label>Partner's state <em>required for GST</em><select id="eState"><option value="">Choose state</option></select></label>
+      <label>Partner's state <em>optional</em><select id="eState"><option value="">Choose state</option></select></label>
       <label>End customer / site<input id="eEnd" maxlength="160" placeholder="e.g. Reliance Mall, Andheri"></label>
       <label>Consultant <em>optional</em><input id="eCons" maxlength="160" placeholder="Consultant or PMC, if any"></label>
       <p class="note">Type the same project name into the Configuration Name box in the Calico software, so the PDF can be matched to this case.</p>
@@ -321,7 +321,7 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
       <p class="note">Used on every new quote. BrightSign CF and margin apply to presales' instant quotes.</p>
       <div class="adm">
         <label>GST %<input type="number" id="sGst" min="0" max="40" step="0.5"></label>
-        <label>Billing state<select id="sState"></select></label>
+        <label hidden>Billing state<select id="sState"></select></label>
         <label>Quote validity, days<input type="number" id="sValid" min="1" max="365"></label>
         <label>BrightSign CF<input type="number" id="sCf" min="1" step="1"></label>
         <label>BrightSign margin %<input type="number" id="sMargin" min="0" max="99" step="0.5"></label>
@@ -370,7 +370,7 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
       <div class="row between"><h2 id="bCaseNo">New BrightSign case</h2><span class="pill" id="bTerritory"></span></div>
       <label>Project name <em>required</em><input id="bProject" placeholder="Enter project name" maxlength="120"></label>
       <label class="pplab">Partner <em>required</em><input id="bPartner" placeholder="Search partner, or add a new one" maxlength="120" autocomplete="off"><span class="picked no" id="bPicked">Pick from the partner list</span></label>
-      <label>Partner's state <em>required for GST</em><select id="bState"><option value="">Choose state</option></select></label>
+      <label>Partner's state <em>optional</em><select id="bState"><option value="">Choose state</option></select></label>
       <label>End customer / site<input id="bEnd" maxlength="160" placeholder="e.g. Reliance Mall, Andheri"></label>
       <label>Consultant <em>optional</em><input id="bCons" maxlength="160" placeholder="Consultant or PMC, if any"></label>
     </div>
@@ -402,7 +402,7 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 'use strict';
-const APP_VERSION = 'v1.9.0';
+const APP_VERSION = 'v1.9.1';
 const SUPABASE_URL = 'https://yhzecukifwnlgowmgkrc.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Rex8QiypJkVmJz2r7UPGtg_3-l1yy1u';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
@@ -469,16 +469,14 @@ function partnerPicker(prefix) {
   return mark;
 }
 /* ---------- GST ----------
-   Quotes are priced before GST. Partner in the billing state: CGST + SGST; elsewhere: IGST. */
-function gstRows(amt, state) {
-  const g = Number(SET.gst_rate ?? 18), home = SET.billing_state || 'Gujarat', rows = [['Subtotal (INR)', amt, 'sub']];
-  if (state && state === home) { const h = Math.round(amt * g / 200); rows.push([`CGST @ ${g / 2}%`, h, g / 200], [`SGST @ ${g / 2}%`, h, g / 200], ['Grand total (INR)', amt + 2 * h, 'grand']); }
-  else { const t = Math.round(amt * g / 100); rows.push([(state ? 'IGST' : 'GST') + ` @ ${g}%`, t, g / 100], ['Grand total (INR)', amt + t, 'grand']); }
-  return rows;
+   Quotes are priced before GST; one GST line at the set rate (18%) on every quote. */
+function gstRows(amt) {
+  const g = Number(SET.gst_rate ?? 18), t = Math.round(amt * g / 100);
+  return [['Subtotal (INR)', amt, 'sub'], [`GST @ ${g}%`, t, g / 100], ['Grand total (INR)', amt + t, 'grand']];
 }
 function gstTerms(c) {
-  const g = Number(SET.gst_rate ?? 18), st = c.partner_state, home = SET.billing_state || 'Gujarat';
-  const t = [st ? `GST @ ${g}% shown as ${st === home ? 'CGST + SGST' : 'IGST'}; place of supply ${st}.` : `GST @ ${g}% shown; IGST or CGST + SGST applies as per place of supply.`];
+  const g = Number(SET.gst_rate ?? 18);
+  const t = [`GST @ ${g}% on all items, shown above.`];
   if (SET.payment_terms) t.push('Payment: ' + SET.payment_terms);
   if (SET.delivery_terms) t.push('Delivery: ' + SET.delivery_terms);
   return t;
@@ -877,7 +875,7 @@ async function saveCaseNow() {
 }
 $('eSave').onclick = async () => { const lbl = $('eSave').textContent; if (await saveCase()) { $('eSave').textContent = 'Saved'; setTimeout(() => $('eSave').textContent = lbl, 1500); if (!['draft', 'returned'].includes(ED.status)) openEditor(ED.id); } };
 $('eSubmit').onclick = async () => {
-  if (!namesOk() || !stateOk('e')) return;
+  if (!namesOk()) return;
   if (!(await saveCase())) return;
   if (!ED.cfg) { setPane('calico'); errBox('eErr', new Error('Upload the Calico PDF before submitting.')); return; }
   if (cfgProblems().length && !ED.ack) { setPane('submit'); errBox('eErr', new Error('The configuration does not match your requirement. Tick the box on the Submit tab to send it anyway, or upload a corrected PDF.')); return; }
@@ -1660,7 +1658,7 @@ async function saveBsNow() {
 }
 $('bSave').onclick = async () => { if (await saveBs()) { $('bSave').textContent = 'Saved'; setTimeout(() => $('bSave').textContent = 'Save', 1500); } };
 $('bGo').onclick = async () => {
-  if (!bsNamesOk() || !stateOk('b')) return;
+  if (!bsNamesOk()) return;
   if (!bsLines().length) { setBPane('products'); errBox('bErr', new Error('Add at least one product.')); return; }
   $('bGo').disabled = true;
   try {
