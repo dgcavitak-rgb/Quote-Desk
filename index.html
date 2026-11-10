@@ -1,0 +1,1593 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://yhzecukifwnlgowmgkrc.supabase.co wss://yhzecukifwnlgowmgkrc.supabase.co; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
+<title>Quote Desk</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600&display=swap">
+<style>
+/* Layout: mobile-first single column of rounded cards, bottom tab bar on phones, two panes on wide screens for the lead. */
+:root{
+  --bg:#eeece7; --panel:#ffffff; --panel2:#f6f4f0; --line:#e3dfd6; --fg:#1b1d21; --mute:#646a75;
+  --accent:#c96f06; --accent-ink:#ffffff; --ok:#1d8a55; --warn:#9a7200; --bad:#c63434; --info:#1f6fd0;
+  --disp:"IBM Plex Sans Condensed","Arial Narrow",sans-serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f1114; --panel:#171a1f; --panel2:#1f232a; --line:#2b313b; --fg:#e8eaee; --mute:#959cab;
+  --accent:#F7941D; --accent-ink:#1a1206; --ok:#3fbf7f; --warn:#e8b339; --bad:#ef5b5b; --info:#5aa9ff; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 var(--body)}
+[hidden]{display:none!important}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:16px;padding-block:16px 96px;display:flex;flex-direction:column;gap:16px}
+header.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding-top:env(safe-area-inset-top,0px)}
+header.top .eyebrow{white-space:nowrap}
+#who{flex-wrap:nowrap;gap:8px}
+#whoPill{max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+h1{font:600 22px var(--disp);margin:0} h1 span{color:var(--accent)}
+h2{font:600 17px var(--disp);margin:0}
+h3{font:600 14px var(--body);margin:0}
+.eyebrow{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.note{font-size:12px;color:var(--mute)}
+.card{background:var(--panel);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 2px color-mix(in srgb,#000 8%,transparent);min-width:0}
+.sub{background:var(--panel2);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.between{justify-content:space-between}
+label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:500;color:var(--mute);flex:none;min-width:0}
+.row>label{flex:1 1 180px}
+label em{font:500 10px var(--mono);font-style:normal;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+input,select,textarea{font:15px var(--body);color:var(--fg);background:var(--panel2);border:1px solid transparent;border-radius:12px;padding:11px 12px;min-height:46px;width:100%}
+textarea{min-height:80px;resize:vertical}
+input[type=number]{font-family:var(--mono)}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+input.miss{border-color:var(--bad)}
+input:disabled,button:disabled,textarea:disabled{opacity:.55;cursor:not-allowed}
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;font:600 14px var(--body);padding:12px 20px;min-height:46px;cursor:pointer}
+.btn.ghost{background:none;color:var(--fg);border:1px solid var(--line)}
+.btn.sm{min-height:36px;padding:7px 14px;font-size:13px}
+.btn.bad{background:var(--bad);color:#fff}
+.btn:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+.chip{display:inline-flex;align-items:center;gap:6px;font:500 11px var(--mono);padding:3px 10px;border-radius:999px;background:color-mix(in srgb,currentColor 12%,transparent);white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:4px 12px;font:600 12px var(--mono);color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)} .info{color:var(--info)} .mut{color:var(--mute)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.seg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--panel2);border-radius:999px;padding:4px;gap:2px}
+.seg button{border:0;background:none;border-radius:999px;padding:8px 4px;font:500 13px var(--body);color:var(--mute);cursor:pointer;min-width:0}
+.seg button[aria-pressed="true"]{background:var(--panel);color:var(--fg);box-shadow:0 1px 2px color-mix(in srgb,#000 12%,transparent)}
+.banner{border-radius:16px;padding:12px 14px;background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--fg)}
+.err{border-radius:12px;padding:10px 12px;background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad);font-size:13px}
+.counts,.k3,.f3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stp{background:var(--panel2);border-radius:16px;padding:12px 6px;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center;font-size:12px;font-weight:500;color:var(--mute);min-width:0}
+.stp div{display:flex;align-items:center;gap:1px}
+.stp input{width:34px;min-height:0;padding:2px 0;text-align:center;background:none;font:600 20px var(--mono);border:0}
+.stp button{width:28px;height:28px;border-radius:50%;border:0;background:var(--panel);color:var(--fg);font-size:17px;line-height:1;cursor:pointer;flex:none}
+.stp input,.f3 input{-moz-appearance:textfield;appearance:textfield}
+.stp input::-webkit-inner-spin-button,.f3 input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.f3 label{flex:none;font-size:11px}
+.f3 input{background:var(--panel);padding:9px 10px}
+.kpi{background:var(--panel2);border-radius:16px;padding:12px 6px;text-align:center;min-width:0}
+.kpi b{display:block;font:600 24px var(--mono);color:var(--accent);line-height:1.2}
+.kpi span{font-size:12px;color:var(--mute)}
+.prev{display:flex;justify-content:center}
+.meter{display:flex;flex-direction:column;gap:6px;background:var(--panel2);border-radius:16px;padding:12px 14px}
+.bar{position:relative;height:8px;border-radius:99px;background:color-mix(in srgb,var(--fg) 10%,transparent)}
+.bar i{display:block;height:100%;border-radius:99px}
+.bar u{position:absolute;top:-4px;width:2px;height:16px;border-radius:2px;background:var(--fg);transform:translateX(-1px)}
+.drop{flex:none;display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center;border:1.5px dashed color-mix(in srgb,var(--accent) 55%,transparent);border-radius:16px;padding:18px;cursor:pointer;background:color-mix(in srgb,var(--accent) 5%,transparent)}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+.kv:last-child{border-bottom:0}
+.kv span:first-child{color:var(--mute)}
+.kv span:last-child{text-align:right;font-family:var(--mono);overflow-wrap:anywhere}
+.case{background:var(--panel);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;border:0;text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
+.case:hover{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 35%,transparent)}
+.list{display:flex;flex-direction:column;gap:10px}
+.filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.filters button{border:0;border-radius:999px;padding:7px 12px;background:var(--panel);color:var(--mute);font:500 12px var(--body);white-space:nowrap;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.grp{background:var(--panel);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px;flex:1 1 140px;min-width:0}
+.dots{display:flex;flex-wrap:wrap;gap:5px}
+.dots i{width:18px;height:12px;border-radius:4px}
+.total{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-top:2px solid var(--accent);padding-top:10px}
+.total b{font:600 24px var(--mono)}
+.tl{display:flex;flex-direction:column;gap:8px}
+.tl div{background:var(--panel2);border-radius:14px;padding:10px 12px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--panel);display:grid;grid-template-columns:repeat(2,1fr);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 -1px 0 var(--line);z-index:5}
+nav.tabs button{border:0;background:none;font:500 13px var(--body);color:var(--mute);padding:8px;border-radius:12px;cursor:pointer}
+nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.sticky{position:sticky;bottom:64px;display:flex;gap:10px;background:var(--bg);padding:10px 0;z-index:4}
+.sticky .btn{flex:1}
+.auth{max-width:420px;margin:8vh auto 0}
+.pw{position:relative;display:block}
+.pw input{padding-right:72px}
+.eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:var(--panel);color:var(--fg);border-radius:999px;padding:6px 12px;font:500 12px var(--body);cursor:pointer}
+.docs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.docs .btn{padding:10px 6px;font-size:13px}
+.split{display:grid;gap:16px}
+.wrap.wide{max-width:1440px}
+.k4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:640px){ .k4{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.ghead{display:flex;justify-content:space-between;align-items:center;gap:8px;border:0;background:none;padding:8px 4px 2px;font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);cursor:pointer;width:100%}
+.ghead span:first-child::before{content:"\25BE";display:inline-block;width:14px}
+.ghead[aria-expanded="false"] span:first-child::before{content:"\25B8"}
+.case .r1,.case .r2{display:flex;justify-content:space-between;gap:10px;align-items:center;min-width:0}
+.case .ttl{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.case.sel{box-shadow:0 0 0 2px var(--accent)}
+.ellip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.rv{display:grid;gap:16px;grid-template-areas:"h" "side" "body"}
+.rvh{grid-area:h;min-width:0} .rvside{grid-area:side;min-width:0} .rvbody{grid-area:body;min-width:0}
+@media (min-width:1280px){ .rv{grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto 1fr;grid-template-areas:"h side" "body side";align-items:start} .rvside{position:sticky;top:16px} }
+.qtotal b{font-size:28px;color:var(--accent)}
+.yn{display:inline-grid;grid-template-columns:1fr 1fr;background:var(--panel);border-radius:999px;padding:3px;gap:2px}
+.yn button{border:0;background:none;border-radius:999px;padding:7px 16px;font:600 13px var(--body);color:var(--mute);cursor:pointer}
+.yn button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.yn button:disabled{opacity:.5}
+/* Tiles that sit directly on the page get the card surface, so they stand off the background; tiles inside cards keep the soft fill. */
+#kpis .kpi,#search{background:var(--panel);box-shadow:0 1px 2px color-mix(in srgb,#000 8%,transparent)}
+#kpis .kpi{border:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+#search{border:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+#search:focus{border-color:var(--accent)}
+.notice.calm{background:var(--panel);border:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+.notice{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-radius:18px;padding:14px 16px;background:color-mix(in srgb,var(--accent) 14%,var(--panel));border:1px solid color-mix(in srgb,var(--accent) 40%,transparent)}
+.notice b{font:600 26px var(--mono);color:var(--accent);margin-right:8px}
+.notice.calm{background:var(--panel);border-color:transparent}
+.split.lead .k4{grid-template-columns:repeat(2,minmax(0,1fr))}
+.split.lead .k4 .kpi b{font-size:22px}
+.case .r2 .note{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.case .r2 .mono{white-space:nowrap;flex:none}
+.case .r1 .chip{flex:none}
+@media (min-width:900px){ .split.lead{grid-template-columns:340px minmax(0,1fr)} nav.tabs{display:none} .wrap{padding-bottom:32px} .sticky{bottom:0} }
+.seg.s3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.brands{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.brand{display:flex;flex-direction:column;gap:6px;text-align:left;border:1.5px solid var(--line);background:var(--panel2);border-radius:18px;padding:18px;cursor:pointer;font:inherit;color:inherit}
+.brand:hover,.brand:focus-visible{border-color:var(--accent);outline:0;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+.brand b{font:600 20px var(--disp)}
+.brand .lg{display:inline-flex;width:38px;height:38px;border-radius:12px;align-items:center;justify-content:center;font:600 13px var(--mono);color:var(--accent-ink);background:var(--accent)}
+.brand .lg.bs{background:var(--bs);color:#fff}
+:root{--bs:#6b4fd8}
+@media (prefers-color-scheme: dark){:root{--bs:#a996ff}}
+.bchip{font:600 10px var(--mono);letter-spacing:.06em;padding:2px 8px;border-radius:999px;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);flex:none}
+.bchip.bs{color:var(--bs);background:color-mix(in srgb,var(--bs) 13%,transparent)}
+.prods{display:flex;flex-direction:column;gap:8px}
+.prod{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--panel2);border-radius:14px;padding:10px 12px;border:1.5px solid transparent}
+.prod.on{border-color:color-mix(in srgb,var(--accent) 55%,transparent);background:color-mix(in srgb,var(--accent) 6%,var(--panel2))}
+.prod b{font:600 14px var(--mono)}
+.prod .note{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.qty{display:flex;align-items:center;gap:2px;background:var(--panel);border-radius:999px;padding:3px}
+.qty button{width:32px;height:32px;border-radius:50%;border:0;background:var(--panel2);color:var(--fg);font-size:17px;line-height:1;cursor:pointer}
+.qty input{width:46px;min-height:0;padding:2px 0;text-align:center;background:none;border:0;font:600 15px var(--mono);-moz-appearance:textfield;appearance:textfield}
+.qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.builds{grid-column:1/-1;display:flex;flex-direction:column;gap:6px;border-top:1px dashed color-mix(in srgb,var(--line) 90%,transparent);padding-top:8px}
+.build{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.build select{width:auto;min-height:38px;padding:6px 10px;background:var(--panel);font-size:13px}
+.qty.sm button{width:28px;height:28px;font-size:15px} .qty.sm input{width:38px;font-size:14px}
+.wifi{border:1px solid var(--line);background:var(--panel);color:var(--mute);border-radius:999px;padding:7px 14px;font:600 12px var(--body);cursor:pointer}
+.wifi[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.addb{align-self:flex-start;border:0;background:none;color:var(--accent);font:600 12px var(--body);padding:4px 0;cursor:pointer}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{border:1.5px solid var(--line);background:var(--panel2);color:var(--fg);border-radius:14px;padding:10px 14px;font:600 13px var(--body);cursor:pointer;text-align:left}
+.opt small{display:block;font:400 11px var(--body);color:var(--mute)}
+.opt[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--panel2))}
+.opt:disabled{opacity:.45;cursor:not-allowed}
+.rt{overflow-x:auto} .rt table{border-collapse:collapse;width:100%;min-width:560px}
+.rt th,.rt td{padding:6px;text-align:left;font-size:12px} .rt th{color:var(--mute);font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em}
+.rt table{table-layout:fixed} .rt th:first-child{width:32%} .rt input{max-width:150px;min-height:38px;padding:6px 8px;font:500 13px var(--mono);background:var(--panel2)} .rt td.ro{font:500 13px var(--mono);color:var(--mute)}
+.ql{display:grid;grid-template-columns:minmax(0,1fr) 44px 92px 104px;gap:8px;padding:9px 0;border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent);align-items:start}
+.ql.h{font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mute);padding-top:0}
+.ql>span:not(:first-child){text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.ql .note{display:block}
+@media (max-width:520px){.ql{grid-template-columns:minmax(0,1fr) 34px 96px}.ql>span:nth-child(3){display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div><div class="eyebrow">Cavitak · tvONE · BrightSign</div><h1>Quote <span>Desk</span></h1></div>
+    <div class="row" id="who" hidden><span class="pill" id="whoPill"></span><button class="btn ghost sm" id="signOut">Sign out</button></div>
+  </header>
+
+  <!-- Sign in -->
+  <section id="vAuth" class="card auth" hidden>
+    <h2 id="authTitle">Sign in</h2>
+    <form id="fSignIn" class="list">
+      <label>Work email or username<input type="text" id="aEmail" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+      <label>Password<span class="pw"><input type="password" id="aPass" autocomplete="current-password" required><button type="button" class="eye" data-eye="aPass" aria-label="Show password">Show</button></span></label>
+      <button class="btn" type="submit" id="aGo">Sign in</button>
+      <button class="btn ghost sm" type="button" id="aForgot">Forgot password</button>
+    </form>
+    <form id="fNewPass" class="list" hidden>
+      <label>New password (at least 8 characters)<span class="pw"><input type="password" id="aNew" autocomplete="new-password" minlength="8" required><button type="button" class="eye" data-eye="aNew" aria-label="Show password">Show</button></span></label>
+      <button class="btn" type="submit">Save new password</button>
+    </form>
+    <div class="note" id="authMsg"></div>
+  </section>
+
+  <!-- Not a member -->
+  <section id="vNoAccess" class="card auth" hidden>
+    <h2>No access yet</h2>
+    <p class="note" id="noAccessMsg">This email is not set up for the Quote Desk. Ask the product lead to add you.</p>
+  </section>
+
+  <!-- Case list -->
+  <section id="vList" hidden>
+    <div class="split" id="listSplit">
+      <div class="list">
+        <div class="row between"><h2 id="listTitle">My cases</h2><div class="row"><button class="btn ghost sm" id="cmsRates" hidden>CMS rates</button><button class="btn sm" id="newCase">New case</button></div></div>
+        <div class="notice" id="notice" hidden></div>
+        <div class="k3" id="kpis" hidden></div>
+        <input id="search" type="search" placeholder="Search project, partner or case no." aria-label="Search cases"><div id="filters" hidden></div>
+        <div class="list" id="cases"></div>
+      </div>
+      <div id="sidePane" class="list"></div>
+    </div>
+  </section>
+
+  <!-- Case editor (presales, or lead creating a case) -->
+  <section id="vEdit" class="list" hidden>
+    <div class="row between"><button class="btn ghost sm" id="backFromEdit">Back to cases</button><span class="chip" id="eStatus"></span></div>
+    <div class="banner" id="eReturned" hidden></div>
+    <div class="seg" role="group" aria-label="Case section">
+      <button data-tab="details" aria-pressed="true">Details</button>
+      <button data-tab="ports" aria-pressed="false">Ports</button>
+      <button data-tab="calico" aria-pressed="false">Calico</button>
+      <button data-tab="submit" aria-pressed="false">Submit</button>
+    </div>
+
+    <div class="card" data-pane="details">
+      <div class="row between"><h2 id="eCaseNo">New case</h2><span class="pill" id="eTerritory"></span></div>
+      <label>Project name <em>required</em><input id="eProject" placeholder="Enter project name" maxlength="120"></label>
+      <label>Partner's name <em>required</em><input id="ePartner" placeholder="Enter partner's name" maxlength="120"></label>
+      <p class="note">Type the same project name into the Configuration Name box in the Calico software, so the PDF can be matched to this case.</p>
+    </div>
+
+    <div class="card" data-pane="ports" hidden>
+      <h2>Port calculation</h2>
+      <div class="counts">
+        <div class="stp"><span>LED screens</span><div><button type="button" data-step="-1" data-for="eLed" aria-label="Fewer LED screens">&minus;</button><input type="number" id="eLed" min="0" max="20" value="0" aria-label="LED screens"><button type="button" data-step="1" data-for="eLed" aria-label="More LED screens">+</button></div></div>
+        <div class="stp"><span>Displays</span><div><button type="button" data-step="-1" data-for="eDisp" aria-label="Fewer displays">&minus;</button><input type="number" id="eDisp" min="0" max="200" value="0" aria-label="Displays"><button type="button" data-step="1" data-for="eDisp" aria-label="More displays">+</button></div></div>
+        <div class="stp"><span>Projectors</span><div><button type="button" data-step="-1" data-for="eProj" aria-label="Fewer projectors">&minus;</button><input type="number" id="eProj" min="0" max="200" value="0" aria-label="Projectors"><button type="button" data-step="1" data-for="eProj" aria-label="More projectors">+</button></div></div>
+      </div>
+      <div class="list" id="eLeds"></div>
+      <div class="row">
+        <label>Sources at 4K@60<input type="number" id="eIn60" min="0" max="200" value="0"></label>
+        <label>Sources at 4K@30<input type="number" id="eIn30" min="0" max="200" value="0"></label>
+      </div>
+      <div class="sub">
+        <div class="row between"><h3>Audio ports required?</h3>
+          <div class="yn" role="group" aria-label="Audio ports required"><button type="button" id="eAudNo" aria-pressed="true">No</button><button type="button" id="eAudYes" aria-pressed="false">Yes</button></div></div>
+        <p class="note" id="eAudNote">If yes, add the AUDIO 2-IN 4-OUT card in slot 11 in the Calico software (S/PDIF and analogue audio).</p>
+        <div class="err" id="eFit" hidden></div>
+      </div>
+      <div class="eyebrow">Total ports required</div>
+      <div class="k3">
+        <div class="kpi"><b id="tOut">0</b><span>Outputs</span></div>
+        <div class="kpi"><b id="tIn60">0</b><span>Inputs 4K@60</span></div>
+        <div class="kpi"><b id="tIn30">0</b><span>Inputs 4K@30</span></div>
+      </div>
+      <p class="note">One 4K@60 output drives up to 3840 × 2160 pixels of an LED screen; each display or projector takes one output.</p>
+    </div>
+
+    <div class="card" data-pane="calico" hidden>
+      <h2>Calico PDF</h2>
+      <label class="drop" for="ePdf"><b id="ePdfName">Choose the PDF exported from the Calico software</b><span class="note">Save the case first, then upload</span><input type="file" id="ePdf" accept="application/pdf,.pdf" hidden></label>
+      <div class="err" id="ePdfErr" hidden></div>
+      <div class="sub" id="eCfg" hidden></div>
+      <div class="list" id="eChecks"></div>
+    </div>
+
+    <div class="card" data-pane="submit" hidden>
+      <h2>Submit for review</h2>
+      <div class="list" id="eSummary"></div>
+      <p class="note">After you submit, the product lead reviews and quotes. The quote files below unlock once a quote is ready.</p>
+      <div id="eDocs" class="list"></div>
+    </div>
+
+    <div class="err" id="eErr" hidden></div>
+    <div class="sticky">
+      <button class="btn ghost" id="eSave">Save draft</button>
+      <button class="btn" id="eSubmit">Submit</button>
+    </div>
+  </section>
+
+  <!-- CMS rates (lead) -->
+  <section id="vRates" class="list" hidden>
+    <div class="row between"><button class="btn ghost sm" id="backFromRates">Back to cases</button><button class="btn sm" id="ratesSave">Save rates</button></div>
+    <div class="card"><h2>CMS rates</h2><p class="note">Buy prices per player licence for each tenure, and the one-time on-premise installation and setup. BrightSign is in USD (landed at CF, like hardware); Korbyt and Pickcel are in INR. Margin and discount apply on top. Leave a box empty if the option is not offered: presales then can not choose it.</p></div>
+    <div class="err" id="ratesErr" hidden></div>
+    <div class="list" id="ratesBox"></div>
+  </section>
+
+  <!-- Brand picker for a new case -->
+  <section id="vBrand" class="list" hidden>
+    <div class="row between"><button class="btn ghost sm" id="backFromBrand">Back to cases</button></div>
+    <div class="card">
+      <h2>New case</h2>
+      <p class="note">Choose the brand. A case covers one brand.</p>
+      <div class="brands">
+        <button class="brand" data-brand="tvone"><span class="lg">tv1</span><b>tvONE</b><span>Calico Pro video wall processor</span><span class="note">Port calculation and Calico PDF. The product lead prices the quote.</span></button>
+        <button class="brand" data-brand="brightsign"><span class="lg bs">BS</span><b>BrightSign</b><span>Media players, BSN.cloud and accessories</span><span class="note">Pick products and get the quote straight away. Ask for a discount if you need one.</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- BrightSign case -->
+  <section id="vBs" class="list" hidden>
+    <div class="row between"><button class="btn ghost sm" id="backFromBs">Back to cases</button><span class="chip" id="bStatus"></span></div>
+    <div class="banner" id="bBanner" hidden></div>
+    <div class="seg" role="group" aria-label="Case section">
+      <button data-btab="details" aria-pressed="true">Details</button>
+      <button data-btab="products" aria-pressed="false">Products</button>
+      <button data-btab="cms" aria-pressed="false">CMS</button>
+      <button data-btab="quote" aria-pressed="false">Quote</button>
+    </div>
+    <div class="card" data-bpane="details">
+      <div class="row between"><h2 id="bCaseNo">New BrightSign case</h2><span class="pill" id="bTerritory"></span></div>
+      <label>Project name <em>required</em><input id="bProject" placeholder="Enter project name" maxlength="120"></label>
+      <label>Partner's name <em>required</em><input id="bPartner" placeholder="Enter partner's name" maxlength="120"></label>
+    </div>
+    <div class="card" data-bpane="products" hidden>
+      <div class="row between"><h2>Products</h2><span class="chip info" id="bCount">0 selected</span></div>
+      <input id="bSearch" type="search" placeholder="Search model or feature, e.g. XD, PoE, 4K, touch" aria-label="Search products">
+      <div class="filters" id="bGroups"></div>
+      <div class="prods" id="bProducts"></div>
+      <p class="note" id="bHint" hidden></p>
+    </div>
+    <div class="card" data-bpane="cms" hidden><div class="list" id="bCms"></div></div>
+    <div class="card" data-bpane="quote" hidden><div class="list" id="bQuote"></div></div>
+    <div class="err" id="bErr" hidden></div>
+    <div class="sticky">
+      <button class="btn ghost" id="bSave">Save</button>
+      <button class="btn" id="bGo">Generate quote</button>
+    </div>
+  </section>
+</div>
+<nav class="tabs" id="tabs" hidden>
+  <button id="tabCases" aria-pressed="true">Cases</button>
+  <button id="tabNew" aria-pressed="false">New case</button>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script>
+'use strict';
+const APP_VERSION = 'v1.7.2';
+const SUPABASE_URL = 'https://yhzecukifwnlgowmgkrc.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Rex8QiypJkVmJz2r7UPGtg_3-l1yy1u';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const usd = n => n == null ? '-' : Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const inr = n => n == null ? '-' : Math.round(Number(n)).toLocaleString('en-IN');
+const STATUS = { draft: ['Draft', 'mut'], submitted: ['Submitted', 'info'], returned: ['Returned', 'warn'], quoted: ['Quoted', 'ok'], revised: ['Revised', 'ok'], won: ['Won', 'ok'], lost: ['Lost', 'mut'] };
+const FLAG_TEXT = {
+  short_outputs: f => `Short on outputs: need ${f.need}, PDF has ${f.have}`,
+  short_in_4k60: f => `Short on 4K@60 inputs: need ${f.need}, PDF has ${f.have}`,
+  short_in_4k30: f => `Short on 4K@30 inputs: need ${f.need}, PDF has ${f.have}`,
+  over_specified: () => 'More than 4 spare ports on at least one port type',
+  name_mismatch: f => `Configuration name "${f.pdf || 'blank'}" does not match the project name`,
+  fan_filter_missing: () => 'Fan filter is not in the PDF; it will be added on 2U',
+  unrecognised_lines: f => 'Lines not recognised: ' + (f.lines || []).join('; '),
+  audio_missing: () => 'Audio ports are required but the PDF has no audio card. Add AUDIO 2-IN 4-OUT in slot 11.',
+  audio_not_required: () => 'The PDF has an audio card, but audio ports are marked as not required'
+};
+const FLAG_CLS = { short_outputs: 'bad', short_in_4k60: 'bad', short_in_4k30: 'bad', audio_missing: 'bad' };
+const hasAudio = cfg => !!cfg && (cfg.other_lines || []).some(x => /S\/PDIF|analog audio/i.test(x));
+let ME = null, CASES = [], FILTER = 'all', ED = null;
+
+function show(view) { ['vAuth', 'vNoAccess', 'vList', 'vEdit', 'vBrand', 'vBs', 'vRates'].forEach(v => $(v).hidden = v !== view); window.scrollTo(0, 0); }
+function chip(status) { const s = STATUS[status] || [status, 'mut']; return el('span', 'chip ' + s[1], s[0]); }
+async function rpc(name, args) {
+  const { data, error } = await sb.rpc(name, args || {});
+  if (error) throw new Error(error.message || 'Something went wrong. Try again.');
+  return data;
+}
+function errBox(id, e) { const b = $(id); b.hidden = !e; b.textContent = e ? (e.message || String(e)) : ''; }
+
+/* ---------- Auth ---------- */
+$('fSignIn').addEventListener('submit', async e => {
+  e.preventDefault(); $('authMsg').textContent = ''; $('aGo').disabled = true;
+  const id = $('aEmail').value.trim().toLowerCase();
+  const { error } = await sb.auth.signInWithPassword({ email: id.includes('@') ? id : id + '@quotedesk.test', password: $('aPass').value });
+  $('aGo').disabled = false;
+  if (error) $('authMsg').textContent = error.message === 'Invalid login credentials' ? 'Email or password is wrong.' : error.message;
+});
+document.addEventListener('click', e => { const b = e.target.closest('[data-eye]'); if (!b) return; const i = $(b.dataset.eye); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; b.textContent = show ? 'Hide' : 'Show'; b.setAttribute('aria-label', show ? 'Hide password' : 'Show password'); i.focus(); });
+$('aForgot').onclick = async () => {
+  const email = $('aEmail').value.trim();
+  if (!email) { $('authMsg').textContent = 'Enter your work email first.'; return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+  $('authMsg').textContent = error ? error.message : 'If this email has an account, a reset link is on its way.';
+};
+$('fNewPass').addEventListener('submit', async e => {
+  e.preventDefault();
+  if ($('aNew').value === 'Cavitak@2026') { $('authMsg').textContent = 'Choose a password different from the starting one.'; return; }
+  const { error } = await sb.auth.updateUser({ password: $('aNew').value, data: { must_change_pw: false } });
+  $('authMsg').textContent = error ? error.message : 'Password saved.';
+  if (!error) { history.replaceState(null, '', location.pathname); $('fNewPass').hidden = true; $('fSignIn').hidden = false; $('authTitle').textContent = 'Sign in'; boot(); }
+});
+$('signOut').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+// Invite and reset links arrive with #...type=invite or type=recovery: ask for a password before anything else.
+const NEEDS_PASSWORD = /type=(invite|recovery)/.test(location.hash);
+function askPassword(title) { show('vAuth'); $('authTitle').textContent = title; $('fSignIn').hidden = true; $('fNewPass').hidden = false; }
+sb.auth.onAuthStateChange((ev) => {
+  if (ev === 'PASSWORD_RECOVERY') askPassword('Set a new password');
+  else if (ev === 'SIGNED_IN' && NEEDS_PASSWORD && $('fNewPass').hidden && !ME) askPassword(/type=invite/.test(location.hash) ? 'Welcome. Choose your password' : 'Set a new password');
+  else if (ev === 'SIGNED_IN') boot();
+});
+
+async function boot() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { $('who').hidden = true; $('tabs').hidden = true; show('vAuth'); return; }
+  if (!$('fNewPass').hidden) return;
+  // accounts created with the shared starting password must set their own first
+  if ((session.user.user_metadata || {}).must_change_pw) { $('who').hidden = true; $('tabs').hidden = true; askPassword('Welcome. Choose your own password'); return; }
+  try { ME = await rpc('qd_me'); } catch (e) { ME = { ok: false, error: e.message }; }
+  if (!ME.ok) { $('noAccessMsg').textContent = (ME.error || 'No access.') + ' Signed in as ' + session.user.email + '.'; $('who').hidden = false; $('whoPill').textContent = 'No access'; show('vNoAccess'); return; }
+  $('who').hidden = false; $('whoPill').textContent = ME.full_name.split(' ')[0] + ' · ' + ME.territory;
+  $('tabs').hidden = false;
+  $('listTitle').textContent = ME.role === 'presales' ? 'My cases' : 'All cases';
+  $('listSplit').classList.toggle('lead', ME.role !== 'presales');
+  $('cmsRates').hidden = ME.role !== 'lead';
+  document.querySelector('.wrap').classList.toggle('wide', ME.role !== 'presales');
+  await loadCases();
+}
+
+/* ---------- Case list ---------- */
+async function loadCases() {
+  await flushAuto();
+  show('vList'); setTab('cases'); $('search').hidden = false;
+  try { CASES = await rpc('qd_case_list'); } catch (e) { CASES = []; $('cases').replaceChildren(el('div', 'err', e.message)); return; }
+  drawList();
+}
+const DAY = 864e5;
+const waitT = c => (c.brand === 'brightsign' && c.disc_requested_at) ? c.disc_requested_at : (c.submitted_at || c.updated_at);
+const ageDays = t => t ? Math.max(0, Math.floor((Date.now() - new Date(t)) / DAY)) : 0;
+const ageChip = d => el('span', 'chip ' + (d >= 4 ? 'bad' : d >= 2 ? 'warn' : 'mut'), d === 0 ? 'today' : d + 'd waiting');
+const lakh = n => n >= 1e7 ? (n / 1e7).toFixed(2) + ' Cr' : (n / 1e5).toFixed(1) + ' L';
+let SEARCH = '', OPEN = {}, CUR = null;
+$('search').addEventListener('input', e => { SEARCH = e.target.value; drawList(); });
+function drawList() {
+  const lead = ME.role !== 'presales', q = SEARCH.trim().toLowerCase();
+  const rows = CASES.filter(c => !q || [c.project_name, c.partner_name, c.case_no, c.presales, c.territory].join(' ').toLowerCase().includes(q));
+  const k = $('kpis'); k.hidden = false; k.className = lead ? 'k4' : 'k3';
+  if (lead) {
+    const need = CASES.filter(c => c.status === 'submitted'), oldest = need.length ? Math.max(...need.map(c => ageDays(waitT(c)))) : 0;
+    const pipe = CASES.filter(c => ['quoted', 'revised'].includes(c.status)).reduce((s, c) => s + Number(c.quote_inr || 0), 0);
+    const cut = Date.now() - 90 * DAY, cl = CASES.filter(c => ['won', 'lost'].includes(c.status) && c.closed_at && new Date(c.closed_at) > cut), won = cl.filter(c => c.status === 'won').length;
+    k.replaceChildren(kpi(need.length, need.length ? `Needs quote · oldest ${oldest}d` : 'Needs quote'), kpi(CASES.filter(c => c.status === 'returned').length, 'Returned'),
+      kpi(pipe ? lakh(pipe) : '0', 'Open pipeline, INR'), kpi(cl.length ? Math.round(won / cl.length * 100) + '%' : '-', 'Win rate, 90 days'));
+  } else {
+    k.replaceChildren(kpi(CASES.filter(c => ['draft', 'returned'].includes(c.status)).length, 'Needs your action'), kpi(CASES.filter(c => c.status === 'submitted').length, 'With product lead'), kpi(CASES.filter(c => ['quoted', 'revised'].includes(c.status)).length, 'Quoted'));
+  }
+  drawNotice(lead);
+  const by = st => rows.filter(c => st.includes(c.status));
+  const groups = lead ? [
+    ['need', 'Needs quote', by(['submitted']).sort((a, b) => new Date(waitT(a)) - new Date(waitT(b))), true],
+    ['quoted', 'Quoted · awaiting outcome', by(['quoted', 'revised']).sort((a, b) => (b.quote_inr || 0) - (a.quote_inr || 0)), true],
+    ['returned', 'Returned to presales', by(['returned']), true],
+    ['drafts', 'Drafts', by(['draft']), false],
+    ['closed', 'Closed', by(['won', 'lost']), false]
+  ] : [
+    ['act', 'Needs your action', by(['draft', 'returned']), true],
+    ['rev', 'With product lead', by(['submitted']), true],
+    ['q', 'Quoted', by(['quoted', 'revised']), true],
+    ['closed', 'Closed', by(['won', 'lost']), false]
+  ];
+  const list = $('cases'); list.replaceChildren();
+  if (!CASES.length) list.append(el('div', 'card note', lead ? 'No cases yet. Presales cases appear here when they start them.' : 'No cases yet. Tap New case to start one.'));
+  groups.forEach(([key, title, items, def]) => {
+    if (!items.length) return;
+    const open = key in OPEN ? OPEN[key] : (def || !!q);
+    const h = el('button', 'ghead'); h.setAttribute('aria-expanded', open); h.append(el('span', null, title), el('span', 'mono', String(items.length)));
+    h.onclick = () => { OPEN[key] = !open; drawList(); }; list.append(h);
+    if (open) items.forEach(c => list.append(caseRow(c, lead)));
+  });
+  if (q && !rows.length) list.append(el('div', 'card note', 'No case matches your search.'));
+  if (lead && window.innerWidth >= 900 && !$('sidePane').childElementCount) $('sidePane').append(el('div', 'card note', 'Select a case to review and quote.'));
+}
+function drawNotice(lead) {
+  const n = $('notice'); n.replaceChildren();
+  const todo = lead ? CASES.filter(c => c.status === 'submitted').sort((a, b) => new Date(waitT(a)) - new Date(waitT(b)))
+                    : CASES.filter(c => ['draft', 'returned'].includes(c.status));
+  document.title = (todo.length ? `(${todo.length}) ` : '') + 'Quote Desk';
+  n.hidden = false; n.classList.toggle('calm', !todo.length);
+  const txt = el('div');
+  if (todo.length) {
+    txt.append(el('b', null, String(todo.length)), el('span', null, lead ? (todo.length === 1 ? 'case is waiting for you' : 'cases are waiting for you') : (todo.length === 1 ? 'case needs your action' : 'cases need your action')));
+    if (lead) txt.append(el('div', 'note', `Oldest: ${todo[0].project_name} · ${ageDays(waitT(todo[0]))}d` + (todo.some(c => c.disc_request_pct != null) ? ` · ${todo.filter(c => c.disc_request_pct != null).length} BrightSign discount request(s)` : '')));
+    else { const ret = todo.filter(c => c.status === 'returned').length; if (ret) txt.append(el('div', 'note', `${ret} returned by the product lead`)); }
+    const go = el('button', 'btn sm', lead ? 'Open oldest' : 'Open'); go.onclick = () => { CUR = todo[0].id; if (lead && window.innerWidth >= 900) drawList(); openCase(todo[0]); };
+    n.append(txt, go);
+  } else { txt.append(el('span', null, lead ? 'Nothing waiting for a quote.' : 'Nothing needs your action right now.')); n.append(txt); }
+}
+function caseRow(c, lead) {
+  const b = el('button', 'case' + (CUR === c.id ? ' sel' : ''));
+  const l1 = el('div', 'r1'); l1.append(el('span', 'ttl', c.project_name + ' · ' + c.partner_name), c.status === 'submitted' ? ageChip(ageDays(waitT(c))) : chip(c.status));
+  const l2 = el('div', 'r2'), ini = (c.presales || '').split(' ').map(x => x[0]).join('').slice(0, 3);
+  const bsc = c.brand === 'brightsign', lt = el('span', 'note'); lt.append(el('span', 'bchip' + (bsc ? ' bs' : ''), bsc ? 'BrightSign' : 'tvONE'), document.createTextNode(' ' + c.case_no + (lead ? ' · ' + ini : '') + ' · ' + c.territory)); l2.append(lt);
+  if (lead && c.quote_inr != null) l2.append(el('span', 'mono', 'R' + c.quote_revision + ' · ' + inr(c.quote_inr)));
+  else if (c.quote_revision != null) l2.append(el('span', 'mono note', 'Quote R' + c.quote_revision));
+  b.append(l1, l2);
+  if ((c.flags || []).some(x => FLAG_CLS[x.code] === 'bad')) b.append(el('span', 'chip bad', 'Short on ports'));
+  if (c.status === 'returned' && c.return_note) b.append(el('span', 'note ellip', 'Note: ' + c.return_note));
+  if (c.status === 'submitted' && c.disc_request_pct != null) b.append(el('span', 'chip info', `Discount ask ${Number(c.disc_request_pct)}%` + (c.disc_request_note ? ' · ' + c.disc_request_note : '')));
+  b.onclick = () => { CUR = c.id; if (lead && window.innerWidth >= 900) drawList(); openCase(c); };
+  return b;
+}
+function kpi(v, l) { const d = el('div', 'kpi'); d.append(el('b', null, String(v)), el('span', null, l)); return d; }
+function openCase(c) {
+  if (c.brand === 'brightsign') return ME.role === 'presales' || (c.mine && c.status === 'draft' && c.quote_revision == null) ? openBsEditor(c.id) : openReview(c.id);
+  if (ME.role === 'presales') return openEditor(c.id);
+  if (c.mine && ['draft', 'returned'].includes(c.status)) return openEditor(c.id);
+  return openReview(c.id);
+}
+const isEditable = st => !['won', 'lost'].includes(st);
+
+/* ---------- Editor ---------- */
+function blankCase() { return { id: null, case_no: null, status: 'draft', project_name: '', partner_name: '', n_display: 0, n_projector: 0, req_in_4k60: 0, req_in_4k30: 0, audio_required: false, led: [], territory: ME.territory }; }
+async function openEditor(id) {
+  errBox('eErr', null); errBox('ePdfErr', null);
+  let cfg = null;
+  if (id) {
+    try { const r = await rpc('qd_case_get', { p_case: id }); ED = r.case; cfg = r.config; ED.cq = r.customer_quote; ED.presales_name = r.presales_name; } catch (e) { alert(e.message); return; }
+  } else ED = blankCase();
+  ED.cfg = cfg;
+  const editable = isEditable(ED.status);
+  $('eCaseNo').textContent = ED.case_no || 'New case';
+  $('eTerritory').textContent = 'Territory · ' + (ED.territory || ME.territory);
+  const s = STATUS[ED.status]; $('eStatus').className = 'chip ' + s[1]; $('eStatus').textContent = s[0];
+  const bn = ED.status === 'returned' && ED.return_note ? 'Returned by the product lead: ' + ED.return_note
+    : ['quoted', 'revised'].includes(ED.status) ? 'This case has a quote. Saving changes sends it back to the product lead for a new quote; the current quote stays in the history.'
+    : ED.status === 'submitted' ? 'Submitted. You can still change it; the product lead sees your latest version.' : '';
+  $('eReturned').hidden = !bn; $('eReturned').textContent = bn;
+  $('eProject').value = ED.project_name; $('ePartner').value = ED.partner_name;
+  $('eLed').value = (ED.led || []).length; $('eDisp').value = ED.n_display; $('eProj').value = ED.n_projector;
+  $('eIn60').value = ED.req_in_4k60; $('eIn30').value = ED.req_in_4k30; setAudio(!!ED.audio_required);
+  document.querySelectorAll('#vEdit input, #vEdit .stp button, #vEdit .yn button').forEach(x => { if (x.id !== 'ePdf') x.disabled = !editable; });
+  $('ePdf').disabled = !editable; $('eSave').hidden = !editable; $('eSubmit').hidden = !['draft', 'returned'].includes(ED.status);
+  $('eSave').textContent = ['draft', 'returned'].includes(ED.status) ? 'Save draft' : 'Save changes';
+  ED.ledList = (ED.led || []).map(l => ({ p: Number(l.pixel_pitch), w: l.width_px, h: l.height_px }));
+  drawLeds(); calcTotals(); drawCfg(); drawDocs($('eDocs'), { c: ED, cfg: ED.cfg, cq: ED.cq, presales: ED.presales_name || ME.full_name }); setPane('details'); show('vEdit'); setTab(id ? 'cases' : 'new');
+}
+const ledOut = l => Math.ceil((l.w || 0) / 3840) * Math.ceil((l.h || 0) / 2160);
+function drawLeds() {
+  const n = Math.max(0, Math.min(20, +$('eLed').value || 0));
+  while (ED.ledList.length < n) ED.ledList.push({ p: 1.5, w: 3840, h: 2160 });
+  ED.ledList.length = n;
+  const box = $('eLeds'); box.replaceChildren();
+  const editable = isEditable(ED.status);
+  ED.ledList.forEach((l, i) => {
+    const card = el('div', 'sub');
+    const head = el('div', 'row between'); const out = el('span', 'chip info'); head.append(el('h3', null, 'LED ' + (i + 1)), out);
+    const prev = el('div', 'prev');
+    const f3 = el('div', 'f3');
+    [['p', 'Pixel pitch (mm)', '0.1'], ['w', 'Width (px)', '1'], ['h', 'Height (px)', '1']].forEach(([k, lab, step]) => {
+      const lb = el('label', null, lab); const inp = el('input'); inp.type = 'number'; inp.min = '0'; inp.step = step; inp.value = l[k]; inp.disabled = !editable; inp.id = 'led' + i + k;
+      inp.oninput = () => { l[k] = +inp.value || 0; paint(); calcTotals(); }; lb.append(inp); f3.append(lb);
+    });
+    const size = el('div', 'note');
+    function paint() {
+      const c = Math.ceil((l.w || 0) / 3840) || 1, r = Math.ceil((l.h || 0) / 2160) || 1, W = 220, H = Math.max(28, Math.min(130, W * (l.h || 1) / (l.w || 1))), o = ledOut(l);
+      const ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', `LED ${i + 1} split into ${o} outputs`); svg.style.cssText = `width:100%;max-width:${W}px;height:auto`;
+      const rect = document.createElementNS(ns, 'rect'); rect.setAttribute('width', W); rect.setAttribute('height', H); rect.setAttribute('rx', 8); rect.setAttribute('fill', 'var(--accent)'); svg.append(rect);
+      const line = (x1, y1, x2, y2) => { const ln = document.createElementNS(ns, 'line'); [['x1', x1], ['y1', y1], ['x2', x2], ['y2', y2]].forEach(a => ln.setAttribute(a[0], a[1])); ln.setAttribute('stroke', 'var(--panel2)'); ln.setAttribute('stroke-width', 3); svg.append(ln); };
+      for (let a = 1; a < c; a++) line(W * a / c, 0, W * a / c, H);
+      for (let a = 1; a < r; a++) line(0, H * a / r, W, H * a / r);
+      prev.replaceChildren(svg); out.textContent = o + (o === 1 ? ' output' : ' outputs');
+      size.textContent = 'Physical size ' + ((l.w || 0) * (l.p || 0) / 1000).toFixed(2) + ' × ' + ((l.h || 0) * (l.p || 0) / 1000).toFixed(2) + ' m';
+    }
+    paint(); card.append(head, prev, f3, size); box.append(card);
+  });
+}
+function calcTotals() {
+  const out = ED.ledList.reduce((s, l) => s + ledOut(l), 0) + (+$('eDisp').value || 0) + (+$('eProj').value || 0);
+  $('tOut').textContent = out; $('tIn60').textContent = +$('eIn60').value || 0; $('tIn30').textContent = +$('eIn30').value || 0;
+  ED.req = { out, in60: +$('eIn60').value || 0, in30: +$('eIn30').value || 0, audio: AUD };
+  // 2U fit: base 8 in + 4 out; slot 10 outputs, slot 11 standard input or audio, slot 12 any input
+  const x60 = Math.max(0, Math.ceil((ED.req.in60 - 8) / 4)), x30 = Math.ceil(ED.req.in30 / 2), inSlots = AUD ? 1 : 2;
+  const msgs = [];
+  if (ED.req.out > 12) msgs.push(`${ED.req.out} outputs is more than the 2U maximum of 12.`);
+  if (x60 > 1) msgs.push(`${ED.req.in60} inputs at 4K@60 is more than the 2U maximum of 12.`);
+  else if (x60 + x30 > inSlots) msgs.push(AUD ? 'With the audio card in slot 11, only slot 12 is left for an extra input card (4 × 4K@60 or 2 × 4K@30). These sources need more.' : 'These sources need more input cards than the 2U has slots for.');
+  $('eFit').hidden = !msgs.length; $('eFit').textContent = msgs.length ? msgs.join(' ') + ' Consider the 4U.' : '';
+  drawChecks(); drawSummary();
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-step]'); if (!b || b.disabled) return;
+  const inp = $(b.dataset.for); inp.value = Math.max(0, Math.min(+inp.max || 99, (+inp.value || 0) + +b.dataset.step));
+  inp.dispatchEvent(new Event('input', { bubbles: true }));
+});
+$('eLed').addEventListener('input', () => { drawLeds(); calcTotals(); });
+['eDisp', 'eProj', 'eIn60', 'eIn30'].forEach(i => $(i).addEventListener('input', calcTotals));
+['eProject', 'ePartner'].forEach(i => $(i).addEventListener('input', () => { $(i).classList.remove('miss'); drawSummary(); }));
+document.querySelectorAll('#vEdit .seg button').forEach(b => b.onclick = () => setPane(b.dataset.tab));
+function setPane(t) { document.querySelectorAll('#vEdit .seg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.tab === t)); document.querySelectorAll('[data-pane]').forEach(p => p.hidden = p.dataset.pane !== t); }
+
+let AUD = false;
+function setAudio(v) { AUD = !!v; $('eAudYes').setAttribute('aria-pressed', AUD); $('eAudNo').setAttribute('aria-pressed', !AUD); }
+$('eAudYes').onclick = () => { setAudio(true); calcTotals(); };
+$('eAudNo').onclick = () => { setAudio(false); calcTotals(); };
+function payload() {
+  return { id: ED.id, project_name: $('eProject').value.trim(), partner_name: $('ePartner').value.trim(), n_display: +$('eDisp').value || 0, n_projector: +$('eProj').value || 0,
+    req_in_4k60: +$('eIn60').value || 0, req_in_4k30: +$('eIn30').value || 0, audio_required: AUD, led: ED.ledList.map(l => ({ pixel_pitch: l.p, width_px: l.w, height_px: l.h })) };
+}
+function namesOk() {
+  const p = $('eProject').value.trim(), q = $('ePartner').value.trim();
+  $('eProject').classList.toggle('miss', !p); $('ePartner').classList.toggle('miss', !q);
+  if (!p || !q) { setPane('details'); errBox('eErr', new Error('Enter the project name and partner\'s name.')); return false; }
+  return true;
+}
+let SAVING = null;
+// One save at a time: a second tap or a PDF upload during a save reuses the same request, so a new case is never created twice.
+function saveCase() {
+  if (SAVING) return SAVING;
+  SAVING = saveCaseNow().finally(() => { SAVING = null; });
+  return SAVING;
+}
+async function saveCaseNow() {
+  if (!namesOk()) return false;
+  errBox('eErr', null); $('eSave').disabled = true;
+  try { const c = await rpc('qd_case_save', { p: payload() }); const cfg = ED.cfg, list = ED.ledList; ED = c; ED.cfg = cfg; ED.ledList = list; $('eCaseNo').textContent = c.case_no; return true; }
+  catch (e) { errBox('eErr', e); return false; }
+  finally { $('eSave').disabled = false; }
+}
+$('eSave').onclick = async () => { const lbl = $('eSave').textContent; if (await saveCase()) { $('eSave').textContent = 'Saved'; setTimeout(() => $('eSave').textContent = lbl, 1500); if (!['draft', 'returned'].includes(ED.status)) openEditor(ED.id); } };
+$('eSubmit').onclick = async () => {
+  if (!(await saveCase())) return;
+  if (!ED.cfg) { setPane('calico'); errBox('eErr', new Error('Upload the Calico PDF before submitting.')); return; }
+  const shortBad = (ED.cfg.flags || []).some(f => FLAG_CLS[f.code] === 'bad');
+  if (shortBad && !$('ackShort')?.checked) { setPane('submit'); errBox('eErr', new Error('The configuration is short on ports. Tick the box on the Submit tab to send it anyway, or upload a corrected PDF.')); return; }
+  try { await rpc('qd_case_submit', { p_case: ED.id }); await loadCases(); } catch (e) { errBox('eErr', e); }
+};
+$('backFromEdit').onclick = async () => { await flushAuto(); loadCases(); };
+$('newCase').onclick = () => pickBrand();
+$('tabNew').onclick = () => pickBrand();
+$('tabCases').onclick = loadCases;
+function setTab(t) { $('tabCases').setAttribute('aria-pressed', t === 'cases'); $('tabNew').setAttribute('aria-pressed', t === 'new'); }
+
+/* ---------- Calico PDF ---------- */
+function parsePdf(t) {
+  const L = t.split(/\n/).map(s => s.trim()).filter(Boolean);
+  const r = { model: '', product_code: '', config_name: '', out_4k60: 0, in_4k60: 0, in_4k30: 0, reflock: 0, fan_filter: false, psu: '', redundant_psu: '', other_lines: [] };
+  const ci = L.findIndex(s => /Configuration$/.test(s));
+  if (ci >= 0) { r.model = L[ci].replace(/\s*Configuration$/, ''); r.config_name = L[ci + 1] && !/^System brief/i.test(L[ci + 1]) ? L[ci + 1] : ''; }
+  const si = L.findIndex(s => /^System brief description/i.test(s)); if (si >= 0) r.product_code = L[si + 1] || '';
+  L.filter(s => /^-/.test(s)).forEach(s => {
+    const b = s.replace(/^-\s*/, ''), m = b.match(/^(\d+)\s*x\s*(.+)$/i), n = m ? +m[1] : 0, d = m ? m[2] : b;
+    if (/4K@60\s*HDMI\s*inputs/i.test(d)) r.in_4k60 += n; else if (/4K@30\s*HDMI\s*inputs/i.test(d)) r.in_4k30 += n;
+    else if (/4K@60\s*HDMI\s*outputs/i.test(d)) r.out_4k60 += n; else if (/RefLock/i.test(d)) r.reflock += n;
+    else if (/air filter/i.test(d)) r.fan_filter = true; else if (/redundant power supply/i.test(d)) r.redundant_psu = b;
+    else if (/power supply/i.test(d)) r.psu = b; else r.other_lines.push(b);
+  });
+  return r;
+}
+$('ePdf').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  errBox('ePdfErr', null);
+  if (!ED.id && !(await saveCase())) { errBox('ePdfErr', new Error('Save the case first: enter the project name and partner\'s name.')); return; }
+  $('ePdfName').textContent = 'Reading ' + f.name + '…';
+  try {
+    if (f.size > 5e6) throw new Error('This file is over 5 MB, which is too large for a Calico export.');
+    const doc = await pdfjsLib.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise; let t = '';
+    for (let n = 1; n <= Math.min(doc.numPages, 5); n++) { const c = await (await doc.getPage(n)).getTextContent(); t += c.items.map(i => i.str + (i.hasEOL ? '\n' : '')).join('') + '\n'; }
+    const r = parsePdf(t);
+    if (!r.product_code || !(r.out_4k60 + r.in_4k60 + r.in_4k30)) throw new Error('Could not read this file as a Calico export. Upload the PDF exported from the Calico software.');
+    if (!(await saveCase())) return;
+    ED.cfg = await rpc('qd_config_save', { p_case: ED.id, p: { ...r, file_name: f.name, raw_text: t.slice(0, 20000) } });
+    drawCfg(); calcTotals();
+  } catch (err) { errBox('ePdfErr', err); }
+  $('ePdfName').textContent = ED.cfg ? ED.cfg.file_name + ' · tap to replace' : 'Choose the PDF exported from the Calico software';
+});
+function drawCfg() {
+  const box = $('eCfg'), c = ED.cfg; box.hidden = !c; box.replaceChildren();
+  $('ePdfName').textContent = c ? c.file_name + ' · tap to replace' : 'Choose the PDF exported from the Calico software';
+  if (!c) return;
+  const opts = [c.reflock ? c.reflock + ' × RefLock' : '', c.fan_filter ? 'Fan filter' : '', c.psu, c.redundant_psu].filter(Boolean).join(', ');
+  [['Configuration name', c.config_name || 'blank'], ['Product code', c.product_code], ['Outputs', c.out_4k60 + ' × 4K@60 HDMI'], ['Inputs', c.in_4k60 + ' × 4K@60 + ' + c.in_4k30 + ' × 4K@30 HDMI'], ['Options', opts || 'none']]
+    .forEach(([k, v]) => { const d = el('div', 'kv'); d.append(el('span', null, k), el('span', null, v)); box.append(d); });
+}
+function meter(name, need, have) {
+  const st = have < need ? ['bad', 'Short'] : have === need ? ['ok', 'Match'] : have - need > 4 ? ['warn', 'Over'] : ['ok', 'Spare'];
+  const max = Math.max(need, have, 1), m = el('div', 'meter');
+  const h = el('div', 'row between'); h.append(el('span', null, name), el('span', 'chip ' + st[0], st[1]));
+  const bar = el('div', 'bar'), fill = el('i'), mark = el('u');
+  fill.style.cssText = `width:${have / max * 100}%;background:var(--${st[0]})`; mark.style.left = (need / max * 100) + '%'; bar.append(fill, mark);
+  m.append(h, bar, el('div', 'note', `Need ${need} (marker) · PDF has ${have} (bar)`)); return m;
+}
+function drawChecks() {
+  const box = $('eChecks'); box.replaceChildren(); const c = ED.cfg; if (!c || !ED.req) return;
+  box.append(el('h3', null, 'Checks against your calculation'), meter('Outputs', ED.req.out, c.out_4k60), meter('4K@60 inputs', ED.req.in60, c.in_4k60), meter('4K@30 inputs', ED.req.in30, c.in_4k30));
+  if (ED.req.audio || hasAudio(c)) box.append(el('div', 'chip ' + (ED.req.audio && hasAudio(c) ? 'ok' : ED.req.audio ? 'bad' : 'warn'), ED.req.audio && hasAudio(c) ? 'Audio card present (slot 11)' : ED.req.audio ? 'Audio required: PDF has no audio card' : 'PDF has an audio card, but audio is marked not required'));
+  (c.flags || []).filter(f => !/^short_/.test(f.code)).forEach(f => box.append(el('div', 'chip ' + (FLAG_CLS[f.code] || 'warn'), (FLAG_TEXT[f.code] || (() => f.code))(f))));
+  if (c.flags && c.flags.length && c.out_4k60 !== undefined) box.append(el('p', 'note', 'Checks shown were saved when the PDF was uploaded. Re-upload after changing the port calculation to refresh them.'));
+}
+function drawSummary() {
+  const box = $('eSummary'); if (!box || !ED) return; box.replaceChildren();
+  const s = el('div', 'sub');
+  [['Project', $('eProject').value.trim() || 'missing'], ['Partner', $('ePartner').value.trim() || 'missing'], ['Required', (ED.req ? `${ED.req.out} out · ${ED.req.in60} in 4K@60 · ${ED.req.in30} in 4K@30` : '-')], ['Audio ports', AUD ? 'Required (slot 11)' : 'Not required'], ['Calico PDF', ED.cfg ? ED.cfg.product_code : 'not uploaded']]
+    .forEach(([k, v]) => { const d = el('div', 'kv'); d.append(el('span', null, k), el('span', null, v)); s.append(d); });
+  box.append(s);
+  if (ED.cfg && (ED.cfg.flags || []).some(f => FLAG_CLS[f.code] === 'bad')) {
+    const lb = el('label'); lb.style.flexDirection = 'row'; lb.style.alignItems = 'center';
+    const cb = el('input'); cb.type = 'checkbox'; cb.id = 'ackShort'; cb.style.width = '22px'; cb.style.minHeight = '22px';
+    lb.append(cb, el('span', null, 'The configuration is short on ports. Send it anyway with my explanation in the project notes.')); box.append(lb);
+  }
+}
+
+/* ---------- Review and quote (lead) ---------- */
+async function openReview(id) {
+  let r; try { r = await rpc('qd_case_get', { p_case: id }); } catch (e) { alert(e.message); return; }
+  CUR = id;
+  const pane = window.innerWidth >= 900 ? $('sidePane') : null, host = pane || $('cases');
+  if (!pane) { show('vList'); $('kpis').hidden = true; $('search').hidden = true; $('notice').hidden = true; }
+  if (r.case.brand === 'brightsign') return reviewBs(r, pane, host);
+  const c = r.case, cfg = r.config, b = r.build, quotes = r.quotes || [], last = quotes[0];
+  const root = el('div', 'rv'), H = el('div', 'list rvh'), S = el('div', 'list rvside'), B = el('div', 'list rvbody');
+
+  /* header */
+  if (!pane) { const back = el('button', 'btn ghost sm', 'Back to cases'); back.onclick = loadCases; H.append(back); }
+  const head = el('div', 'card'), t = el('div', 'row between');
+  t.append(el('h2', null, c.project_name), chip(c.status));
+  const wait = c.status === 'submitted' && c.submitted_at ? ` · waiting ${ageDays(c.submitted_at)}d` : '';
+  head.append(t, el('div', 'note', `${c.partner_name} · ${c.case_no} · ${r.presales_name || ''} · ${c.territory}${wait}`));
+  const req = el('div', 'k3'); req.append(kpi(c.req_out, 'Outputs needed'), kpi(c.req_in_4k60, 'Inputs 4K@60'), kpi(c.req_in_4k30, 'Inputs 4K@30')); head.append(req);
+  head.append(el('span', 'chip ' + (c.audio_required ? (hasAudio(cfg) ? 'ok' : 'bad') : 'mut'), c.audio_required ? (hasAudio(cfg) ? 'Audio required · card in PDF' : 'Audio required · no card in PDF') : 'Audio not required'));
+  if (c.return_note) head.append(el('div', 'banner', 'Returned: ' + c.return_note));
+  if (isEditable(c.status)) { const eb = el('button', 'btn ghost sm', 'Edit case'); eb.onclick = () => openEditor(c.id); const rr = el('div', 'row'); rr.append(eb); head.append(rr); }
+  H.append(head);
+
+  /* configuration */
+  if (cfg) {
+    const pc = el('div', 'card'); const ph = el('div', 'row between'); ph.append(el('h3', null, 'Configuration'), el('span', 'mono note', cfg.product_code)); pc.append(ph);
+    const pg = el('div', 'row');
+    [['Outputs 4K@60', cfg.out_4k60, 'var(--accent)'], ['Inputs 4K@60', cfg.in_4k60, 'var(--info)'], ['Inputs 4K@30', cfg.in_4k30, 'var(--warn)']].forEach(([l, n, col]) => {
+      const g = el('div', 'grp'), d = el('div', 'dots'); for (let i = 0; i < n; i++) { const x = el('i'); x.style.background = col; d.append(x); }
+      g.append(d, el('b', 'mono', String(n)), el('span', 'note', l)); pg.append(g);
+    });
+    pc.append(pg);
+    (cfg.flags || []).forEach(f => pc.append(el('div', 'chip ' + (FLAG_CLS[f.code] || 'warn'), (FLAG_TEXT[f.code] || (() => f.code))(f))));
+    B.append(pc);
+  } else B.append(el('div', 'card note', 'No Calico PDF uploaded yet.'));
+
+  /* build-up */
+  if (b) {
+    const q = el('div', 'card'); q.append(el('h3', null, 'Price build-up (internal)'));
+    (b.lines || []).forEach(l => { const d = el('div', 'kv'); d.append(el('span', null, `${l.qty} × ${l.label}`), el('span', null, l.usd == null ? 'no price' : 'USD ' + usd(l.usd))); q.append(d); });
+    const tl = el('div', 'kv'); tl.append(el('span', null, 'Total USD'), el('b', 'mono', usd(b.list_usd))); q.append(tl);
+    (b.problems || []).forEach(p => q.append(el('div', 'err', p)));
+    if ((b.missing_prices || []).length) q.append(el('div', 'err', 'No USD price in the price list for: ' + b.missing_prices.join(', ')));
+    if (b.reflock_note) q.append(el('div', 'note', b.reflock_note));
+    B.append(q);
+  }
+
+  /* quote panel (sticky on wide screens) */
+  if (b) {
+    const canQuote = ['submitted', 'quoted', 'revised'].includes(c.status);
+    const qp = el('div', 'card'); qp.append(el('h3', null, last ? `Re-quote (current R${last.revision})` : 'Quote'));
+    const field = (label, val, step, min, max) => { const l = el('label', null, label), i = el('input'); i.type = 'number'; i.step = step; i.min = min; if (max != null) i.max = max; i.value = val; i.disabled = !canQuote; l.append(i); return [l, i]; };
+    const [ml, mi] = field('Margin %', last && last.margin_pct != null ? last.margin_pct : 0, 0.5, 0, 99);
+    const [dl, di] = field('Discount %', last ? last.discount_pct : 0, 0.5, 0, 100);
+    const [cl, ci] = field('CF', last ? last.cf : (b.default_cf || 120), 1, 1);
+    const vl = el('label', null, 'Valid till'), vi = el('input'); vi.type = 'date'; vi.disabled = !canQuote;
+    vi.value = last && last.valid_till && new Date(last.valid_till) >= new Date(new Date().toDateString()) ? last.valid_till : new Date(Date.now() + 30 * DAY).toISOString().slice(0, 10); vl.append(vi);
+    const r1 = el('div', 'row'); r1.append(ml, dl); const r2 = el('div', 'row'); r2.append(cl, vl); qp.append(r1, r2);
+    const steps = el('div', 'sub'), line = k => { const d = el('div', 'kv'), v = el('span'); d.append(el('span', null, k), v); steps.append(d); return v; };
+    const sx = line('Total USD (x)'), sl = line('Landing (x × CF)'), sm = line('With margin'), sd = line('Discount');
+    qp.append(steps);
+    const tot = el('div', 'total qtotal'), tv = el('b'); tot.append(el('span', null, 'Quote, INR'), tv); qp.append(tot);
+    const calc = () => {
+      const x = Number(b.list_usd), y = +ci.value || 0, z = Math.min(+mi.value || 0, 99.99), d = +di.value || 0, land = x * y, pre = land / (1 - z / 100), fin = pre * (1 - d / 100);
+      sx.textContent = usd(x); sl.textContent = inr(land); sm.textContent = inr(pre); sd.textContent = '− ' + inr(pre - fin) + ' (' + d + '%)'; tv.textContent = inr(fin);
+    };
+    [mi, di, ci].forEach(i => i.oninput = calc); calc();
+    if (last) qp.append(el('div', 'note', `R${last.revision}: INR ${inr(last.quote_inr != null ? last.quote_inr : last.landing_inr)} · margin ${last.margin_pct != null ? last.margin_pct : '-'}% · disc ${last.discount_pct}% · CF ${last.cf}`));
+    const qe = el('div', 'err'); qe.hidden = true; qp.append(qe);
+    if (canQuote) {
+      const go = el('button', 'btn', last ? `Generate re-quote R${last.revision + 1}` : 'Approve and generate quote');
+      go.disabled = !b.ok; if (!b.ok) qp.append(el('div', 'note', 'Fix the items marked in the build-up to enable quoting.'));
+      go.onclick = async () => { go.disabled = true; try { await rpc('qd_quote_create_v2', { p_case: c.id, p_margin_pct: +mi.value || 0, p_discount_pct: +di.value || 0, p_cf: +ci.value || 0, p_valid_till: vi.value || null }); await refreshAfter(c.id); } catch (e) { qe.hidden = false; qe.textContent = e.message; go.disabled = false; } };
+      qp.append(go);
+    }
+    S.append(qp);
+  }
+
+  /* actions */
+  const act = el('div', 'card');
+  if (c.status === 'submitted') {
+    act.append(el('h3', null, 'Return to presales'));
+    const ta = el('textarea'); ta.placeholder = 'What should presales change?'; ta.maxLength = 500; const lb = el('label', null, 'Note'); lb.append(ta);
+    const rb = el('button', 'btn ghost', 'Return with note');
+    rb.onclick = async () => { try { await rpc('qd_case_return', { p_case: c.id, p_note: ta.value }); await refreshAfter(c.id); } catch (e) { alert(e.message); } };
+    act.append(lb, rb);
+  }
+  if (['quoted', 'revised'].includes(c.status)) {
+    act.append(el('h3', null, 'Close the case'), el('p', 'note', 'Re-quote stays open until the case is closed as won or lost.'));
+    const ta = el('input'); ta.placeholder = 'Reason (required)'; ta.maxLength = 300; const lb = el('label', null, 'Reason'); lb.append(ta);
+    const row = el('div', 'row'), w = el('button', 'btn', 'Won'), l = el('button', 'btn ghost', 'Lost');
+    const close = async o => { if (!ta.value.trim()) { ta.classList.add('miss'); ta.focus(); return; } try { await rpc('qd_case_close', { p_case: c.id, p_outcome: o, p_reason: ta.value }); await refreshAfter(c.id); } catch (e) { alert(e.message); } };
+    w.onclick = () => close('won'); l.onclick = () => close('lost'); row.append(w, l); act.append(lb, row);
+  }
+  if (c.close_reason) act.append(el('div', 'note', 'Closed: ' + c.close_reason));
+  if (act.childElementCount) S.append(act);
+
+  /* revisions and documents */
+  if (quotes.length) {
+    const rc = el('div', 'card'); rc.append(el('h3', null, 'Quote revisions')); const tl = el('div', 'tl');
+    quotes.forEach((x, i) => { const d = el('div'); d.append(el('span', 'mono', `R${x.revision}${i === 0 ? ' · current' : ''} · ${fdate(x.created_at)}`), el('span', 'mono', `INR ${inr(x.quote_inr != null ? x.quote_inr : x.landing_inr)} · m ${x.margin_pct != null ? x.margin_pct : '-'}% · d ${x.discount_pct}% · CF ${x.cf}`)); tl.append(d); });
+    rc.append(tl); B.append(rc);
+  }
+  const dc = el('div', 'card'); dc.append(el('h3', null, 'Documents')); const dbox = el('div', 'list'); dc.append(dbox);
+  drawDocs(dbox, { c, cfg, cq: r.customer_quote, presales: r.presales_name }); B.append(dc);
+
+  root.append(H, S, B); host.replaceChildren(root);
+  if (!pane) window.scrollTo(0, 0);
+}
+async function refreshAfter(id) { CASES = await rpc('qd_case_list'); drawList(); await openReview(id); }
+
+/* ---------- Documents: quote PDF, quote Excel, tender spec ---------- */
+// Tender wording from Cavitak's CALICO PRO tender spec workbook (1U, 2U, 4U); port clauses are set from the case's configuration.
+const SPECS = {"C7-PRO-1200": {"name": "CALICO PRO 1U", "short": "Calico Pro 1U ( 6 x 4K60 HDMI inputs & 2 x 4K60 HDMI outputs)", "long": "Supply, Installation, Testing & Commissioning of high performance & Extremely Low Latency 1U Hardware based Video wall Processor, FPGA based and with Parallel Processing Architecture. System must be capable of processing and managing multiple unrestricted & uncompressed FHD & 4K60 sources and displays and must be capable of end-to-end 4:4:4 processing, combined with the highest quality conversions between 4:2:0, 4:2:2 and 4:4:4 color spaces. System must be capable to handle Displays, video wall panels, Active LEDs & Projectors and must have built in feature to do edge blending of projectors. Must supports minimum 16.5 million pixels design space with standard or custom resolutions & capable to show upto 250 windows onto a single active LED or Video wall and must support HDR10 and HLG (Hybrid Log Gamma) to allow freely convert any input to any output and must also support 10-bit processing (30-bit True Color). System should have minimum 6 HDMI 2.0 HDCP 2.2 inputs each input must support 4k60 4:4:4 resolution. Device must support both progressive & interlaced scan input resolutions ranging from 480i, 480p to 2160p (4096x2160) @60 Hz & 1080p upto 120Hz . System should have minimum 2 HDMI 2.0 HDCP 2.2 output each output must support 4k60 4:4:4 resolution. Device must support both progressive & interlaced scan output resolutions ranging from 720p to 2160p (3840x2160)@60 Hz & 1080p upto 120Hz. System must have minimum 4 canvas each supporting both symmetric & asymmetric kind of Video wall & Active LED. Must have 360-degree rotation option for both Inputs & Outputs in 1-degree increments. System Must support bezel compensation, Up/down/cross conversion, EDID manager, output cloning, Transition effects & customisable borders, Video Matrixing, Picture in picture, Multi windowing, windows stacking, window resizing, keying with HDCP key handling, monitoring output option & BNC ref input and loop, Framelock to any input video source, synclock using internal clock. The video processors must be able to crop multiple sections from any source and place them anywhere on the output. The system must support upto 200 labels (source, text and images) and must be able to dynamically change the label text & images based on the source selection that is displayed in a locked video window and must be able to add borders to windows of various widths or colors which can be animated using Presets. Must have built in storage of minimum 3 GB to store  images (logos, Background, etc). System must allow to manage wide active LED having pixel counts of 7480x1080 pixels, 1080x7480 pixels and any random pixel counts within limit to 4K pixel count with a single 4K60 basic Active LED controller. The video processor must be able to crop multiple sections from outputs for independent placement on the canvas. System must allow to break each HDMI output into minimum 30 pieces to handle multiple Active LED walls by a single Active LED controller and must be able to break each HDMI inputs into minimum 30 pieces and each piece must be an independent virtual input allowing to show cropped section on any inputs or the complete input. Custom Resolution Editor with resolutions auto detected on inputs & selectable on the outputs along with option to make custom outputs by entering actual dimension & pixel info of the device physically used, Combination of different size and resolution. Must be able to handle custom aspect ratio on inputs and output side both and to handle Non-standard aspect ratio device. Systems must have option to save upto 500 presets on the device. Secure Command Line Interface and API – for third party control and remote monitoring. Control options:  Dashboard on software, Application for Android & IOS platform for both mobile phones & tablets, Lan or RS-232 for 3rd party control. Minimum Regulatory compliance: FCC, CE, RoHS, Ulc. Power consumption must be less than 160W & Operating Temperature: 32° to 104°F (0° to +40°C) or better.", "make": "tvONE/Extron/RGB Spectrum", "rows": ["High-performance, extremely low-latency, 1U hardware-based video wall processor.", "Processor shall be FPGA-based and use parallel processing architecture.", "System shall process and manage multiple unrestricted and uncompressed FHD and 4K@60 Hz sources and displays.", "System shall support end-to-end 4:4:4 processing.", "System shall provide high-quality conversion between 4:2:0, 4:2:2 and 4:4:4 colour spaces.", "System shall support conventional displays, video wall panels, Active LED displays and projectors.", "System shall have built-in edge blending functionality for projectors.", "System shall support minimum 16.5 million pixels design space.", "System shall support standard and custom resolutions.", "System shall support up to 250 windows on a single Active LED or video wall.", "System shall support HDR10.", "System shall support HLG (Hybrid Log Gamma).", "System shall allow free conversion of HDR10/HLG from any input to any output.", "System shall support 10-bit processing / 30-bit true colour.", "System shall have minimum 6 × HDMI 2.0, HDCP 2.2 HDMI input ports.", "Each HDMI 2.0 input shall support 4K@60 Hz 4:4:4.", "Device shall support progressive and interlaced input resolutions.", "Input resolution range shall be from 480i/480p up to 2160p (4096 × 2160)@60 Hz.", "System shall support 1080p input up to 120 Hz.", "System shall have minimum 2 × HDMI 2.0, HDCP 2.2 outputs.", "Each HDMI 2.0 output shall support 4K@60 Hz 4:4:4.", "Device shall support progressive and interlaced output resolutions.", "Output resolution range shall be from 720p up to 2160p (3840 × 2160)@60 Hz.", "System shall support 1080p output up to 120 Hz.", "System shall provide minimum 4 canvases.", "Each canvas shall support symmetric video walls.", "Each canvas shall support asymmetric video walls.", "Each canvas shall support symmetric Active LED configurations.", "Each canvas shall support asymmetric Active LED configurations.", "System shall provide 360° image rotation for inputs in 1° increments.", "System shall provide 360° image rotation for outputs in 1° increments.", "System shall support bezel compensation.", "System shall support up/down/cross conversion.", "System shall have EDID management functionality.", "System shall support output cloning.", "System shall support transition effects.", "System shall support customisable window borders.", "System shall support video matrixing.", "System shall support Picture-in-Picture (PiP).", "System shall support multi-windowing.", "System shall support window stacking/layering.", "System shall support window resizing.", "System shall support keying with HDCP key handling.", "System shall provide monitoring output functionality.", "System shall provide BNC reference input and loop-through.", "System shall support frame lock to any input video source.", "System shall support sync lock using an internal clock.", "Video processor shall be able to crop multiple sections from any source and place them anywhere on the output.", "System shall support up to 200 labels comprising source, text and images.", "Label text and images shall be dynamically changeable based on the selected source displayed in a locked video window.", "System shall allow borders of various widths and colours to be added to windows.", "Window borders shall support animation using presets.", "System shall have minimum 3 GB built-in storage for images (logos, backgrounds, etc.).", "System shall manage wide Active LED walls with pixel counts of 7480 × 1080, 1080 × 7480 and any other pixel count within the 4K pixel limit using a single 4K60 basic Active LED controller.", "Video processor shall support cropping of multiple sections from outputs for independent placement on the canvas.", "Each HDMI output shall be divisible into minimum 30 sections/pieces for handling multiple Active LED walls using a single Active LED controller.", "Each HDMI input shall be divisible into minimum 30 sections/pieces.", "Each cropped input section shall function as an independent virtual input.", "Virtual cropped inputs shall be assignable to any input/window or the complete input source.", "System shall provide a Custom Resolution Editor.", "Input resolutions shall be automatically detected.", "Detected/available resolutions shall be selectable for outputs.", "System shall allow custom output resolutions by entering actual physical dimensions and pixel information of the connected display/device.", "System shall support combinations of devices with different sizes and resolutions.", "System shall support custom aspect ratios on the input side.", "System shall support custom aspect ratios on the output side.", "System shall support non-standard aspect-ratio devices.", "System shall allow storage of minimum 500 presets on the device.", "System shall provide a secure Command Line Interface (CLI).", "System shall provide API for third-party control and remote monitoring.", "System shall provide software dashboard for control.", "System shall provide application for Android mobile phones and tablets.", "System shall provide application for iOS mobile phones and tablets.", "System shall support LAN or RS-232 for third-party control.", "System shall comply with FCC regulatory requirements.", "System shall comply with CE regulatory requirements.", "System shall comply with RoHS requirements.", "System shall comply with UL/C/ULC regulatory requirements.", "Power consumption shall be less than 160 W.", "Operating temperature shall be 32° to 104°F (0° to +40°C) or better."]}, "C7-PRO-2200": {"name": "CALICO PRO 2U", "short": "Calico Pro 2U (8x 4K60 HDMI input & 4 x 4K60 HDMI outputs along with redundant power supply)", "long": "Supply, Installation, Testing & Commissioning of high performance & Extremely Low Latency Hardware based Video wall Processor having Configurable Modular Chassis, FPGA based and with Parallel Processing Architecture. System must be capable of processing and managing multiple unrestricted & uncompressed FHD & 4K60 sources and displays and must be capable of end-to-end 4:4:4 processing, combined with the highest quality conversions between 4:2:0, 4:2:2 and 4:4:4 color spaces. System must be capable to handle different types of signals like HDMI, HDBaseT, 3G-SDI, 12G-SDI, H.264 & H.265 IP feeds. System must be capable to handle Displays, video wall panels, Active LEDs & Projectors and must have built in feature to do edge blending of multiple projectors. Must supports up to 66 million pixels with standard or custom resolutions & capable to show upto 256 windows onto a single active LED or Video wall and must support HDR & 10-bit processing (30-bit True Color). System should have minimum 8 HDMI 2.0 HDCP 2.2 inputs and all must support 4k60 4:4:4 resolution and must have empty input slots available to accommodate minimum upto total 16 inputs. Device must support both progressive & interlaced scan input resolutions ranging from 480i, 480p to 2160p (4096x2160)@60 Hz. System should have minimum 4 HDMI 2.0 HDCP 2.2 output each output must support 4k60 4:4:4 resolution and must have provision to accommodate upto total 12 output ports by adding/replacing necessary output cards. Device must support both progressive & interlaced scan output resolutions ranging from 720p to 2160p (3840x2160)@60 Hz & 1080p upto 120Hz. System must support SMPTE2082 11.88/11.868Gbps < 0.3 UI jitter or better. System must have minimum 4 canvas each supporting both symmetric & asymmetric kind of Video wall & Active LED. Must have 360-degree rotation option for both Inputs & Outputs in 1-degree increments. System Must support bezel compensation, Up/down/cross conversion, EDID manager, output cloning, Transition effects & customisable borders, Video Matrixing, Picture in picture, Multi windowing, windows stacking, window resizing, keying with HDCP key handling, monitoring output option & BNC ref input and loop, Framelock to any input video source, synclock using internal clock. The video processors must be able to crop multiple sections from any source and place them anywhere on the output. The system must support upto 200 labels (source, text and images) and must be able to dynamically change the label text & images based on the source selection that is displayed in a locked video window and must be able to add borders to windows of various widths or colors which can be animated using Presets. Must have built in storage of minimum 3 GB to store media files and images. System must allow to manage wide active LED having pixel counts of 7480x1080 pixels, 1080x7480 pixels and any random pixel counts within limit to 4K pixel count with a single 4K60 basic Active LED controller. The video processor must be able to crop multiple sections from outputs for independent placement on the canvas. System must allow to break each HDMI output into minimum32 pieces to handle multiple Active LED walls by a single Active LED controller and must be able to break each HDMI inputs into minimum 32 pieces and each piece must be an independent virtual input allowing to show cropped section on any inputs or the complete input. Custom Resolution Editor with resolutions auto detected on inputs & selectable on the outputs along with option to make custom outputs by entering actual dimension & pixel info of the device physically used, Combination of different size and resolution. Must be able to handle custom aspect ratio on inputs and output side both and to handle Non-standard aspect ratio device. Systems must have option to save upto 500 presets on the device. Must have redundant Power Supply. Must have built in Audio matrixing option to control audio flow. Must have option to add audio card for Audio embedding and Audio de-embedding both analog and digital audio. Secure Command Line Interface and API – for third party control and remote monitoring. Control options:  Dashboard on software, Application for Android & IOS platform for both mobile phones & tablets, Lan or RS-232 for 3rd party control. Minimum Regulatory compliance: FCC, CE, RoHS, Ulc. Operating Temperature: 32° to 104°F (0° to +40°C) or better.", "make": "tvONE/Extron/RGB Spectrum", "rows": ["High-performance, extremely low-latency, hardware-based video wall processor having configurable modular chassis.", "Processor shall be FPGA-based and use parallel processing architecture.", "System shall process and manage multiple unrestricted and uncompressed FHD and 4K@60 Hz sources and displays.", "System shall support end-to-end 4:4:4 processing.", "System shall provide high-quality conversion between 4:2:0, 4:2:2 and 4:4:4 colour spaces.", "System shall support HDMI signal inputs/outputs.", "System shall support HDBaseT signals.", "System shall support 3G-SDI signals.", "System shall support 12G-SDI signals.", "System shall support H.264 IP video feeds.", "System shall support H.265 IP video feeds.", "System shall support conventional displays, video wall panels, Active LED displays and projectors.", "System shall have built-in edge blending functionality for multiple projectors.", "System shall support up to 66 million pixels.", "System shall support standard and custom resolutions.", "System shall support up to 256 windows on a single Active LED or video wall.", "System shall support HDR.", "System shall support 10-bit processing / 30-bit true colour.", "System shall have minimum 8 × HDMI 2.0, HDCP 2.2 HDMI input ports.", "Each HDMI 2.0 input shall support 4K@60 Hz 4:4:4.", "System shall have empty input slots available to accommodate minimum up to a total of 16 inputs.", "Device shall support progressive and interlaced input resolutions.", "Input resolution range shall be from 480i/480p up to 2160p (4096 × 2160)@60 Hz.", "System shall have minimum 4 × HDMI 2.0, HDCP 2.2 outputs.", "Each HDMI 2.0 output shall support 4K@60 Hz 4:4:4.", "System shall have provision to accommodate up to a total of 12 output ports by adding/replacing necessary output cards.", "Device shall support progressive and interlaced output resolutions.", "Output resolution range shall be from 720p up to 2160p (3840 × 2160)@60 Hz.", "System shall support 1080p output up to 120 Hz.", "System shall support SMPTE 2082 at 11.88/11.868 Gbps with less than 0.3 UI jitter or better.", "System shall provide minimum 4 canvases.", "Each canvas shall support symmetric video walls.", "Each canvas shall support asymmetric video walls.", "Each canvas shall support symmetric Active LED configurations.", "Each canvas shall support asymmetric Active LED configurations.", "System shall provide 360° image rotation for inputs in 1° increments.", "System shall provide 360° image rotation for outputs in 1° increments.", "System shall support bezel compensation.", "System shall support up/down/cross conversion.", "System shall have EDID management functionality.", "System shall support output cloning.", "System shall support transition effects.", "System shall support customisable window borders.", "System shall support video matrixing.", "System shall support Picture-in-Picture (PiP).", "System shall support multi-windowing.", "System shall support window stacking/layering.", "System shall support window resizing.", "System shall support keying with HDCP key handling.", "System shall provide monitoring output functionality.", "System shall provide BNC reference input and loop-through.", "System shall support frame lock to any input video source.", "System shall support sync lock using an internal clock.", "Video processor shall be able to crop multiple sections from any source and place them anywhere on the output.", "System shall support up to 200 labels comprising source, text and images.", "Label text and images shall be dynamically changeable based on the selected source displayed in a locked video window.", "System shall allow borders of various widths and colours to be added to windows.", "Window borders shall support animation using presets.", "System shall have minimum 3 GB built-in storage for media files and images.", "System shall manage wide Active LED walls with pixel counts of 7480 × 1080, 1080 × 7480 and any other pixel count within the 4K pixel limit using a single 4K60 basic Active LED controller.", "Video processor shall support cropping of multiple sections from outputs for independent placement on the canvas.", "Each HDMI output shall be divisible into minimum 32 sections/pieces for handling multiple Active LED walls using a single Active LED controller.", "Each HDMI input shall be divisible into minimum 32 sections/pieces.", "Each cropped input section shall function as an independent virtual input.", "Virtual cropped inputs shall be assignable to any input/window or the complete input source.", "System shall provide a Custom Resolution Editor.", "Input resolutions shall be automatically detected.", "Detected/available resolutions shall be selectable for outputs.", "System shall allow custom output resolutions by entering actual physical dimensions and pixel information of the connected display/device.", "System shall support combinations of devices with different sizes and resolutions.", "System shall support custom aspect ratios on the input side.", "System shall support custom aspect ratios on the output side.", "System shall support non-standard aspect-ratio devices.", "System shall allow storage of minimum 500 presets on the device.", "System shall have redundant power supply.", "System shall have built-in audio matrixing functionality for controlling audio signal flow.", "System shall have option to add an audio card.", "Audio card shall support audio embedding.", "Audio card shall support audio de-embedding.", "Audio functionality shall support analogue audio.", "Audio functionality shall support digital audio.", "System shall provide a secure Command Line Interface (CLI).", "System shall provide API for third-party control and remote monitoring.", "System shall provide software dashboard for control.", "System shall provide application for Android mobile phones and tablets.", "System shall provide application for iOS mobile phones and tablets.", "System shall support LAN or RS-232 for third-party control.", "System shall comply with FCC regulatory requirements.", "System shall comply with CE regulatory requirements.", "System shall comply with RoHS requirements.", "System shall comply with UL/C/ULC regulatory requirements.", "Operating temperature shall be 32° to 104°F (0° to +40°C) or better."]}, "C7-PRO-4200": {"name": "CALICO PRO 4U", "short": "Calico Pro 4U (Modular chassis expandable up to 44 x HDMI inputs & 32 x HDMI outputs along with redundant power supply)", "long": "SITC of high performance & Extremely Low Latency Hardware based 4U Modular Video wall Processor, FPGA based and with Parallel Processing Architecture. Chassis must have capacity to accommodate minimum upto 44 x HDMI inputs & 32 x HDMI outputs. System must be capable of processing and managing multiple unrestricted & uncompressed FHD & 4K60 sources and displays and must be capable of end-to-end 4:4:4 processing, combined with the highest quality conversions between 4:2:0, 4:2:2 and 4:4:4 color spaces.  System video input to output latency must not be more than 2 frames regardless of the inputs and outputs cards. System must be capable to handle different types of signals like HDMI, HDBaseT, 3G-SDI, 12G-SDI, H.264 & H.265 IP feeds. System must be capable to handle Displays, video wall panels, Active LEDs & Projectors and must have built in feature to do edge blending of multiple projectors. Must supports minimum 66 million pixels with standard or custom resolutions & capable to show minimum 256 windows onto a single active LED or Video wall and must support HDR, 10-bit processing (30-bit True Color) & and HLG (Hybrid Log Gamma). System should have minimum have minimum 12 HDMI 2.0 HDCP 2.2 HDMI inputs ports each port supporting 4K60 4:4:4. Device must support both progressive & interlaced scan input resolutions ranging from 480i, 480p to 2160p (4096x2160)@60 Hz. System should have minimum 16 HDMI output ports each supporting minimum 1080p resolution and 4 HDMI 2.0 HDCP 2.2 output each output must support 4k60 4:4:4 resolution. Device must support both progressive & interlaced scan output resolutions ranging from 720p to 2160p (3840x2160)@60 Hz & 1080p upto 120Hz. System must support SMPTE2082 11.88/11.868Gbps < 0.3 UI jitter or better. System must have minimum 4 canvas each supporting both symmetric & asymmetric kind of Video wall & Active LED. Must have 360-degree rotation option for both Inputs & Outputs in 1-degree increments. System Must support bezel compensation, Up/down/cross conversion, EDID manager, output cloning, Transition effects & customisable borders, Video Matrixing, Picture in picture, Multi windowing, windows stacking, window resizing, keying with HDCP key handling, monitoring output option & BNC ref input and loop, Framelock to any input video source, synclock using internal clock. The system must support upto 200 labels (source, text and images) and must be able to dynamically change the label text & images based on the source selection that is displayed in a locked video window and must be able to add borders to windows of various widths or colors which can be animated using Presets. Must have built in storage of minimum 3 GB to store Background, Logos and other image files. The video processor must be able to crop multiple sections from outputs for independent placement on the canvas. System must allow to break each HDMI output into minimum 30 pieces to handle multiple Active LED walls by a single Active LED controller and must be able to break each HDMI inputs into minimum 30 pieces and each piece must be an independent virtual input allowing to show cropped section on any inputs or the complete input. Custom Resolution Editor with resolutions auto detected on inputs & selectable on the outputs along with option to make custom outputs by entering actual dimension & pixel info of the device physically used, Combination of different size and resolution. Must be able to handle custom aspect ratio on inputs and output side both and to handle Non-standard aspect ratio device. Systems must have option to save upto 500 presets on the device. Must have built in Audio matrixing option to control audio flow. Must have dedicated slot(not occupying the IO slots) to add audio card for Audio embedding and Audio de-embedding both analog and digital audio. Secure Command Line Interface and API – for third party control and remote monitoring.  Must have redundant power supply. Syslog and SNMP support for device monitoring. Control options Software for PC, LAN or RS-232 for 3rd party Automation, Application for mobile & Tablets for Android & IOS devices and must have provision to control the device over DMX/Art-Net/sACN Protocol. Minimum Regulatory compliance: FCC, CE, RoHS, Ulc. Operating Temperature: 32° to 104°F (0° to +40°C) or better.", "make": "tvONE/Extron/RGB Spectrum", "rows": ["High-performance, extremely low-latency, hardware-based 4U modular video wall processor.", "Processor shall be FPGA-based and use parallel processing architecture.", "4U chassis shall accommodate minimum 44 × HDMI inputs and 32 × HDMI outputs.", "System shall process and manage multiple unrestricted and uncompressed FHD and 4K@60 Hz sources and displays.", "System shall support end-to-end 4:4:4 processing.", "System shall provide high-quality conversion between 4:2:0, 4:2:2 and 4:4:4 colour spaces.", "End-to-end system video input-to-output latency shall not exceed 2 frames, regardless of input/output cards used.", "System shall support HDMI signal inputs/outputs.", "System shall support HDBaseT signals.", "System shall support 3G-SDI signals.", "System shall support 12G-SDI signals.", "System shall support H.264 IP video feeds.", "System shall support H.265 IP video feeds.", "System shall support conventional displays, video wall panels, Active LED displays and projectors.", "System shall have built-in edge blending functionality for multiple projectors.", "System shall support minimum 66 million pixels.", "System shall support standard and custom resolutions.", "System shall support minimum 256 windows on a single Active LED or video wall.", "System shall support HDR.", "System shall support 10-bit processing / 30-bit true colour.", "System shall support HLG (Hybrid Log Gamma).", "System shall have minimum 12 × HDMI 2.0, HDCP 2.2 HDMI input ports.", "Each HDMI input shall support 4K@60 Hz 4:4:4.", "Device shall support progressive and interlaced input resolutions.", "Input resolution range shall be from 480i/480p up to 2160p (4096 × 2160)@60 Hz.", "System shall have minimum 16 × HDMI output ports supporting minimum 1080p resolution.", "System shall have minimum 4 × HDMI 2.0, HDCP 2.2 outputs.", "Each HDMI 2.0 output shall support 4K@60 Hz 4:4:4.", "Device shall support progressive and interlaced output resolutions.", "Output resolution range shall be from 720p up to 2160p (3840 × 2160)@60 Hz.", "System shall support 1080p output up to 120 Hz.", "System shall support SMPTE 2082 at 11.88/11.868 Gbps with less than 0.3 UI jitter or better.", "System shall provide minimum 4 canvases.", "Each canvas shall support symmetric video walls.", "Each canvas shall support asymmetric video walls.", "Each canvas shall support symmetric Active LED configurations.", "Each canvas shall support asymmetric Active LED configurations.", "System shall provide 360° image rotation for inputs in 1° increments.", "System shall provide 360° image rotation for outputs in 1° increments.", "System shall support bezel compensation.", "System shall support up/down/cross conversion.", "System shall have EDID management functionality.", "System shall support output cloning.", "System shall support transition effects.", "System shall support customisable window borders.", "System shall support video matrixing.", "System shall support Picture-in-Picture (PiP).", "System shall support multi-windowing.", "System shall support window stacking/layering.", "System shall support window resizing.", "System shall support keying with HDCP key handling.", "System shall provide monitoring output functionality.", "System shall provide BNC reference input and loop-through.", "System shall support frame lock to any input video source.", "System shall support sync lock using an internal clock.", "System shall support up to 200 labels comprising source, text and images.", "Label text and images shall be dynamically changeable based on the selected source displayed in a locked video window.", "System shall allow borders of various widths and colours to be added to windows.", "Window borders shall support animation using presets.", "System shall have minimum 3 GB built-in storage for backgrounds, logos and other image files.", "Video processor shall support cropping of multiple sections from outputs for independent placement on the canvas.", "Each HDMI output shall be divisible into minimum 30 sections/pieces for handling multiple Active LED walls using a single Active LED controller.", "Each HDMI input shall be divisible into minimum 30 sections/pieces.", "Each cropped input section shall function as an independent virtual input.", "Virtual cropped inputs shall be assignable to any input/window or the complete input source.", "System shall provide a Custom Resolution Editor.", "Input resolutions shall be automatically detected.", "Detected/available resolutions shall be selectable for outputs.", "System shall allow custom output resolutions by entering actual physical dimensions and pixel information of the connected display/device.", "System shall support combinations of devices with different sizes and resolutions.", "System shall support custom aspect ratios on the input side.", "System shall support custom aspect ratios on the output side.", "System shall support non-standard aspect-ratio devices.", "System shall allow storage of minimum 500 presets on the device.", "System shall have built-in audio matrixing functionality for controlling audio signal flow.", "System shall have a dedicated slot for an audio card without occupying video I/O slots.", "Dedicated audio card shall support audio embedding.", "Dedicated audio card shall support audio de-embedding.", "Audio functionality shall support analogue audio.", "Audio functionality shall support digital audio.", "System shall provide a secure Command Line Interface (CLI).", "System shall provide API for third-party control and remote monitoring.", "System shall have redundant power supplies.", "System shall support Syslog.", "System shall support SNMP for device monitoring.", "System shall provide PC-based software for control.", "System shall support LAN-based control.", "System shall support RS-232 control for third-party automation.", "System shall provide mobile/tablet application for Android devices.", "System shall provide mobile/tablet application for iOS devices.", "System shall support control through DMX protocol.", "System shall support control through Art-Net protocol.", "System shall support control through sACN protocol.", "System shall comply with FCC regulatory requirements.", "System shall comply with CE regulatory requirements.", "System shall comply with RoHS requirements.", "System shall comply with UL/C/ULC regulatory requirements.", "Operating temperature shall be 32° to 104°F (0° to +40°C) or better."]}};
+/* ---------- Tender text per configuration ----------
+   Original wording is kept. Only clauses that would be untrue for the configuration are changed:
+   1 input and output counts, 2 a 4K@30 input clause when 4K@30 inputs exist, 3 "each input supports 4K@60" limited to the 4K@60 inputs
+   when 4K@30 inputs exist, 4 redundant power supply only when it is in the configuration, 5 free-slot clauses (2U) only when slots are free. */
+function tenderFor(cfg) {
+  const base = SPECS[cfg.model]; if (!base) return null;
+  const in60 = cfg.in_4k60, in30 = cfg.in_4k30, out = cfg.out_4k60, rps = !!cfg.redundant_psu, is2 = cfg.model === 'C7-PRO-2200';
+  const freeIn = is2 ? Math.max(0, 2 - Math.max(0, (in60 - 8) / 4) - in30 / 2) : null;   // 2U: slots 11 and 12 take inputs
+  const freeOut = is2 ? (out > 4 ? 0 : 1) : null;                                          // 2U: slot 10 takes outputs
+  const changes = [];
+  const rows = [];
+  base.rows.forEach(r => {
+    let t = r;
+    t = t.replace(/^(System shall have minimum )\d+( × HDMI 2\.0, HDCP 2\.2 HDMI input ports\.)$/, `$1${in60}$2`)
+         .replace(/^(System shall have minimum )\d+( × HDMI 2\.0, HDCP 2\.2 outputs\.)$/, `$1${out}$2`);
+    if (in30) t = t.replace(/^Each HDMI( 2\.0)? input shall support 4K@60/, 'Each 4K@60 HDMI input shall support 4K@60');
+    if (!rps && /^System shall have redundant power suppl(y|ies)\.$/.test(t)) { changes.push('Removed: ' + t); return; }
+    if (is2 && /^System shall have empty input slots available/.test(t) && !freeIn) { changes.push('Removed (no free input slot): ' + t); return; }
+    if (is2 && /^System shall have provision to accommodate up to a total of 12 output ports/.test(t) && !freeOut) { changes.push('Removed (no free output slot): ' + t); return; }
+    if (t !== r) changes.push('Changed: ' + t);
+    rows.push(t);
+    if (in30 && /^Each 4K@60 HDMI input shall support 4K@60/.test(t)) { const a = `System shall have minimum ${in30} × HDMI input ports supporting 4K@30 Hz.`; rows.push(a); changes.push('Added: ' + a); }
+  });
+  let long = base.long.replace(/minimum \d+ HDMI 2\.0 HDCP 2\.2 (HDMI )?inputs?( ports)?/, m => m.replace(/\d+/, in60))
+                      .replace(/\d+( HDMI 2\.0 HDCP 2\.2 output)/, `${out}$1`);
+  if (in30) { const i = long.search(/minimum \d+ HDMI 2\.0 HDCP 2\.2 (HDMI )?inputs/), j = long.indexOf('. ', i); if (i >= 0 && j > 0) long = long.slice(0, j + 1) + ` System should also have minimum ${in30} HDMI inputs supporting 4K@30 Hz.` + long.slice(j + 1); }
+  if (!rps) long = long.replace(/ *Must have redundant [Pp]ower [Ss]uppl(y|ies)\./, '');
+  if (is2 && !freeIn) long = long.replace(' and must have empty input slots available to accommodate minimum upto total 16 inputs', '');
+  if (is2 && !freeOut) long = long.replace(' and must have provision to accommodate upto total 12 output ports by adding/replacing necessary output cards', '');
+  const short = shortDesc(cfg, base.name);
+  return { name: base.name, make: base.make, short, long, rows, changes };
+}
+function shortDesc(cfg, name) {
+  name = (name || (SPECS[cfg.model] || {}).name || ('CALICO PRO ' + cfg.model)).replace('CALICO PRO', 'Calico Pro');
+  return `${name} (${cfg.in_4k60}x 4K60 HDMI inputs${cfg.in_4k30 ? ` + ${cfg.in_4k30}x 4K30 HDMI inputs` : ''} & ${cfg.out_4k60}x 4K60 HDMI outputs${hasAudio(cfg) ? ', audio I/O card (2 in, 4 out)' : ''}${cfg.redundant_psu ? ' along with redundant power supply' : ''})`;
+}
+const is2U = m => /^C7-PRO-2/.test(m || '');
+// Load a library on demand if its script tag failed (blocked or slow network).
+const LIBS = { jspdf: ['https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js', 'https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js', () => window.jspdf && window.jspdf.jsPDF],
+               exceljs: ['https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js', 'https://unpkg.com/exceljs@4.4.0/dist/exceljs.min.js', () => window.ExcelJS] };
+async function need(name) {
+  const [a, b, ok] = LIBS[name]; if (ok()) return;
+  for (const url of [a, b]) {
+    await new Promise(res => { const sc = document.createElement('script'); sc.src = url; sc.onload = res; sc.onerror = res; document.head.append(sc); });
+    if (ok()) return;
+  }
+  throw new Error('the ' + (name === 'jspdf' ? 'PDF' : 'Excel') + ' library could not be loaded. Check the internet connection and try again.');
+}
+function specRows(cfg) {
+  return [['Make and model', `tvONE CALICO PRO ${cfg.model}`], ['Video inputs', `Minimum ${cfg.in_4k60}x HDMI inputs at 4K@60` + (cfg.in_4k30 ? ` and ${cfg.in_4k30}x HDMI inputs at 4K@30` : '')],
+    ['Video outputs', `Minimum ${cfg.out_4k60}x HDMI outputs at 4K@60`], ['Power', [cfg.psu, cfg.redundant_psu].filter(Boolean).join(' with ') || 'As per manufacturer'], ['Warranty', 'Five-year manufacturer warranty']]
+    .map(([k, v]) => `${k}: ${v}`);
+}
+const today = () => new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+const fdate = d => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+const safe = s => String(s || '').replace(/[^\w\-]+/g, '_').slice(0, 40);
+function drawDocs(box, ctx) {
+  box.replaceChildren();
+  if (!ctx.cfg) { box.append(el('p', 'note', 'Upload the Calico PDF to enable the tender spec.')); return; }
+  const g = el('div', 'docs');
+  const mk = (label, fn, ok) => { const b = el('button', 'btn ghost', label); b.disabled = !ok; b.onclick = async () => { b.disabled = true; try { await fn(ctx); } catch (e) { alert('Could not create the file: ' + e.message); } finally { b.disabled = false; } }; return b; };
+  g.append(mk('Quote Excel', quoteXlsx, !!ctx.cq), mk('Quote PDF', quotePdf, !!ctx.cq), mk('Tender spec Excel', tenderXlsx, true), mk('Tender spec PDF', tenderPdf, true));
+  box.append(g, el('p', 'note', ctx.cq ? `Quote ${ctx.c.case_no}-R${ctx.cq.revision} · INR ${inr(ctx.cq.quote_inr)}` + (ctx.cq.valid_till ? ' · valid till ' + fdate(ctx.cq.valid_till) : '') : 'Quote files unlock once the product lead quotes this case.'));
+}
+
+/* ---------- PDF building blocks (A4, mm) ---------- */
+const PG = { w: 210, h: 297, m: 16, ink: [27, 29, 33], mute: [100, 106, 117], line: [222, 218, 210], amber: [247, 148, 29], soft: [248, 246, 242] };
+const CW = PG.w - 2 * PG.m;   // content width
+function pdfNew() { const { jsPDF } = window.jspdf; const d = new jsPDF({ unit: 'mm', format: 'a4' }); d.setLineHeightFactor(1.35); return d; }
+function pdfHeader(d, title, sub, tag) {
+  d.setFillColor(...PG.amber); d.rect(0, 0, PG.w, 3, 'F');
+  d.setTextColor(...PG.ink); d.setFont('helvetica', 'bold'); d.setFontSize(13); d.text('Cavitak Marketing Pvt. Ltd.', PG.m, 15);
+  d.setFont('helvetica', 'normal'); d.setFontSize(8.5); d.setTextColor(...PG.mute); d.text(tag || 'Authorised distributor for tvONE in India', PG.m, 20);
+  d.setTextColor(...PG.ink); d.setFont('helvetica', 'bold'); d.setFontSize(15); d.text(title, PG.w - PG.m, 15, { align: 'right' });
+  if (sub) { d.setFont('helvetica', 'normal'); d.setFontSize(8.5); d.setTextColor(...PG.mute); d.text(sub, PG.w - PG.m, 20, { align: 'right' }); }
+  d.setDrawColor(...PG.line); d.setLineWidth(0.3); d.line(PG.m, 25, PG.w - PG.m, 25);
+  return 32;
+}
+function pdfMeta(d, pairs, y) {
+  // two columns of label / value with fixed tab stops
+  const colX = [PG.m, PG.m + CW / 2 + 4], lab = 24; d.setFontSize(9);
+  pairs.forEach(([k, v], i) => {
+    const x = colX[i % 2], yy = y + Math.floor(i / 2) * 6;
+    d.setFont('helvetica', 'normal'); d.setTextColor(...PG.mute); d.text(k, x, yy);
+    d.setFont('helvetica', 'bold'); d.setTextColor(...PG.ink); d.text(d.splitTextToSize(String(v), CW / 2 - lab - 6)[0], x + lab, yy);
+  });
+  return y + Math.ceil(pairs.length / 2) * 6 + 3;
+}
+function pdfFooter(d) {
+  const n = d.getNumberOfPages();
+  for (let i = 1; i <= n; i++) {
+    d.setPage(i); d.setDrawColor(...PG.line); d.setLineWidth(0.3); d.line(PG.m, PG.h - 14, PG.w - PG.m, PG.h - 14);
+    d.setFont('helvetica', 'normal'); d.setFontSize(7.5); d.setTextColor(...PG.mute);
+    d.text('Cavitak Marketing Pvt. Ltd.  |  Generated by Quote Desk on ' + today(), PG.m, PG.h - 9);
+    d.text(`Page ${i} of ${n}`, PG.w - PG.m, PG.h - 9, { align: 'right' });
+  }
+}
+function pdfPorts(d, cfg, y) {
+  d.setFont('helvetica', 'bold'); d.setFontSize(9.5); d.setTextColor(...PG.ink); d.text('Processor configuration', PG.m, y); y += 3;
+  d.setFillColor(...PG.soft); d.roundedRect(PG.m, y, CW, 30, 2.5, 2.5, 'F');
+  const groups = [['Outputs 4K@60', cfg.out_4k60, PG.amber], ['Inputs 4K@60', cfg.in_4k60, [31, 111, 208]], ['Inputs 4K@30', cfg.in_4k30, [154, 114, 0]]];
+  const gw = CW / 3;
+  groups.forEach(([l, n, col], gi) => {
+    const x0 = PG.m + 6 + gi * gw; d.setFillColor(...col);
+    for (let i = 0; i < n; i++) d.roundedRect(x0 + (i % 8) * 6, y + 5 + Math.floor(i / 8) * 5, 4.6, 3.4, 0.8, 0.8, 'F');
+    d.setTextColor(...PG.ink); d.setFont('helvetica', 'bold'); d.setFontSize(11); d.text(String(n), x0, y + 21);
+    d.setFont('helvetica', 'normal'); d.setFontSize(8); d.setTextColor(...PG.mute); d.text(l, x0 + 8, y + 21);
+  });
+  d.setFontSize(7.5); d.text([cfg.product_code, hasAudio(cfg) ? 'Audio I/O card' : '', cfg.reflock ? 'RefLock' : '', cfg.redundant_psu ? 'Redundant PSU' : '', cfg.fan_filter || is2U(cfg.model) ? 'Fan filter' : ''].filter(Boolean).join('   |   '), PG.m + 6, y + 27);
+  return y + 36;
+}
+function pdfTable(d, y, cols, rows, opt = {}) {
+  // cols: [{h, w, align}] ; rows: array of arrays of strings ; repeats header on new pages
+  const pad = 2.2, fs = opt.fs || 8.6, lh = fs * 0.3528 * 1.35;
+  const head = () => {
+    d.setFillColor(...PG.ink); d.rect(PG.m, y, CW, 8, 'F'); d.setFont('helvetica', 'bold'); d.setFontSize(8.2); d.setTextColor(255, 255, 255);
+    const hl = cols.map(c => d.splitTextToSize(c.h, c.w - 2 * pad)), hh = Math.max(...hl.map(l => l.length)) > 1 ? 11 : 8;
+    d.setFillColor(...PG.ink); d.rect(PG.m, y, CW, hh, 'F');
+    let x = PG.m; cols.forEach((c, i) => { const tx = c.align === 'right' ? x + c.w - pad : c.align === 'center' ? x + c.w / 2 : x + pad; d.text(hl[i], tx, y + (hh === 8 ? 5.3 : 4.4), { align: c.align || 'left' }); x += c.w; }); y += hh;
+  };
+  head();
+  rows.forEach((r, ri) => {
+    d.setFontSize(fs);
+    const cells = r.map((v, i) => d.splitTextToSize(String(v ?? ''), cols[i].w - 2 * pad));
+    const hgt = Math.max(...cells.map(c => c.length)) * lh + 2 * pad + 0.6;
+    if (y + hgt > PG.h - 20) { d.addPage(); y = opt.onPage ? opt.onPage() : 18; head(); d.setFontSize(fs); }
+    if (opt.zebra && ri % 2) { d.setFillColor(...PG.soft); d.rect(PG.m, y, CW, hgt, 'F'); }
+    let x = PG.m;
+    cells.forEach((lines, i) => {
+      const c = cols[i]; d.setTextColor(...PG.ink); d.setFont('helvetica', (opt.bold || []).includes(i) ? 'bold' : 'normal');
+      const tx = c.align === 'right' ? x + c.w - pad : c.align === 'center' ? x + c.w / 2 : x + pad;
+      d.text(lines, tx, y + pad + lh * 0.8, { align: c.align || 'left' }); x += c.w;
+    });
+    d.setDrawColor(...PG.line); d.setLineWidth(0.2);
+    if (opt.grid) { let gx = PG.m; d.line(gx, y, gx, y + hgt); cols.forEach(cc => { gx += cc.w; d.line(gx, y, gx, y + hgt); }); }
+    y += hgt; d.line(PG.m, y, PG.w - PG.m, y);
+  });
+  return y;
+}
+
+/* ---------- Output 1 and 2: quote with short description ---------- */
+function quoteData(ctx) {
+  const c = ctx.c, cfg = ctx.cfg, q = ctx.cq, amt = Math.round(Number(q.quote_inr));
+  return { no: `${c.case_no}-R${q.revision}`, amt, desc: shortDesc(cfg), code: cfg.product_code,
+    meta: [['Quote no', `${c.case_no}-R${q.revision}`], ['Date', today()], ['Project', c.project_name], ['Valid till', q.valid_till ? fdate(q.valid_till) : 'On request'], ['Partner', c.partner_name], ['Prepared by', ctx.presales || '-']],
+    terms: ['Prices are in Indian Rupees for the configuration described, quoted as a single line item.', 'Taxes extra as applicable.'].concat(q.valid_till ? ['This quote is valid until the date shown above.'] : []) };
+}
+async function quotePdf(ctx) {
+  await need('jspdf'); const d = pdfNew(), Q = quoteData(ctx);
+  let y = pdfHeader(d, 'QUOTATION', Q.no);
+  y = pdfMeta(d, Q.meta, y) + 2;
+  const cols = [{ h: 'Sr', w: 10, align: 'center' }, { h: 'Description', w: 98 }, { h: 'Qty', w: 14, align: 'center' }, { h: 'Unit price (INR)', w: 28, align: 'right' }, { h: 'Amount (INR)', w: CW - 150, align: 'right' }];
+  y = pdfTable(d, y, cols, [['1', Q.desc + '\nItem code: ' + Q.code, '1', inr(Q.amt), inr(Q.amt)]], { fs: 9 });
+  y += 2; d.setFillColor(...PG.soft); d.rect(PG.m + 108, y, CW - 108, 10, 'F'); d.setDrawColor(...PG.amber); d.setLineWidth(0.6); d.line(PG.m + 108, y, PG.w - PG.m, y);
+  d.setFont('helvetica', 'bold'); d.setFontSize(10.5); d.setTextColor(...PG.ink); d.text('Total (INR)', PG.m + 112, y + 6.6); d.text(inr(Q.amt), PG.w - PG.m - 2.2, y + 6.6, { align: 'right' });
+  y = pdfPorts(d, ctx.cfg, y + 20);
+  d.setFont('helvetica', 'bold'); d.setFontSize(9); d.setTextColor(...PG.ink); d.text('Terms', PG.m, y + 2);
+  d.setFont('helvetica', 'normal'); d.setFontSize(8.5); d.setTextColor(...PG.mute); Q.terms.forEach((t, i) => d.text('•  ' + t, PG.m, y + 8 + i * 5));
+  pdfFooter(d); d.save(`Quote_${safe(ctx.c.project_name)}_${Q.no}.pdf`);
+}
+const XL = { ink: 'FF1B1D21', mute: 'FF646A75', soft: 'FFF8F6F2', amber: 'FFF7941D', line: 'FFDEDAD2', white: 'FFFFFFFF' };
+const INRFMT = '[>=10000000]##\\,##\\,##\\,##0;[>=100000]##\\,##\\,##0;##,##0';
+const thin = { style: 'thin', color: { argb: XL.line } };
+const box = { top: thin, left: thin, bottom: thin, right: thin };
+function xlHead(row) { row.eachCell(c => { c.font = { bold: true, color: { argb: XL.white } }; c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: XL.ink } }; c.alignment = { vertical: 'middle', wrapText: true, horizontal: c.alignment && c.alignment.horizontal }; c.border = box; }); row.height = 22; }
+const estLines = (txt, widthChars) => String(txt || '').split('\n').reduce((s, p) => s + Math.max(1, Math.ceil(p.length / (widthChars * 1.18))), 0);
+function xlFont(wb) { wb.eachSheet(ws => ws.eachRow({ includeEmpty: true }, r => r.eachCell({ includeEmpty: true }, c => { c.font = Object.assign({ size: 10 }, c.font || {}, { name: 'Arial' }); }))); }
+async function quoteXlsx(ctx) {
+  await need('exceljs'); const Q = quoteData(ctx), wb = new ExcelJS.Workbook(); wb.creator = 'Quote Desk';
+  const ws = wb.addWorksheet('Quote', { views: [{ showGridLines: false }], pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: 0.5, right: 0.5, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3 } } });
+  ws.columns = [{ width: 12 }, { width: 58 }, { width: 8 }, { width: 18 }, { width: 20 }];
+  ws.mergeCells('A1:C1'); ws.getCell('A1').value = 'Cavitak Marketing Pvt. Ltd.'; ws.getCell('A1').font = { bold: true, size: 15, color: { argb: XL.ink } };
+  ws.mergeCells('D1:E1'); ws.getCell('D1').value = 'QUOTATION'; ws.getCell('D1').font = { bold: true, size: 15, color: { argb: XL.ink } }; ws.getCell('D1').alignment = { horizontal: 'right' };
+  ws.mergeCells('A2:C2'); ws.getCell('A2').value = 'Authorised distributor for tvONE in India'; ws.getCell('A2').font = { size: 9, color: { argb: XL.mute } };
+  ws.mergeCells('D2:E2'); ws.getCell('D2').value = Q.no; ws.getCell('D2').font = { size: 9, color: { argb: XL.mute } }; ws.getCell('D2').alignment = { horizontal: 'right' };
+  ws.getRow(1).height = 24; ['A3', 'B3', 'C3', 'D3', 'E3'].forEach(a => ws.getCell(a).border = { bottom: { style: 'medium', color: { argb: XL.amber } } });
+  let r = 5;
+  for (let i = 0; i < Q.meta.length; i += 2) {
+    const [k1, v1] = Q.meta[i], [k2, v2] = Q.meta[i + 1] || ['', ''];
+    ws.getCell(r, 1).value = k1; ws.getCell(r, 2).value = v1; ws.getCell(r, 4).value = k2; ws.getCell(r, 5).value = v2;
+    [1, 4].forEach(cc => ws.getCell(r, cc).font = { size: 9, color: { argb: XL.mute } }); [2, 5].forEach(cc => ws.getCell(r, cc).font = { bold: true }); ws.getCell(r, 5).alignment = { horizontal: 'right' };
+    r++;
+  }
+  r += 1; const hr = ws.getRow(r); hr.values = ['Sr', 'Description', 'Qty', 'Unit price (INR)', 'Amount (INR)'];
+  [1, 3].forEach(c => hr.getCell(c).alignment = { horizontal: 'center' }); [4, 5].forEach(c => hr.getCell(c).alignment = { horizontal: 'right' }); xlHead(hr);
+  const lr = ws.getRow(++r), first = r; lr.values = [1, Q.desc + '\nItem code: ' + Q.code, 1, Q.amt, { formula: `C${r}*D${r}`, result: Q.amt }];
+  lr.eachCell(c => { c.border = box; c.alignment = { vertical: 'top', wrapText: true }; }); lr.getCell(1).alignment = { horizontal: 'center', vertical: 'top' }; lr.getCell(3).alignment = { horizontal: 'center', vertical: 'top' };
+  [4, 5].forEach(c => { lr.getCell(c).numFmt = INRFMT; lr.getCell(c).alignment = { horizontal: 'right', vertical: 'top' }; }); lr.height = estLines(Q.desc + '\nx', 62) * 15 + 8;
+  const tr = ws.getRow(++r); tr.getCell(4).value = 'Total (INR)'; tr.getCell(5).value = { formula: `SUM(E${first}:E${first})`, result: Q.amt };
+  [4, 5].forEach(c => { const cl = tr.getCell(c); cl.font = { bold: true, size: 11 }; cl.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: XL.soft } }; cl.border = { top: { style: 'medium', color: { argb: XL.amber } }, bottom: thin }; cl.alignment = { horizontal: 'right' }; });
+  tr.getCell(5).numFmt = INRFMT; tr.height = 22;
+  r += 2; ws.getCell(r, 1).value = 'Processor configuration'; ws.getCell(r, 1).font = { bold: true };
+  const cfg = ctx.cfg; [['Item code', cfg.product_code], ['Outputs 4K@60 HDMI', cfg.out_4k60], ['Inputs 4K@60 HDMI', cfg.in_4k60], ['Inputs 4K@30 HDMI', cfg.in_4k30], ['RefLock inputs', cfg.reflock], ['Audio I/O card (slot 11)', hasAudio(cfg) ? 'Yes' : 'No'], ['Redundant power supply', cfg.redundant_psu ? 'Yes' : 'No'], ['Fan filter', cfg.fan_filter || is2U(cfg.model) ? 'Yes' : 'No']]
+    .forEach(([k, v]) => { r++; ws.getCell(r, 1).value = k; ws.mergeCells(r, 1, r, 2); ws.getCell(r, 1).font = { color: { argb: XL.mute } }; ws.mergeCells(r, 3, r, 5); ws.getCell(r, 3).value = v; ws.getCell(r, 3).alignment = { horizontal: 'left' }; ws.getCell(r, 3).font = { bold: true }; ws.getRow(r).eachCell({ includeEmpty: true }, cl => cl.border = { bottom: thin }); });
+  r += 2; ws.getCell(r, 1).value = 'Terms'; ws.getCell(r, 1).font = { bold: true };
+  Q.terms.forEach(t => { r++; ws.mergeCells(r, 1, r, 5); ws.getCell(r, 1).value = '•  ' + t; ws.getCell(r, 1).font = { size: 9, color: { argb: XL.mute } }; });
+  ws.headerFooter.oddFooter = '&L&8Cavitak Marketing Pvt. Ltd.&R&8Page &P of &N';
+  xlFont(wb);
+  await saveWb(wb, `Quote_${safe(ctx.c.project_name)}_${Q.no}.xlsx`);
+}
+
+/* ---------- Output 3 and 4: tender spec (summary + itemised table) ---------- */
+async function tenderXlsx(ctx) {
+  await need('exceljs'); const cfg = ctx.cfg, c = ctx.c, T = tenderFor(cfg), wb = new ExcelJS.Workbook(); wb.creator = 'Quote Desk';
+  const name = T ? T.name : 'CALICO PRO ' + cfg.model, short = T ? T.short : shortDesc(cfg), long = T ? T.long : specRows(cfg).join(' '), rows = T ? T.rows : specRows(cfg);
+  const su = wb.addWorksheet('Summary', { views: [{ state: 'frozen', ySplit: 1, showGridLines: false }], pageSetup: { paperSize: 9, orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+  su.columns = [{ header: 'Sr. No.', width: 8 }, { header: 'Model', width: 16 }, { header: 'Item Code', width: 15 }, { header: 'Short Description', width: 34 }, { header: 'Long Tender Specification', width: 165 }, { header: 'Make', width: 20 }];
+  xlHead(su.getRow(1));
+  const sr = su.addRow([1, name, cfg.model, short, long, T ? T.make : 'tvONE']);
+  sr.eachCell(cl => { cl.alignment = { vertical: 'top', wrapText: true }; cl.border = box; }); sr.getCell(1).alignment = { vertical: 'top', horizontal: 'center' };
+  sr.getCell(5).font = { size: 9 }; sr.height = Math.min(409, estLines(long, 165 * 1.12) * 12 + 10);
+  su.headerFooter.oddFooter = `&L&8${c.project_name} · ${c.case_no}&R&8Page &P of &N`;
+  const ws = wb.addWorksheet(name.slice(0, 31), { views: [{ state: 'frozen', ySplit: 1, showGridLines: false }], pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, printTitlesRow: '1:1' } });
+  ws.columns = [{ header: 'Sr. No.', width: 8 }, { header: 'Technical Specification / Requirement', width: 78 }, { header: 'Compliance (Yes/No)', width: 14 }, { header: 'Remarks', width: 26 }];
+  xlHead(ws.getRow(1)); ws.getRow(1).height = 30; ws.getRow(1).getCell(1).alignment = { horizontal: 'center', vertical: 'middle' }; ws.getRow(1).getCell(3).alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+  rows.forEach((t, i) => {
+    const rr = ws.addRow([i + 1, t, '', '']); rr.eachCell({ includeEmpty: true }, cl => { cl.border = box; cl.alignment = { vertical: 'top', wrapText: true }; });
+    rr.getCell(1).alignment = { vertical: 'top', horizontal: 'center' }; rr.height = estLines(t, 78) * 15 + 4;
+    if (i % 2) rr.eachCell({ includeEmpty: true }, cl => cl.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: XL.soft } });
+  });
+  ws.headerFooter.oddFooter = `&L&8${c.project_name} · ${c.case_no}&R&8Page &P of &N`;
+  xlFont(wb);
+  await saveWb(wb, `Tender_Spec_${safe(c.project_name)}_${c.case_no}.xlsx`);
+}
+async function tenderPdf(ctx) {
+  await need('jspdf'); const d = pdfNew(), c = ctx.c, cfg = ctx.cfg, T = tenderFor(cfg);
+  const name = T ? T.name : 'CALICO PRO ' + cfg.model, short = T ? T.short : shortDesc(cfg), long = T ? T.long : specRows(cfg).join(' '), rows = T ? T.rows : specRows(cfg);
+  let y = pdfHeader(d, 'TENDER SPECIFICATION', c.case_no);
+  y = pdfMeta(d, [['Project', c.project_name], ['Date', today()], ['Model', name], ['Item code', cfg.model], ['Make', T ? T.make : 'tvONE'], ['Partner', c.partner_name]], y) + 2;
+  // short description band
+  d.setFont('helvetica', 'bold'); d.setFontSize(10); const sl = d.splitTextToSize(short, CW - 8);
+  d.setFillColor(...PG.soft); d.roundedRect(PG.m, y, CW, sl.length * 5 + 6, 2, 2, 'F'); d.setTextColor(...PG.ink); d.text(sl, PG.m + 4, y + 6.5); y += sl.length * 5 + 12;
+  d.setFont('helvetica', 'bold'); d.setFontSize(9.5); d.text('Long tender specification', PG.m, y); y += 5;
+  d.setFont('helvetica', 'normal'); d.setFontSize(8.8); d.setTextColor(...PG.ink);
+  const lines = d.splitTextToSize(long, CW), lh = 8.8 * 0.3528 * 1.5;
+  const top = () => pdfHeader(d, 'TENDER SPECIFICATION', c.case_no);
+  lines.forEach((ln, i) => { if (y > PG.h - 22) { d.addPage(); y = top(); d.setFont('helvetica', 'normal'); d.setFontSize(8.8); d.setTextColor(...PG.ink); } const last = i === lines.length - 1; d.text(ln, PG.m, y, last ? {} : { align: 'justify', maxWidth: CW }); y += lh; });
+  d.addPage(); y = top();
+  d.setFont('helvetica', 'bold'); d.setFontSize(10); d.setTextColor(...PG.ink); d.text(`Itemised compliance statement: ${name.replace('CALICO PRO', 'Calico Pro')}`, PG.m, y); y += 5;
+  const cols = [{ h: 'Sr.', w: 12, align: 'center' }, { h: 'Technical specification / requirement', w: 100 }, { h: 'Compliance (Yes/No)', w: 26, align: 'center' }, { h: 'Remarks', w: CW - 138 }];
+  pdfTable(d, y, cols, rows.map((t, i) => [String(i + 1), t, '', '']), { zebra: true, grid: true, fs: 8.6, onPage: top });
+  pdfFooter(d); d.save(`Tender_Spec_${safe(c.project_name)}_${c.case_no}.pdf`);
+}
+async function saveWb(wb, name) {
+  const buf = await wb.xlsx.writeBuffer(); const url = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  const a = document.createElement('a'); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+/* ---------- New case: brand picker ---------- */
+async function pickBrand() { await flushAuto(); show('vBrand'); setTab('new'); }
+$('backFromBrand').onclick = loadCases;
+document.querySelectorAll('[data-brand]').forEach(b => b.onclick = () => b.dataset.brand === 'brightsign' ? openBsEditor(null) : openEditor(null));
+
+/* ---------- BrightSign case (presales, or lead creating one) ----------
+   Presales pick products and generate the quote themselves at the brand defaults (CF 120, margin 35%).
+   A discount goes to the product lead as a request; the approved terms carry into later quotes. */
+let BS = null, CAT = null, BGRP = 'players', BQ = '', BSAVING = null;
+const PLAYER_GROUPS = ['AU', 'LS', 'HD', 'XD', 'XT', 'XC'];
+const grpOf = g => PLAYER_GROUPS.includes(g) ? 'players' : ['SUPPORT', 'SVC', 'TRAINING'].includes(g) ? 'svc' : g;
+const BS_GROUPS = [['sel', 'Selected'], ['players', 'Players'], ['all', 'All']];
+const BS_TAG = 'Authorised distributor for BrightSign in India';
+let CMSR = null;
+async function loadCat() { if (!CAT) CAT = await rpc('qd_bs_catalog'); CMSR = await rpc('qd_cms_rates'); return CAT; }
+const catById = id => (CAT || []).find(p => p.price_id === id);
+const isPlayer = p => !!p && PLAYER_GROUPS.includes(p.group);
+const isWifi = p => !!p && /^WD10[45]$/.test(p.sku);
+const pickable = p => p.group !== 'STORAGE' && p.group !== 'CLOUD' && !isWifi(p);          // storage and Wi-Fi are chosen per player build
+const canWifi = p => !!p && ['HD', 'XD', 'XT'].includes(p.group);
+const wifiItem = () => (CAT || []).find(p => p.sku === 'WD105');
+const storageFor = p => !p || p.group === 'AU' || p.variant === 'win' ? [] : (CAT || []).filter(s => s.group === 'STORAGE' && (p.ssd || !/SSD/i.test(s.sku)));
+const storageLabel = s => ((s.sku + ' ' + s.desc).match(/(\d+)\s*GB/i) || [, '?'])[1] + ' GB ' + (/SSD/i.test(s.sku) ? 'SSD' : 'microSD');
+const playerQty = id => BS.builds.filter(b => b.player === id).reduce((t, b) => t + b.qty, 0);
+function bsLines() {
+  const m = new Map(), add = (id, q) => { if (q > 0 && catById(id)) m.set(id, (m.get(id) || 0) + q); };
+  const bl = BS.builds.filter(b => b.qty > 0 && catById(b.player));
+  (CAT || []).filter(isPlayer).forEach(p => add(p.price_id, bl.filter(b => b.player === p.price_id).reduce((t, b) => t + b.qty, 0)));
+  (CAT || []).filter(x => x.group === 'STORAGE').forEach(x => add(x.price_id, bl.filter(b => b.storage === x.price_id).reduce((t, b) => t + b.qty, 0)));
+  const w = wifiItem(); if (w) add(w.price_id, bl.filter(b => b.wifi && canWifi(catById(b.player))).reduce((t, b) => t + b.qty, 0));
+  Object.entries(BS.qty).forEach(([k, v]) => { const p = catById(k); if (p && pickable(p) && !isPlayer(p)) add(k, v); });
+  return [...m].map(([price_id, qty]) => ({ price_id, qty }));
+}
+const bsSig = () => JSON.stringify([bsLines(), BS.cms || null]);
+const bsDirty = () => BS.saved !== bsSig();
+function setBPane(t) { document.querySelectorAll('[data-btab]').forEach(b => b.setAttribute('aria-pressed', b.dataset.btab === t)); document.querySelectorAll('[data-bpane]').forEach(p => p.hidden = p.dataset.bpane !== t); }
+document.querySelectorAll('[data-btab]').forEach(b => b.onclick = () => setBPane(b.dataset.btab));
+
+async function openBsEditor(id, pane) {
+  errBox('bErr', null);
+  try {
+    await loadCat();
+    if (id) {
+      const r = await rpc('qd_case_get', { p_case: id });
+      BS = r.case; BS.cq = r.customer_quote; BS.presales_name = r.presales_name; BS.qty = {}; BS.builds = [];
+      const saved = (BS.bs_req || {}).builds;
+      if (Array.isArray(saved)) BS.builds = saved.filter(b => catById(b.player)).map(b => ({ player: b.player, qty: Number(b.qty), storage: b.storage || '', wifi: !!b.wifi }));
+      (r.bs_lines || []).forEach(l => { const p = catById(l.price_id); if (!p) return;
+        if (isPlayer(p)) { if (!Array.isArray(saved)) BS.builds.push({ player: p.price_id, qty: Number(l.qty), storage: '', wifi: false }); }
+        else if (pickable(p)) BS.qty[l.price_id] = (BS.qty[l.price_id] || 0) + Number(l.qty); });
+    } else BS = { id: null, case_no: null, status: 'draft', brand: 'brightsign', project_name: '', partner_name: '', territory: ME.territory, bs_req: {}, qty: {}, builds: [] };
+  } catch (e) { alert(e.message); return; }
+  BS.cms = (BS.bs_req || {}).cms || null; BS.saved = bsSig();
+  const req = BS.bs_req || {};
+  $('bCaseNo').textContent = BS.case_no || 'New BrightSign case';
+  $('bTerritory').textContent = 'Territory · ' + (BS.territory || ME.territory);
+  $('bProject').value = BS.project_name; $('bPartner').value = BS.partner_name;
+  
+  const editable = isEditable(BS.status);
+  ['bProject', 'bPartner'].forEach(i => $(i).disabled = !editable);
+  BQ = ''; $('bSearch').value = ''; BGRP = bsLines().length ? 'sel' : 'players';
+  drawBsProducts(); drawBsCms(); drawBsState();
+  setBPane(pane || (BS.cq ? 'quote' : id ? 'products' : 'details'));
+  show('vBs'); setTab(id ? 'cases' : 'new');
+}
+function drawBsState() {
+  const st = BS.status, s = STATUS[st] || [st, 'mut'], editable = isEditable(st), dirty = bsDirty();
+  $('bStatus').className = 'chip ' + s[1]; $('bStatus').textContent = st === 'submitted' ? 'Discount requested' : s[0];
+  let bn = '';
+  if (st === 'submitted') bn = `Your discount request of ${Number(BS.disc_request_pct)}% is with the product lead. The current quote stays valid meanwhile.`;
+  else if (['quoted', 'revised'].includes(st) && BS.return_note) bn = 'Discount request declined by the product lead: ' + BS.return_note;
+  else if (['quoted', 'revised'].includes(st) && dirty) bn = 'Products or CMS changed. Tap Update quote to price the new list; any approved discount carries over.';
+  else if (st === 'draft' && !BS.cq) bn = BS.id ? 'Add products, then tap Generate quote. The price comes straight away.' : '';
+  else if (['won', 'lost'].includes(st)) bn = 'This case is closed as ' + st + '.';
+  $('bBanner').hidden = !bn; $('bBanner').textContent = bn;
+  $('bSave').hidden = !editable;
+  const go = editable && (['draft', 'returned'].includes(st) || (['quoted', 'revised'].includes(st) && dirty));
+  $('bGo').hidden = !go; $('bGo').textContent = ['quoted', 'revised'].includes(st) ? 'Update quote' : 'Generate quote';
+  drawBsQuote();
+}
+function bsMatches(p) {
+  const q = BQ.trim().toLowerCase();
+  if (q && ![p.sku, p.desc, p.tag, p.group].join(' ').toLowerCase().includes(q)) return false;
+  if (q) return true;   // search looks across all groups
+  if (BGRP === 'all') return true;
+  if (BGRP === 'sel') return isPlayer(p) ? playerQty(p.price_id) > 0 : (BS.qty[p.price_id] || 0) > 0;
+  return grpOf(p.group) === BGRP;
+}
+function drawBsProducts() {
+  const editable = isEditable(BS.status), sel = bsLines();
+  const g = $('bGroups'); g.replaceChildren();
+  BS_GROUPS.forEach(([k, lab]) => {
+    if (k === 'sel' && !sel.length) return;
+    if (!['sel', 'all'].includes(k) && !(CAT || []).some(p => pickable(p) && grpOf(p.group) === k)) return;
+    const nSel = (CAT || []).filter(p => pickable(p) && (isPlayer(p) ? playerQty(p.price_id) : BS.qty[p.price_id] || 0) > 0).length;
+    const b = el('button', null, k === 'sel' ? `${lab} (${nSel})` : lab); b.setAttribute('aria-pressed', BGRP === k && !BQ.trim());
+    b.onclick = () => { BGRP = k; BQ = ''; $('bSearch').value = ''; drawBsProducts(); }; g.append(b);
+  });
+  const list = $('bProducts'); list.replaceChildren();
+  const items = (CAT || []).filter(p => pickable(p) && bsMatches(p));
+  if (!items.length) list.append(el('p', 'note', BGRP === 'sel' ? 'Nothing selected yet.' : 'No product matches.'));
+  items.forEach(p => {
+    const pl = isPlayer(p), n = pl ? playerQty(p.price_id) : BS.qty[p.price_id] || 0, row = el('div', 'prod' + (n ? ' on' : ''));
+    const info = el('div'); const t = el('div', 'row'); t.style.gap = '8px'; t.append(el('b', null, p.sku));
+    if (p.series) t.append(el('span', 'chip ' + (p.series === '6' ? 'info' : 'ok'), 'Series ' + p.series));
+    if (p.group === 'XC') t.append(el('span', 'chip warn', p.variant === 'win' ? 'Windows OS' : 'BrightSign OS'));
+    info.append(t, el('span', 'note', p.tag && p.tag !== p.desc ? p.tag : p.desc));
+    const q = el('div', 'qty'), minus = el('button', null, '−'), inp = el('input'), plus = el('button', null, '+');
+    minus.type = plus.type = 'button'; minus.setAttribute('aria-label', 'Fewer ' + p.sku); plus.setAttribute('aria-label', 'More ' + p.sku);
+    inp.type = 'number'; inp.min = '0'; inp.max = '100000'; inp.value = n; inp.setAttribute('aria-label', 'Quantity of ' + p.sku);
+    [minus, inp, plus].forEach(x => x.disabled = !editable);
+    const set = v => {
+      v = Math.max(0, Math.min(100000, Math.floor(+v || 0)));
+      if (pl) setPlayerQty(p.price_id, v); else if (v) BS.qty[p.price_id] = v; else delete BS.qty[p.price_id];
+      errBox('bErr', null); if (pl) return bsChanged(); touched('bs'); inp.value = v; row.classList.toggle('on', !!v); bsCount(); drawBsState();
+    };
+    minus.onclick = () => set(n - 1); plus.onclick = () => set((pl ? playerQty(p.price_id) : BS.qty[p.price_id] || 0) + 1);
+    inp.onchange = () => set(inp.value); inp.onfocus = () => inp.select();
+    q.append(minus, inp, plus); row.append(info, q);
+    if (pl && n) row.append(buildList(p, editable));
+    list.append(row);
+  });
+  bsCount();
+}
+// Total for a player: grow the last build, shrink from the last build backwards.
+function setPlayerQty(id, v) {
+  const mine = BS.builds.filter(b => b.player === id); let cur = mine.reduce((t, b) => t + b.qty, 0);
+  if (v > cur) { if (mine.length) mine[mine.length - 1].qty += v - cur; else BS.builds.push({ player: id, qty: v, storage: '', wifi: false }); }
+  for (let i = mine.length - 1; i >= 0 && cur > v; i--) { const take = Math.min(mine[i].qty, cur - v); mine[i].qty -= take; cur -= take; }
+  BS.builds = BS.builds.filter(b => b.qty > 0);
+}
+// Redraw after the current event finishes, once, so a blur during a redraw can not start a second one.
+let BSREDRAW = false;
+function bsChanged() { touched('bs'); if (BSREDRAW) return; BSREDRAW = true; setTimeout(() => { BSREDRAW = false; const y = window.scrollY; drawBsProducts(); drawBsCms(); drawBsState(); window.scrollTo(0, y); }, 0); }
+function buildList(p, editable) {
+  const box = el('div', 'builds'), opts = storageFor(p), wifi = canWifi(p), mine = BS.builds.filter(b => b.player === p.price_id);
+  if (!opts.length && !wifi) return box;
+  mine.forEach((b, i) => {
+    const r = el('div', 'build');
+    const q = el('div', 'qty sm'), minus = el('button', null, '−'), inp = el('input'), plus = el('button', null, '+');
+    minus.type = plus.type = 'button'; inp.type = 'number'; inp.min = '0'; inp.value = b.qty;
+    minus.setAttribute('aria-label', 'Fewer in this build'); plus.setAttribute('aria-label', 'More in this build'); inp.setAttribute('aria-label', 'Quantity in this build');
+    const setq = v => { b.qty = Math.max(0, Math.min(100000, Math.floor(+v || 0))); BS.builds = BS.builds.filter(x => x.qty > 0); bsChanged(); };
+    minus.onclick = () => setq(b.qty - 1); plus.onclick = () => setq(b.qty + 1); inp.onchange = () => setq(inp.value); inp.onfocus = () => inp.select();
+    q.append(minus, inp, plus); r.append(q);
+    if (opts.length) {
+      const sel = el('select'); sel.setAttribute('aria-label', 'Storage for this build');
+      [['', 'No storage']].concat(opts.map(o => [o.price_id, storageLabel(o)])).forEach(([v, l]) => { const o = el('option', null, l); o.value = v; o.selected = (b.storage || '') === v; sel.append(o); });
+      sel.onchange = () => { b.storage = sel.value; bsChanged(); }; r.append(sel);
+    }
+    if (wifi) {
+      const w = el('button', 'wifi', 'Wi-Fi'); w.type = 'button'; w.setAttribute('aria-pressed', !!b.wifi);
+      w.onclick = () => { b.wifi = !b.wifi; bsChanged(); }; r.append(w);
+    }
+    [r.querySelectorAll('button, input, select')].forEach(xs => xs.forEach(x => x.disabled = !editable));
+    box.append(r);
+  });
+  if (editable) { const add = el('button', 'addb', '+ Another build with different storage or Wi-Fi'); add.type = 'button'; add.onclick = () => { BS.builds.push({ player: p.price_id, qty: 1, storage: '', wifi: false }); bsChanged(); }; box.append(add); }
+  return box;
+}
+function bsCount() {
+  const sel = bsLines(), units = sel.reduce((s, l) => s + l.qty, 0);
+  const players = sel.filter(l => PLAYER_GROUPS.includes((catById(l.price_id) || {}).group)).reduce((s, l) => s + l.qty, 0);
+  $('bCount').textContent = sel.length ? `${players} player${players === 1 ? '' : 's'} · ${sel.length} line${sel.length > 1 ? 's' : ''}` : 'Nothing selected';
+  const nostore = BS.builds.filter(b => b.qty > 0 && !b.storage && storageFor(catById(b.player)).length).reduce((t, b) => t + b.qty, 0);
+  if (!players && BS.cms) { BS.cms = null; drawBsCms(); }    // no players, no licences
+  const h = $('bHint'); let t = '';
+  if (players && !BS.cms) t = `Tip: no CMS chosen yet. Add one on the CMS tab if the customer needs content management.`;
+  if (nostore) t = (t ? t + ' ' : '') + `${nostore} player${nostore > 1 ? 's have' : ' has'} no storage selected.`;
+  h.hidden = !t; h.textContent = t;
+}
+$('bSearch').addEventListener('input', e => { BQ = e.target.value; drawBsProducts(); });
+['bProject', 'bPartner'].forEach(i => $(i).addEventListener('input', () => $(i).classList.remove('miss')));
+
+function qline(cells, cls) { const d = el('div', 'ql' + (cls ? ' ' + cls : '')); cells.forEach(c => d.append(typeof c === 'string' ? el('span', null, c) : c)); return d; }
+function bsQuoteTable(lines, total) {
+  const box = el('div');
+  box.append(qline(['Item', 'Qty', 'Unit, INR', 'Amount, INR'], 'h'));
+  lines.forEach(l => { const it = el('span'); it.append(el('b', 'mono', l.sku), el('span', 'note', l.desc || '')); box.append(qline([it, String(l.qty), inr(l.sell_each), inr(l.sell)])); });
+  const t = el('div', 'total qtotal'); t.append(el('span', null, 'Total, INR (taxes extra)'), el('b', null, inr(total))); box.append(t);
+  return box;
+}
+function drawBsQuote() {
+  const box = $('bQuote'); box.replaceChildren();
+  const st = BS.status, cq = BS.cq, sel = bsLines();
+  if (!cq || st === 'draft') {
+    box.append(el('h2', null, 'Quote'));
+    if (!sel.length) { box.append(el('p', 'note', 'Pick products on the Products tab, then generate the quote here.')); return; }
+    const s = el('div', 'sub'); sel.forEach(l => { const d = el('div', 'kv'); d.append(el('span', null, catById(l.price_id).sku), el('span', null, '× ' + l.qty)); s.append(d); });
+    cmsItems().forEach(x => { const d = el('div', 'kv'); d.append(el('span', null, x.desc), el('span', null, '× ' + x.qty)); s.append(d); });
+    box.append(s, el('p', 'note', 'Tap Generate quote to price these items. No approval is needed.'));
+    return;
+  }
+  const h = el('div', 'row between'); h.append(el('h2', null, `Quote ${BS.case_no}-R${cq.revision}`), el('span', 'chip ok', cq.valid_till ? 'Valid till ' + fdate(cq.valid_till) : 'Current'));
+  box.append(h, bsQuoteTable(cq.lines || [], cq.quote_inr));
+  if (Number(cq.discount_pct) > 0) box.append(el('p', 'note', `Includes the ${Number(cq.discount_pct)}% discount approved by the product lead.`));
+  const g = el('div', 'docs'), ctx = { c: BS, cq, presales: BS.presales_name || ME.full_name };
+  const mk = (label, fn) => { const b = el('button', 'btn ghost', label); b.onclick = async () => { b.disabled = true; try { await fn(ctx); } catch (e) { alert('Could not create the file: ' + e.message); } finally { b.disabled = false; } }; return b; };
+  g.append(mk('Quote Excel', bsQuoteXlsx), mk('Quote PDF', bsQuotePdf)); box.append(g);
+  if (st === 'submitted') {
+    const s = el('div', 'sub'); s.append(el('h3', null, 'Discount request sent'), el('p', 'note', `${Number(BS.disc_request_pct)}%` + (BS.disc_request_note ? ' · ' + BS.disc_request_note : '') + '. You get a revised quote here once the product lead approves.')); box.append(s);
+  } else if (['quoted', 'revised'].includes(st) && !bsDirty()) {
+    const s = el('div', 'sub'); s.append(el('h3', null, 'Need a better price?'));
+    const r = el('div', 'row'), pl = el('label', null, 'Discount %'), pi = el('input'), nl = el('label', null, 'Reason'), ni = el('input');
+    pi.type = 'number'; pi.min = '0.5'; pi.max = '50'; pi.step = '0.5'; pi.placeholder = 'e.g. 5'; pl.append(pi);
+    ni.maxLength = 300; ni.placeholder = 'e.g. competitor price, project size'; nl.append(ni); r.append(pl, nl);
+    const err = el('div', 'err'); err.hidden = true;
+    const b = el('button', 'btn', 'Ask for discount');
+    b.onclick = async () => {
+      const v = +pi.value; if (!(v > 0 && v <= 50)) { pi.classList.add('miss'); pi.focus(); return; }
+      b.disabled = true; try { await rpc('qd_bs_request_discount', { p_case: BS.id, p_pct: v, p_note: ni.value }); await openBsEditor(BS.id, 'quote'); } catch (e) { err.hidden = false; err.textContent = e.message; b.disabled = false; }
+    };
+    s.append(el('p', 'note', 'The product lead reviews the request. Once approved you get a revised quote here.'), r, err, b); box.append(s);
+  }
+}
+function bsNamesOk() {
+  const p = $('bProject').value.trim(), q = $('bPartner').value.trim();
+  $('bProject').classList.toggle('miss', !p); $('bPartner').classList.toggle('miss', !q);
+  if (!p || !q) { setBPane('details'); errBox('bErr', new Error('Enter the project name and partner\'s name.')); return false; }
+  return true;
+}
+function saveBs() { if (BSAVING) return BSAVING; BSAVING = saveBsNow().finally(() => { BSAVING = null; }); return BSAVING; }
+async function saveBsNow() {
+  if (!bsNamesOk()) return false;
+  errBox('bErr', null); $('bSave').disabled = true;
+  try {
+    const c = await rpc('qd_case_save', { p: { id: BS.id, brand: 'brightsign', project_name: $('bProject').value.trim(), partner_name: $('bPartner').value.trim(),
+      bs_lines: bsLines(), bs_req: { builds: BS.builds.filter(b => b.qty > 0).map(b => ({ player: b.player, qty: b.qty, storage: b.storage || null, wifi: !!b.wifi })), cms: BS.cms || null } } });
+    const keep = { qty: BS.qty, builds: BS.builds, cms: BS.cms, cq: c.status === 'draft' ? null : BS.cq, presales_name: BS.presales_name };
+    BS = Object.assign(c, keep); BS.saved = bsSig(); $('bCaseNo').textContent = c.case_no; drawBsState(); return true;
+  } catch (e) { errBox('bErr', e); return false; }
+  finally { $('bSave').disabled = false; }
+}
+$('bSave').onclick = async () => { if (await saveBs()) { $('bSave').textContent = 'Saved'; setTimeout(() => $('bSave').textContent = 'Save', 1500); } };
+$('bGo').onclick = async () => {
+  if (!bsLines().length) { setBPane('products'); errBox('bErr', new Error('Add at least one product.')); return; }
+  $('bGo').disabled = true;
+  try {
+    if (!(await saveBs())) return;
+    await rpc('qd_bs_quote_self', { p_case: BS.id });
+    await openBsEditor(BS.id, 'quote');
+  } catch (e) { errBox('bErr', e); }
+  finally { $('bGo').disabled = false; }
+};
+$('backFromBs').onclick = async () => { await flushAuto(); loadCases(); };
+
+/* ---------- CMS tab (BrightSign case) ----------
+   One CMS per case: BrightSign, Korbyt or Pickcel; cloud or on-premise; 1 to 5 years. Licences = players.
+   Cloud quotes one licence line; on-premise adds a one-time installation and setup line. */
+const CMS_NAMES = { brightsign: 'BrightSign CMS', korbyt: 'Korbyt CMS', pickcel: 'Pickcel CMS' };
+const nPlayers = () => BS.builds.reduce((t, b) => t + (b.qty > 0 ? b.qty : 0), 0);
+function cmsRate(v, m, item, y) { return ((CMSR || {}).rates || []).find(r => r.vendor === v && r.mode === m && r.item === item && r.term_years === (item === 'install' ? 0 : y)); }
+function cmsPriced(v, m, y) {
+  if (v === 'brightsign' && m === 'cloud') return (((CMSR || {}).bsn || []).find(x => x.years === y) || {}).priced;
+  const lic = cmsRate(v, m, 'license', y); if (!lic || !lic.priced) return false;
+  return m === 'cloud' || !!(cmsRate(v, m, 'install', 0) || {}).priced;
+}
+function cmsItems() {
+  const c = BS.cms; if (!c) return []; const n = nPlayers(), out = [];
+  if (c.vendor === 'brightsign' && c.mode === 'cloud') { const x = ((CMSR || {}).bsn || []).find(b => b.years === c.years); out.push({ sku: x ? x.sku : 'BSN.cloud', desc: `BSN.cloud ${c.years} year licence, per player`, qty: n }); }
+  else { const l = cmsRate(c.vendor, c.mode, 'license', c.years); if (l) out.push({ sku: l.sku, desc: l.desc, qty: n }); }
+  if (c.mode === 'onprem') { const i = cmsRate(c.vendor, 'onprem', 'install', 0); if (i) out.push({ sku: i.sku, desc: i.desc, qty: 1 }); }
+  return out;
+}
+function setCms(next) { BS.cms = next; touched('bs'); drawBsCms(); drawBsState(); bsCount(); }
+function drawBsCms() {
+  const box = $('bCms'); if (!box || !BS) return; box.replaceChildren();
+  const editable = isEditable(BS.status), n = nPlayers(), c = BS.cms;
+  box.append(el('h2', null, 'Content management (CMS)'));
+  if (!n) { box.append(el('p', 'note', 'Add players on the Products tab first. CMS licences are one per player.')); return; }
+  box.append(el('p', 'note', `Licences are one per player: ${n} licence${n > 1 ? 's' : ''}.`));
+  const grp = (title, items) => { const w = el('div', 'list'); w.style.gap = '6px'; w.append(el('h3', null, title)); const o = el('div', 'opts'); items.forEach(x => o.append(x)); w.append(o); box.append(w); };
+  const opt = (label, sub, on, enabled, fn) => { const b = el('button', 'opt', label); b.type = 'button'; if (sub) b.append(el('small', null, sub)); b.setAttribute('aria-pressed', !!on); b.disabled = !editable || !enabled; b.onclick = fn; return b; };
+  const anyPriced = v => ['cloud', 'onprem'].some(m => [1, 2, 3, 4, 5].some(y => cmsPriced(v, m, y)));
+  grp('CMS', [opt('No CMS', null, !c, true, () => setCms(null))].concat(Object.keys(CMS_NAMES).map(v => opt(CMS_NAMES[v], anyPriced(v) ? null : 'Rates not set yet', c && c.vendor === v, anyPriced(v), () => {
+    const m = c && cmsPriced(v, c.mode, c.years) ? c.mode : ['cloud', 'onprem'].find(mm => [1, 2, 3, 4, 5].some(y => cmsPriced(v, mm, y)));
+    const y = c && cmsPriced(v, m, c.years) ? c.years : [1, 2, 3, 4, 5].find(yy => cmsPriced(v, m, yy));
+    setCms({ vendor: v, mode: m, years: y });
+  }))));
+  if (!c) return;
+  grp('Deployment', [['cloud', 'Cloud', 'Licences only'], ['onprem', 'On-premise', 'Licences + installation and setup']].map(([m, l, sub]) => {
+    const ok = [1, 2, 3, 4, 5].some(y => cmsPriced(c.vendor, m, y));
+    return opt(l, ok ? sub : 'Rates not set yet', c.mode === m, ok, () => setCms({ ...c, mode: m, years: cmsPriced(c.vendor, m, c.years) ? c.years : [1, 2, 3, 4, 5].find(y => cmsPriced(c.vendor, m, y)) }));
+  }));
+  grp('Tenure', [1, 2, 3, 4, 5].map(y => opt(y + (y > 1 ? ' years' : ' year'), cmsPriced(c.vendor, c.mode, y) ? null : 'Not offered', c.years === y, cmsPriced(c.vendor, c.mode, y), () => setCms({ ...c, years: y }))));
+  const s = el('div', 'sub'); s.append(el('h3', null, 'On the quote'));
+  cmsItems().forEach(x => { const d = el('div', 'kv'); d.append(el('span', null, x.desc), el('span', null, '× ' + x.qty)); s.append(d); });
+  box.append(s);
+}
+
+/* ---------- CMS rates (lead) ---------- */
+let RATES = null;
+async function openRates() {
+  await flushAuto(); errBox('ratesErr', null);
+  try { RATES = await rpc('qd_cms_rates'); } catch (e) { alert(e.message); return; }
+  const box = $('ratesBox'); box.replaceChildren();
+  Object.keys(CMS_NAMES).forEach(v => {
+    const cur = v === 'brightsign' ? 'USD' : 'INR', card = el('div', 'card');
+    const h = el('div', 'row between'); h.append(el('h3', null, CMS_NAMES[v]), el('span', 'chip ' + (cur === 'USD' ? 'info' : 'warn'), cur + ' buy price')); card.append(h);
+    const wrap = el('div', 'rt'), t = el('table'), hr = el('tr');
+    ['Item', '1 year', '2 years', '3 years', '4 years', '5 years'].forEach(x => hr.append(el('th', null, x))); t.append(hr);
+    const row = (label, cells) => { const tr = el('tr'); tr.append(el('td', null, label)); cells.forEach(c => tr.append(c)); t.append(tr); };
+    const inp = r => { const td = el('td'); if (!r) { td.textContent = '-'; return td; } const i = el('input'); i.type = 'number'; i.min = '0'; i.step = cur === 'USD' ? '0.01' : '1'; i.placeholder = 'not set';
+      i.value = r.buy_price ?? ''; i.dataset.key = JSON.stringify([r.vendor, r.mode, r.item, r.term_years]); i.setAttribute('aria-label', r.desc); td.append(i); return td; };
+    if (v === 'brightsign') row('Cloud licence (BSN.cloud, from price list)', [1, 2, 3, 4, 5].map(y => { const x = (RATES.bsn || []).find(b => b.years === y); const td = el('td', 'ro', x && x.buy_price != null ? usd(x.buy_price) : '-'); return td; }));
+    else row('Cloud licence, per player', [1, 2, 3, 4, 5].map(y => inp(RATES.rates.find(r => r.vendor === v && r.mode === 'cloud' && r.item === 'license' && r.term_years === y))));
+    row('On-premise licence, per player', [1, 2, 3, 4, 5].map(y => inp(RATES.rates.find(r => r.vendor === v && r.mode === 'onprem' && r.item === 'license' && r.term_years === y))));
+    const it = inp(RATES.rates.find(r => r.vendor === v && r.mode === 'onprem' && r.item === 'install')); it.colSpan = 5;
+    row('On-premise installation and setup, one time', [it]);
+    wrap.append(t); card.append(wrap); box.append(card);
+  });
+  show('vRates');
+}
+$('cmsRates').onclick = openRates;
+$('backFromRates').onclick = loadCases;
+$('ratesSave').onclick = async () => {
+  const rates = [...document.querySelectorAll('#ratesBox input[data-key]')].map(i => { const [vendor, mode, item, term_years] = JSON.parse(i.dataset.key); return { vendor, mode, item, term_years, buy_price: i.value === '' ? null : +i.value }; });
+  if (rates.some(r => r.buy_price != null && !(r.buy_price > 0))) { errBox('ratesErr', new Error('Rates must be more than 0, or left empty.')); return; }
+  $('ratesSave').disabled = true;
+  try { const r = await rpc('qd_cms_rates_save', { p: { rates } }); CMSR = null; $('ratesSave').textContent = r.changed ? `Saved ${r.changed} change${r.changed > 1 ? 's' : ''}` : 'No changes'; setTimeout(() => $('ratesSave').textContent = 'Save rates', 1800); errBox('ratesErr', null); }
+  catch (e) { errBox('ratesErr', e); }
+  finally { $('ratesSave').disabled = false; }
+};
+
+/* ---------- Autosave ----------
+   Saves after every 3 changes, or 2.5 s after the last change. Only drafts and returned cases autosave:
+   saving a quoted case sends it back for a new quote, so that stays a deliberate tap on Save. */
+let AUTO = { n: 0, t: null, kind: null };
+function touched(kind) {
+  AUTO.kind = kind; AUTO.n++; clearTimeout(AUTO.t);
+  if (AUTO.n >= 3) autoSave(); else AUTO.t = setTimeout(autoSave, 2500);
+}
+async function autoSave() {
+  clearTimeout(AUTO.t); const kind = AUTO.kind; AUTO.n = 0; AUTO.kind = null; if (!kind) return;
+  const bs = kind === 'bs', c = bs ? BS : ED, view = bs ? 'vBs' : 'vEdit';
+  if (!c || $(view).hidden || !['draft', 'returned'].includes(c.status)) return;
+  const proj = $(bs ? 'bProject' : 'eProject').value.trim(), part = $(bs ? 'bPartner' : 'ePartner').value.trim();
+  if (!proj || !part) return;                     // nothing to save until both names are in
+  const btn = $(bs ? 'bSave' : 'eSave'), lbl = btn.textContent;
+  btn.textContent = 'Saving…';
+  const ok = await (bs ? saveBs() : saveCase());
+  btn.textContent = ok ? 'Saved' : lbl; if (ok) setTimeout(() => { if (btn.textContent === 'Saved') btn.textContent = lbl; }, 1500);
+}
+async function flushAuto() { if (AUTO.kind) await autoSave(); }
+// tvONE editor: typing, steppers and Yes/No count as changes (the PDF upload saves by itself)
+$('vEdit').addEventListener('input', e => { if (e.target.id !== 'ePdf') touched('tv'); });
+$('vEdit').addEventListener('click', e => { if (e.target.closest('[data-step], .yn button')) touched('tv'); });
+// BrightSign editor: name fields (product changes are counted where they happen; search is not a change)
+['bProject', 'bPartner'].forEach(i => $(i).addEventListener('input', () => touched('bs')));
+
+/* ---------- BrightSign review (lead): approve a discount or re-quote ---------- */
+function reviewBs(r, pane, host) {
+  const c = r.case, b = r.build || { lines: [], list_usd: 0, ok: false }, quotes = r.quotes || [], last = quotes[0], dflt = r.defaults || {};
+  const root = el('div', 'rv'), H = el('div', 'list rvh'), S = el('div', 'list rvside'), B = el('div', 'list rvbody');
+  if (!pane) { const back = el('button', 'btn ghost sm', 'Back to cases'); back.onclick = loadCases; H.append(back); }
+  const head = el('div', 'card'), t = el('div', 'row between'), asks = c.status === 'submitted' && c.disc_request_pct != null;
+  const sc = chip(c.status); if (asks) sc.textContent = 'Discount requested';
+  const tt = el('div', 'row'); tt.style.gap = '8px'; tt.append(el('span', 'bchip bs', 'BrightSign'), el('h2', null, c.project_name)); t.append(tt, sc);
+  head.append(t, el('div', 'note', `${c.partner_name} · ${c.case_no} · ${r.presales_name || ''} · ${c.territory}`));
+  const req = c.bs_req || {};
+  if (req.cms) head.append(el('div', 'note mono', `CMS: ${CMS_NAMES[req.cms.vendor]} · ${req.cms.mode === 'onprem' ? 'on-premise' : 'cloud'} · ${req.cms.years} year${req.cms.years > 1 ? 's' : ''}`));
+  const sku = id => { const x = (b.lines || []).find(l => l.price_id === id); return x ? x.sku : ''; };
+  (req.builds || []).forEach(x => { const st = x.storage ? sku(x.storage) : ''; head.append(el('div', 'note mono', `${x.qty} × ${x.sku}` + (st ? ' · ' + st : ' · no storage') + (x.wifi ? ' · Wi-Fi' : ''))); });
+  if (asks) { const bn = el('div', 'banner'); bn.append(el('b', null, `Presales asks for ${Number(c.disc_request_pct)}% discount`), document.createTextNode((c.disc_request_note ? ' · ' + c.disc_request_note : '') + ` · ${ageDays(c.disc_requested_at)}d ago`)); head.append(bn); }
+  if (c.return_note && !asks) head.append(el('div', 'note', 'Last decline note: ' + c.return_note));
+  if (isEditable(c.status)) { const eb = el('button', 'btn ghost sm', 'Edit products'); eb.onclick = () => openBsEditor(c.id, 'products'); const rr = el('div', 'row'); rr.append(eb); head.append(rr); }
+  H.append(head);
+
+  /* build-up (internal, buy price) */
+  const q = el('div', 'card'); q.append(el('h3', null, 'Price build-up (internal)'));
+  if (!(b.lines || []).length) q.append(el('p', 'note', 'No products on this case yet.'));
+  (b.lines || []).forEach(l => { const d = el('div', 'kv'); d.append(el('span', null, `${l.qty} × ${l.sku}`), el('span', null, l.inr_each != null ? `INR ${inr(l.inr_each)} · ${inr(l.inr)}` : l.usd_each == null ? 'no price' : `USD ${usd(l.usd_each)} · ${usd(l.usd)}`)); q.append(d); });
+  const tl = el('div', 'kv'); tl.append(el('span', null, 'Total USD'), el('b', 'mono', usd(b.list_usd))); q.append(tl);
+  if (Number(b.list_inr) > 0) { const ti = el('div', 'kv'); ti.append(el('span', null, 'Total INR (CMS, no CF)'), el('b', 'mono', inr(b.list_inr))); q.append(ti); }
+  (b.problems || []).forEach(p => q.append(el('div', 'err', p)));
+  if ((b.missing_prices || []).length) q.append(el('div', 'err', 'No price set for: ' + b.missing_prices.join(', ') + '. Set it under CMS rates.'));
+  B.append(q);
+
+  /* quote panel */
+  const canQuote = isEditable(c.status) && b.ok;
+  const qp = el('div', 'card'); qp.append(el('h3', null, asks ? 'Approve discount' : last ? `Re-quote (current R${last.revision})` : 'Quote'));
+  const field = (label, val, step, min, max) => { const l = el('label', null, label), i = el('input'); i.type = 'number'; i.step = step; i.min = min; if (max != null) i.max = max; i.value = val; i.disabled = !isEditable(c.status); l.append(i); return [l, i]; };
+  const [ml, mi] = field('Margin %', last ? last.margin_pct : (dflt.margin_pct ?? 35), 0.5, 0, 99);
+  const [dl, di] = field('Discount %', asks ? Number(c.disc_request_pct) : last ? last.discount_pct : 0, 0.5, 0, 100);
+  const [cl, ci] = field('CF', last ? last.cf : (dflt.cf ?? 120), 1, 1);
+  const vl = el('label', null, 'Valid till'), vi = el('input'); vi.type = 'date'; vi.disabled = !isEditable(c.status);
+  vi.value = last && last.valid_till && new Date(last.valid_till) >= new Date(new Date().toDateString()) ? last.valid_till : new Date(Date.now() + 30 * DAY).toISOString().slice(0, 10); vl.append(vi);
+  const r1 = el('div', 'row'); r1.append(ml, dl); const r2 = el('div', 'row'); r2.append(cl, vl); qp.append(r1, r2);
+  const steps = el('div', 'sub'), line = k => { const d = el('div', 'kv'), v = el('span'); d.append(el('span', null, k), v); steps.append(d); return v; };
+  const sx = line('Total USD (x)'), sl = line(Number(b.list_inr) > 0 ? 'Landing (x × CF + INR CMS)' : 'Landing (x × CF)'), sm = line('With margin'), sd = line('Discount');
+  qp.append(steps);
+  const tot = el('div', 'total qtotal'), tv = el('b'); tot.append(el('span', null, 'Quote, INR'), tv); qp.append(tot);
+  const go = el('button', 'btn');
+  const calc = () => {
+    const y = +ci.value || 0, z = Math.min(+mi.value || 0, 99.99), d = +di.value || 0, x = Number(b.list_usd), land = x * y + Number(b.list_inr || 0), pre = land / (1 - z / 100);
+    // same rounding as the server: each unit price rounded to the rupee, then times quantity; INR (CMS) lines take no CF
+    const fin = (b.lines || []).reduce((s, l) => s + Math.round((l.inr_each != null ? Number(l.inr_each) : Number(l.usd_each) * y) / (1 - z / 100) * (1 - d / 100)) * l.qty, 0);
+    sx.textContent = usd(x); sl.textContent = inr(land); sm.textContent = inr(pre); sd.textContent = '− ' + inr(pre - fin) + ' (' + d + '%)'; tv.textContent = inr(fin);
+    go.textContent = asks ? `Approve ${d}% · issue R${last ? last.revision + 1 : 0}` : last ? `Generate re-quote R${last.revision + 1}` : 'Generate quote';
+  };
+  [mi, di, ci].forEach(i => i.oninput = calc); calc();
+  if (last) qp.append(el('div', 'note', `R${last.revision}: INR ${inr(last.quote_inr)} · margin ${last.margin_pct}% · disc ${last.discount_pct}% · CF ${last.cf}`));
+  const qe = el('div', 'err'); qe.hidden = true; qp.append(qe);
+  if (isEditable(c.status)) {
+    go.disabled = !canQuote;
+    go.onclick = async () => { go.disabled = true; try { await rpc('qd_quote_create_v2', { p_case: c.id, p_margin_pct: +mi.value || 0, p_discount_pct: +di.value || 0, p_cf: +ci.value || 0, p_valid_till: vi.value || null }); await refreshAfter(c.id); } catch (e) { qe.hidden = false; qe.textContent = e.message; go.disabled = false; } };
+    qp.append(go);
+  }
+  S.append(qp);
+
+  /* actions */
+  const act = el('div', 'card');
+  if (asks) {
+    act.append(el('h3', null, 'Decline the request'), el('p', 'note', 'Presales keep the current quote and see your note.'));
+    const ta = el('textarea'); ta.placeholder = 'Why the discount is not possible'; ta.maxLength = 500; const lb = el('label', null, 'Note'); lb.append(ta);
+    const rb = el('button', 'btn ghost', 'Decline with note');
+    rb.onclick = async () => { try { await rpc('qd_case_return', { p_case: c.id, p_note: ta.value }); await refreshAfter(c.id); } catch (e) { alert(e.message); } };
+    act.append(lb, rb);
+  }
+  if (['quoted', 'revised'].includes(c.status)) {
+    act.append(el('h3', null, 'Close the case'), el('p', 'note', 'Presales can re-quote and ask for discounts until the case is closed.'));
+    const ta = el('input'); ta.placeholder = 'Reason (required)'; ta.maxLength = 300; const lb = el('label', null, 'Reason'); lb.append(ta);
+    const row = el('div', 'row'), w = el('button', 'btn', 'Won'), l = el('button', 'btn ghost', 'Lost');
+    const close = async o => { if (!ta.value.trim()) { ta.classList.add('miss'); ta.focus(); return; } try { await rpc('qd_case_close', { p_case: c.id, p_outcome: o, p_reason: ta.value }); await refreshAfter(c.id); } catch (e) { alert(e.message); } };
+    w.onclick = () => close('won'); l.onclick = () => close('lost'); row.append(w, l); act.append(lb, row);
+  }
+  if (c.close_reason) act.append(el('div', 'note', 'Closed: ' + c.close_reason));
+  if (act.childElementCount) S.append(act);
+
+  /* revisions and documents */
+  if (quotes.length) {
+    const rc = el('div', 'card'); rc.append(el('h3', null, 'Quote revisions')); const tlx = el('div', 'tl');
+    quotes.forEach((x, i) => { const d = el('div'); d.append(el('span', 'mono', `R${x.revision}${i === 0 ? ' · current' : ''} · ${fdate(x.created_at)}${x.created_by === c.created_by ? ' · by presales' : ''}`), el('span', 'mono', `INR ${inr(x.quote_inr)} · m ${x.margin_pct}% · d ${x.discount_pct}% · CF ${x.cf}`)); tlx.append(d); });
+    rc.append(tlx); B.append(rc);
+  }
+  if (r.customer_quote) {
+    const dc = el('div', 'card'); dc.append(el('h3', null, 'Customer quote'), bsQuoteTable(r.customer_quote.lines || [], r.customer_quote.quote_inr));
+    const g = el('div', 'docs'), ctx = { c, cq: r.customer_quote, presales: r.presales_name };
+    const mk = (label, fn) => { const bt = el('button', 'btn ghost', label); bt.onclick = async () => { bt.disabled = true; try { await fn(ctx); } catch (e) { alert('Could not create the file: ' + e.message); } finally { bt.disabled = false; } }; return bt; };
+    g.append(mk('Quote Excel', bsQuoteXlsx), mk('Quote PDF', bsQuotePdf)); dc.append(g); B.append(dc);
+  }
+  root.append(H, S, B); host.replaceChildren(root);
+  if (!pane) window.scrollTo(0, 0);
+}
+
+/* ---------- BrightSign quote files: one line per product ---------- */
+function bsQuoteData(ctx) {
+  const c = ctx.c, q = ctx.cq, lines = (q.lines || []).map(l => ({ ...l, sell_each: Math.round(Number(l.sell_each)), sell: Math.round(Number(l.sell)) }));
+  const cloud = lines.some(l => l.group === 'CMS' || l.group === 'CLOUD');
+  return { no: `${c.case_no}-R${q.revision}`, lines, total: lines.reduce((s, l) => s + l.sell, 0),
+    meta: [['Quote no', `${c.case_no}-R${q.revision}`], ['Date', today()], ['Project', c.project_name], ['Valid till', q.valid_till ? fdate(q.valid_till) : 'On request'], ['Partner', c.partner_name], ['Prepared by', ctx.presales || '-']],
+    terms: ['Prices are in Indian Rupees for the items and quantities listed.', 'Taxes extra as applicable.'].concat(cloud ? ['CMS licences are per player for the tenure shown.'] : [], q.valid_till ? ['This quote is valid until the date shown above.'] : []) };
+}
+async function bsQuotePdf(ctx) {
+  await need('jspdf'); const d = pdfNew(), Q = bsQuoteData(ctx);
+  let y = pdfHeader(d, 'QUOTATION', Q.no, BS_TAG);
+  y = pdfMeta(d, Q.meta, y) + 2;
+  const cols = [{ h: 'Sr', w: 9, align: 'center' }, { h: 'Item code', w: 30 }, { h: 'Description', w: 69 }, { h: 'Qty', w: 12, align: 'center' }, { h: 'Unit price (INR)', w: 27, align: 'right' }, { h: 'Amount (INR)', w: CW - 147, align: 'right' }];
+  y = pdfTable(d, y, cols, Q.lines.map((l, i) => [String(i + 1), l.sku, l.desc || '', String(l.qty), inr(l.sell_each), inr(l.sell)]), { fs: 8.6, zebra: true, bold: [1], onPage: () => pdfHeader(d, 'QUOTATION', Q.no, BS_TAG) });
+  if (y > PG.h - 60) { d.addPage(); y = pdfHeader(d, 'QUOTATION', Q.no, BS_TAG); }
+  y += 2; d.setFillColor(...PG.soft); d.rect(PG.m + 108, y, CW - 108, 10, 'F'); d.setDrawColor(...PG.amber); d.setLineWidth(0.6); d.line(PG.m + 108, y, PG.w - PG.m, y);
+  d.setFont('helvetica', 'bold'); d.setFontSize(10.5); d.setTextColor(...PG.ink); d.text('Total (INR)', PG.m + 112, y + 6.6); d.text(inr(Q.total), PG.w - PG.m - 2.2, y + 6.6, { align: 'right' });
+  y += 20;
+  d.setFont('helvetica', 'bold'); d.setFontSize(9); d.setTextColor(...PG.ink); d.text('Terms', PG.m, y);
+  d.setFont('helvetica', 'normal'); d.setFontSize(8.5); d.setTextColor(...PG.mute); Q.terms.forEach((t, i) => d.text('•  ' + t, PG.m, y + 6 + i * 5));
+  pdfFooter(d); d.save(`Quote_${safe(ctx.c.project_name)}_${Q.no}.pdf`);
+}
+async function bsQuoteXlsx(ctx) {
+  await need('exceljs'); const Q = bsQuoteData(ctx), wb = new ExcelJS.Workbook(); wb.creator = 'Quote Desk';
+  const ws = wb.addWorksheet('Quote', { views: [{ showGridLines: false }], pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: 0.5, right: 0.5, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3 } } });
+  ws.columns = [{ width: 6 }, { width: 22 }, { width: 52 }, { width: 8 }, { width: 17 }, { width: 18 }];
+  ws.mergeCells('A1:C1'); ws.getCell('A1').value = 'Cavitak Marketing Pvt. Ltd.'; ws.getCell('A1').font = { bold: true, size: 15, color: { argb: XL.ink } };
+  ws.mergeCells('D1:F1'); ws.getCell('D1').value = 'QUOTATION'; ws.getCell('D1').font = { bold: true, size: 15, color: { argb: XL.ink } }; ws.getCell('D1').alignment = { horizontal: 'right' };
+  ws.mergeCells('A2:C2'); ws.getCell('A2').value = BS_TAG; ws.getCell('A2').font = { size: 9, color: { argb: XL.mute } };
+  ws.mergeCells('D2:F2'); ws.getCell('D2').value = Q.no; ws.getCell('D2').font = { size: 9, color: { argb: XL.mute } }; ws.getCell('D2').alignment = { horizontal: 'right' };
+  ws.getRow(1).height = 24; ['A3', 'B3', 'C3', 'D3', 'E3', 'F3'].forEach(a => ws.getCell(a).border = { bottom: { style: 'medium', color: { argb: XL.amber } } });
+  let r = 5;
+  for (let i = 0; i < Q.meta.length; i += 2) {
+    const [k1, v1] = Q.meta[i], [k2, v2] = Q.meta[i + 1] || ['', ''];
+    ws.mergeCells(r, 1, r, 2); ws.getCell(r, 1).value = k1; ws.getCell(r, 3).value = v1; ws.mergeCells(r, 4, r, 5); ws.getCell(r, 4).value = k2; ws.getCell(r, 6).value = v2;
+    [1, 4].forEach(cc => ws.getCell(r, cc).font = { size: 9, color: { argb: XL.mute } }); [3, 6].forEach(cc => ws.getCell(r, cc).font = { bold: true }); ws.getCell(r, 6).alignment = { horizontal: 'right' };
+    r++;
+  }
+  r += 1; const hr = ws.getRow(r); hr.values = ['Sr', 'Item code', 'Description', 'Qty', 'Unit price (INR)', 'Amount (INR)'];
+  [1, 4].forEach(c => hr.getCell(c).alignment = { horizontal: 'center' }); [5, 6].forEach(c => hr.getCell(c).alignment = { horizontal: 'right' }); xlHead(hr);
+  const first = r + 1;
+  Q.lines.forEach((l, i) => {
+    const lr = ws.getRow(++r); lr.values = [i + 1, l.sku, l.desc || '', l.qty, l.sell_each, { formula: `D${r}*E${r}`, result: l.sell }];
+    lr.eachCell(c => { c.border = box; c.alignment = { vertical: 'top', wrapText: true }; });
+    [1, 4].forEach(c => lr.getCell(c).alignment = { horizontal: 'center', vertical: 'top' }); lr.getCell(2).font = { bold: true };
+    [5, 6].forEach(c => { lr.getCell(c).numFmt = INRFMT; lr.getCell(c).alignment = { horizontal: 'right', vertical: 'top' }; });
+    lr.height = Math.max(estLines(l.desc, 52), estLines(l.sku, 22)) * 14 + 6;
+    if (i % 2) lr.eachCell({ includeEmpty: true }, c => c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: XL.soft } });
+  });
+  const tr = ws.getRow(++r); tr.getCell(5).value = 'Total (INR)'; tr.getCell(6).value = { formula: `SUM(F${first}:F${r - 1})`, result: Q.total };
+  [5, 6].forEach(c => { const cl = tr.getCell(c); cl.font = { bold: true, size: 11 }; cl.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: XL.soft } }; cl.border = { top: { style: 'medium', color: { argb: XL.amber } }, bottom: thin }; cl.alignment = { horizontal: 'right' }; });
+  tr.getCell(6).numFmt = INRFMT; tr.height = 22;
+  r += 2; ws.getCell(r, 1).value = 'Terms'; ws.getCell(r, 1).font = { bold: true };
+  Q.terms.forEach(t => { r++; ws.mergeCells(r, 1, r, 6); ws.getCell(r, 1).value = '•  ' + t; ws.getCell(r, 1).font = { size: 9, color: { argb: XL.mute } }; });
+  ws.headerFooter.oddFooter = '&L&8Cavitak Marketing Pvt. Ltd.&R&8Page &P of &N';
+  xlFont(wb);
+  await saveWb(wb, `Quote_${safe(ctx.c.project_name)}_${Q.no}.xlsx`);
+}
+
+
+boot();
+</script>
+</body>
+</html>
