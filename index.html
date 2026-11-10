@@ -179,6 +179,20 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
 .ql .note{display:block}
 @media (max-width:520px){.ql{grid-template-columns:minmax(0,1fr) 34px 96px}.ql>span:nth-child(3){display:none}}
 @media (pointer:coarse){.seg button{min-height:40px} nav.tabs button{min-height:44px} .qty button{width:40px;height:40px} .qty.sm button{width:36px;height:36px} .qty.sm input{min-height:36px} .wifi{min-height:40px;padding:8px 16px} .addb{min-height:40px} .filters button{min-height:36px;padding:8px 14px} .btn.sm{min-height:40px}}
+.pplab{position:relative}
+.pp{position:absolute;left:0;right:0;top:100%;margin-top:4px;z-index:25;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.14);max-height:280px;overflow:auto;padding:4px}
+.pp button{display:block;width:100%;text-align:left;border:0;background:none;color:var(--fg);font:500 14px var(--body);padding:10px 12px;border-radius:10px;cursor:pointer}
+.pp button:hover,.pp button:focus-visible{background:var(--panel2);outline:0}
+.pp button.add{color:var(--accent);font-weight:600}
+.pp .note{padding:8px 12px}
+.picked{font:500 11px var(--body);color:var(--ok)} .picked.no{color:var(--mute)}
+.inbox{display:flex;flex-direction:column;gap:4px}
+.inbox .ev{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;border:0;background:var(--panel2);border-radius:12px;padding:9px 12px;text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
+.inbox .ev span:first-child{min-width:0} .inbox .ev .note{white-space:nowrap}
+.gst{display:flex;justify-content:space-between;font:500 13px var(--mono);color:var(--mute);padding:3px 0}
+.adm{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.mp{display:grid;grid-template-columns:minmax(0,1fr) 120px auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+.mp input{min-height:38px;padding:6px 10px;font:500 13px var(--mono)}
 .toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);max-width:min(92vw,520px);background:var(--fg);color:var(--panel);padding:11px 18px;border-radius:14px;font:500 13px var(--body);z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.18)}
 .qhint{font-size:12px;color:var(--mute)} .qhint.bad{color:var(--bad)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -218,8 +232,9 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
   <section id="vList" hidden>
     <div class="split" id="listSplit">
       <div class="list">
-        <div class="row between" id="listHead"><h2 id="listTitle">My cases</h2><div class="row"><button class="btn ghost sm" id="cmsRates" hidden>CMS rates</button><button class="btn sm" id="newCase">New case</button></div></div>
+        <div class="row between" id="listHead"><h2 id="listTitle">My cases</h2><div class="row"><button class="btn ghost sm" id="adminBtn" hidden>Admin</button><button class="btn ghost sm" id="exportBtn">Export</button><button class="btn sm" id="newCase">New case</button></div></div>
         <div class="notice" id="notice" hidden></div>
+        <div class="card" id="inbox" hidden></div>
         <div class="k3" id="kpis" hidden></div>
         <input id="search" type="search" placeholder="Search project, partner or case no." aria-label="Search cases"><div id="filters" hidden></div>
         <div class="list" id="cases"></div>
@@ -242,7 +257,10 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
     <div class="card" data-pane="details">
       <div class="row between"><h2 id="eCaseNo">New case</h2><span class="pill" id="eTerritory"></span></div>
       <label>Project name <em>required</em><input id="eProject" placeholder="Enter project name" maxlength="120"></label>
-      <label>Partner's name <em>required</em><input id="ePartner" placeholder="Enter partner's name" maxlength="120"></label>
+      <label class="pplab">Partner <em>required</em><input id="ePartner" placeholder="Search partner, or add a new one" maxlength="120" autocomplete="off"><span class="picked no" id="ePicked">Pick from the partner list</span></label>
+      <label>Partner's state <em>required for GST</em><select id="eState"><option value="">Choose state</option></select></label>
+      <label>End customer / site<input id="eEnd" maxlength="160" placeholder="e.g. Reliance Mall, Andheri"></label>
+      <label>Consultant <em>optional</em><input id="eCons" maxlength="160" placeholder="Consultant or PMC, if any"></label>
       <p class="note">Type the same project name into the Configuration Name box in the Calico software, so the PDF can be matched to this case.</p>
     </div>
 
@@ -295,6 +313,28 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
     </div>
   </section>
 
+  <!-- Admin (lead) -->
+  <section id="vAdmin" class="list" hidden>
+    <div class="row between"><button class="btn ghost sm" id="backFromAdmin">Back to cases</button><button class="btn ghost sm" id="openRates">CMS rates</button></div>
+    <div class="card">
+      <h2>Commercial settings</h2>
+      <p class="note">Used on every new quote. BrightSign CF and margin apply to presales' instant quotes.</p>
+      <div class="adm">
+        <label>GST %<input type="number" id="sGst" min="0" max="40" step="0.5"></label>
+        <label>Billing state<select id="sState"></select></label>
+        <label>Quote validity, days<input type="number" id="sValid" min="1" max="365"></label>
+        <label>BrightSign CF<input type="number" id="sCf" min="1" step="1"></label>
+        <label>BrightSign margin %<input type="number" id="sMargin" min="0" max="99" step="0.5"></label>
+      </div>
+      <label>Payment terms <em>printed on quotes; leave empty to omit</em><textarea id="sPay" maxlength="600" placeholder="e.g. 100% advance along with PO"></textarea></label>
+      <label>Delivery terms <em>printed on quotes; leave empty to omit</em><textarea id="sDel" maxlength="600" placeholder="e.g. 3–4 weeks from PO and advance"></textarea></label>
+      <div class="err" id="sErr" hidden></div>
+      <div class="row"><button class="btn" id="sSave">Save settings</button></div>
+    </div>
+    <div class="card"><div class="row between"><h2>Missing prices</h2><span class="chip warn" id="mpCount"></span></div><div class="list" id="mpBox"></div></div>
+    <div class="card"><h2>Backup</h2><p class="note">Every case, quote revision, quote line and history entry in one Excel file. Download it weekly and keep it on the company drive.</p><div class="row"><button class="btn ghost" id="backupBtn">Download backup (Excel)</button></div></div>
+  </section>
+
   <!-- CMS rates (lead) -->
   <section id="vRates" class="list" hidden>
     <div class="row between"><button class="btn ghost sm" id="backFromRates">Back to cases</button><button class="btn sm" id="ratesSave">Save rates</button></div>
@@ -329,7 +369,10 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
     <div class="card" data-bpane="details">
       <div class="row between"><h2 id="bCaseNo">New BrightSign case</h2><span class="pill" id="bTerritory"></span></div>
       <label>Project name <em>required</em><input id="bProject" placeholder="Enter project name" maxlength="120"></label>
-      <label>Partner's name <em>required</em><input id="bPartner" placeholder="Enter partner's name" maxlength="120"></label>
+      <label class="pplab">Partner <em>required</em><input id="bPartner" placeholder="Search partner, or add a new one" maxlength="120" autocomplete="off"><span class="picked no" id="bPicked">Pick from the partner list</span></label>
+      <label>Partner's state <em>required for GST</em><select id="bState"><option value="">Choose state</option></select></label>
+      <label>End customer / site<input id="bEnd" maxlength="160" placeholder="e.g. Reliance Mall, Andheri"></label>
+      <label>Consultant <em>optional</em><input id="bCons" maxlength="160" placeholder="Consultant or PMC, if any"></label>
     </div>
     <div class="card" data-bpane="products" hidden>
       <div class="row between"><h2>Products</h2><span class="chip info" id="bCount">0 selected</span></div>
@@ -359,7 +402,7 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 'use strict';
-const APP_VERSION = 'v1.8.0';
+const APP_VERSION = 'v1.9.0';
 const SUPABASE_URL = 'https://yhzecukifwnlgowmgkrc.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Rex8QiypJkVmJz2r7UPGtg_3-l1yy1u';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
@@ -384,7 +427,7 @@ const FLAG_CLS = { short_outputs: 'bad', short_in_4k60: 'bad', short_in_4k30: 'b
 const hasAudio = cfg => !!cfg && (cfg.other_lines || []).some(x => /S\/PDIF|analog audio/i.test(x));
 let ME = null, CASES = [], FILTER = 'all', ED = null;
 
-function show(view) { ['vAuth', 'vNoAccess', 'vList', 'vEdit', 'vBrand', 'vBs', 'vRates'].forEach(v => $(v).hidden = v !== view); window.scrollTo(0, 0); }
+function show(view) { ['vAuth', 'vNoAccess', 'vList', 'vEdit', 'vBrand', 'vBs', 'vRates', 'vAdmin'].forEach(v => $(v).hidden = v !== view); window.scrollTo(0, 0); }
 function chip(status) { const s = STATUS[status] || [status, 'mut']; return el('span', 'chip ' + s[1], s[0]); }
 async function rpc(name, args) {
   const { data, error } = await sb.rpc(name, args || {});
@@ -392,15 +435,71 @@ async function rpc(name, args) {
   return data;
 }
 function errBox(id, e) { const b = $(id); b.hidden = !e; b.textContent = e ? (e.message || String(e)) : ''; }
-function toast(msg) { const t = el('div', 'toast', msg); t.setAttribute('role', 'status'); document.body.append(t); setTimeout(() => t.remove(), 3200); }
+function toast(msg) { document.querySelectorAll('.toast').forEach(x => x.remove()); const t = el('div', 'toast', msg); t.setAttribute('role', 'status'); document.body.append(t); setTimeout(() => t.remove(), 3200); }
 const isStale = e => /^STALE:/.test(e.message || '');
 const staleMsg = e => (e.message || '').replace(/^STALE:\s*/, '');
+let SET = {};
+/* ---------- Partner picker: Cavitak One's partner list ----------
+   Typing searches the list; picking sets the case's partner. A partner not in the list is added with one tap. */
+function partnerPicker(prefix) {
+  const inp = $(prefix + 'Partner'), tag = $(prefix + 'Picked'), lab = inp.parentNode, obj = () => prefix === 'b' ? BS : ED;
+  let box = null, t = null, seq = 0;
+  const close = () => { if (box) { box.remove(); box = null; } };
+  const mark = () => { const o = obj(), ok = !!(o && o.partner_id); tag.className = 'picked' + (ok ? '' : ' no'); tag.textContent = ok ? 'From the partner list' : 'Pick from the partner list'; };
+  const pick = (id, name) => { const o = obj(); o.partner_id = id; inp.value = name; inp.classList.remove('miss'); close(); mark(); touched(prefix === 'b' ? 'bs' : 'tv'); if (prefix === 'b') drawBsState(); };
+  const search = async () => {
+    const q = inp.value.trim(), my = ++seq; let rows = [];
+    try { rows = await rpc('qd_partners', { p_q: q }); } catch (e) { rows = []; }
+    if (my !== seq || document.activeElement !== inp) return;
+    close(); box = el('div', 'pp'); box.setAttribute('role', 'listbox');
+    rows.forEach(r => { const b = el('button', null, r.name); b.type = 'button'; b.onmousedown = e => e.preventDefault(); b.onclick = () => pick(r.id, r.name); box.append(b); });
+    const exact = rows.some(r => r.name.toLowerCase() === q.toLowerCase());
+    if (q.length >= 3 && !exact) {
+      const a = el('button', 'add', `+ Add "${q}" as a new partner`); a.type = 'button'; a.onmousedown = e => e.preventDefault();
+      a.onclick = async () => { a.disabled = true; try { const r = await rpc('qd_partner_add', { p_name: q }); pick(r.id, r.name); if (r.existing) toast('That partner was already in the list as ' + r.name); else toast('Partner added to the list'); } catch (e) { alert(e.message); a.disabled = false; } };
+      box.append(a);
+    }
+    if (!box.childElementCount) box.append(el('div', 'note', 'Type at least 3 letters to add a new partner.'));
+    lab.append(box);
+  };
+  inp.addEventListener('input', () => { const o = obj(); if (o) o.partner_id = null; mark(); clearTimeout(t); t = setTimeout(search, 200); });
+  inp.addEventListener('focus', () => { clearTimeout(t); t = setTimeout(search, 50); });
+  inp.addEventListener('blur', () => setTimeout(close, 150));
+  inp.addEventListener('keydown', e => { if (e.key === 'Escape') close(); if (e.key === 'Enter' && box) { const f = box.querySelector('button'); if (f) { e.preventDefault(); f.click(); } } });
+  return mark;
+}
+/* ---------- GST ----------
+   Quotes are priced before GST. Partner in the billing state: CGST + SGST; elsewhere: IGST. */
+function gstRows(amt, state) {
+  const g = Number(SET.gst_rate ?? 18), home = SET.billing_state || 'Gujarat', rows = [['Subtotal (INR)', amt, 'sub']];
+  if (state && state === home) { const h = Math.round(amt * g / 200); rows.push([`CGST @ ${g / 2}%`, h, g / 200], [`SGST @ ${g / 2}%`, h, g / 200], ['Grand total (INR)', amt + 2 * h, 'grand']); }
+  else { const t = Math.round(amt * g / 100); rows.push([(state ? 'IGST' : 'GST') + ` @ ${g}%`, t, g / 100], ['Grand total (INR)', amt + t, 'grand']); }
+  return rows;
+}
+function gstTerms(c) {
+  const g = Number(SET.gst_rate ?? 18), st = c.partner_state, home = SET.billing_state || 'Gujarat';
+  const t = [st ? `GST @ ${g}% shown as ${st === home ? 'CGST + SGST' : 'IGST'}; place of supply ${st}.` : `GST @ ${g}% shown; IGST or CGST + SGST applies as per place of supply.`];
+  if (SET.payment_terms) t.push('Payment: ' + SET.payment_terms);
+  if (SET.delivery_terms) t.push('Delivery: ' + SET.delivery_terms);
+  return t;
+}
+// On screen: subtotal and GST lines small, the grand total large.
+function gstBlock(amt, state) { const w = el('div'), rows = gstRows(amt, state); rows.slice(0, -1).forEach(([k, v]) => { const d = el('div', 'gst'); d.append(el('span', null, k), el('span', null, inr(v))); w.append(d); }); const g = rows[rows.length - 1], t = el('div', 'total qtotal'); t.append(el('span', null, 'Grand total, INR (incl. GST)'), el('b', null, inr(g[1]))); w.append(t); return w; }
+/* ---------- WhatsApp share: a ready message, sent from the person's own WhatsApp ---------- */
+function waShare(c, cq) {
+  const st = (STATUS[c.status] || [c.status])[0];
+  let t = `${c.project_name} – ${c.partner_name}\nCase ${c.case_no} · ${st}`;
+  if (c.end_customer) t += `\nEnd customer: ${c.end_customer}`;
+  if (cq) t += `\nQuote R${cq.revision}: INR ${inr(cq.quote_inr)} + GST` + (cq.valid_till ? `, valid till ${fdate(cq.valid_till)}` : '');
+  window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank', 'noopener');
+}
+function waButton(c, cq) { const b = el('button', 'btn ghost', 'Share on WhatsApp'); b.type = 'button'; b.onclick = () => waShare(c, cq); return b; }
 const todayISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
 
 /* ---------- Navigation: browser Back / refresh, and unsaved changes ----------
    Each screen has an address (#case/<id>, #new, #new/bs, #new/tvone, #rates). Leaving a screen with
    changes that would be lost asks first. */
-let ROUTING = false, UNSAVED = false, DIRTY = { rev: false, rates: false };
+let ROUTING = false, UNSAVED = false, DIRTY = { rev: false, rates: false, admin: false };
 function route(h) {
   if (ROUTING || /access_token|type=/.test(location.hash)) return;
   const want = h ? '#' + h : '';
@@ -411,16 +510,17 @@ function route(h) {
 function navTo(id, fresh) { if (!id && location.hash === '#new' && !ROUTING) history.replaceState(null, '', '#' + fresh); else route(id ? 'case/' + id : fresh); }
 function pendingChanges() {
   const inBs = !$('vBs').hidden, inTv = !$('vEdit').hidden;
-  if ((inBs || inTv) && AUTO.kind && (!$(inBs ? 'bProject' : 'eProject').value.trim() || !$(inBs ? 'bPartner' : 'ePartner').value.trim())) return 'This case is not saved yet: it needs the project name and partner\'s name.';
+  if ((inBs || inTv) && AUTO.kind && (!$(inBs ? 'bProject' : 'eProject').value.trim() || !((inBs ? BS : ED) || {}).partner_id)) return 'This case is not saved yet: it needs the project name and a partner picked from the list.';
   if (inBs && BS && BS.id && ['quoted', 'revised'].includes(BS.status) && bsDirty()) return 'You changed products or CMS but did not tap Update quote.';
   if ((inBs || inTv) && UNSAVED) return 'You changed this case but did not save it.';
   if (!$('vList').hidden && DIRTY.rev) return 'You typed a quote, note or reason on this case and did not send it.';
   if (!$('vRates').hidden && DIRTY.rates) return 'You changed CMS rates and did not save them.';
+  if (!$('vAdmin').hidden && DIRTY.admin) return 'You changed settings or prices and did not save them.';
   return '';
 }
 async function leaveOk() {
   const m = pendingChanges();
-  if (m) { if (!confirm(m + '\n\nLeave and discard the changes?')) return false; AUTO.kind = null; AUTO.n = 0; clearTimeout(AUTO.t); UNSAVED = false; DIRTY.rev = DIRTY.rates = false; }
+  if (m) { if (!confirm(m + '\n\nLeave and discard the changes?')) return false; AUTO.kind = null; AUTO.n = 0; clearTimeout(AUTO.t); UNSAVED = false; DIRTY.rev = DIRTY.rates = DIRTY.admin = false; }
   else await flushAuto();
   return true;
 }
@@ -439,6 +539,7 @@ async function go(h) {
   try {
     const m = (h || '').replace(/^#/, '');
     if (m === 'rates' && ME.role === 'lead') await openRates();
+    else if (m === 'admin' && ME.role === 'lead') await openAdmin();
     else if (m === 'new') await pickBrand();
     else if (m === 'new/bs') await openBsEditor(null);
     else if (m === 'new/tvone') await openEditor(null);
@@ -505,18 +606,20 @@ async function boot() {
   $('tabs').hidden = false;
   $('listTitle').textContent = ME.role === 'presales' ? 'My cases' : 'All cases';
   $('listSplit').classList.toggle('lead', ME.role !== 'presales');
-  $('cmsRates').hidden = ME.role !== 'lead';
+  $('adminBtn').hidden = ME.role !== 'lead';
+  try { SET = await rpc('qd_settings'); } catch (e) { SET = { gst_rate: 18, billing_state: 'Gujarat', states: [] }; }
+  ['eState', 'bState', 'sState'].forEach(id => { const sel = $(id); (SET.states || []).forEach(st => { const o = el('option', null, st); o.value = st; sel.append(o); }); });
   document.querySelector('.wrap').classList.toggle('wide', ME.role !== 'presales');
   const h = location.hash;
-  if (/^#(case\/|new|rates)/.test(h)) await go(h); else await loadCases();
+  if (/^#(case\/|new|rates|admin)/.test(h)) await go(h); else await loadCases();
 }
 
 /* ---------- Case list ---------- */
 async function loadCases() {
   await flushAuto();
-  show('vList'); setTab('cases'); $('search').hidden = false; $('listHead').hidden = false; route(''); LASTHASH = location.hash;
+  show('vList'); setTab('cases'); $('search').hidden = false; $('listHead').hidden = false; $('inbox').hidden = true; route(''); LASTHASH = location.hash;
   try { CASES = await rpc('qd_case_list'); } catch (e) { CASES = []; $('cases').replaceChildren(el('div', 'err', e.message)); return; }
-  drawList();
+  drawList(); loadInbox();
   // keep the lead's side pane in step with the list
   if (ME.role !== 'presales' && window.innerWidth >= 900 && CUR && CASES.some(c => c.id === CUR)) { const R = ROUTING; ROUTING = true; try { await openReview(CUR); } finally { ROUTING = R; } }
 }
@@ -566,6 +669,51 @@ function drawList() {
   if (q && !rows.length) list.append(el('div', 'card note', 'No case matches your search.'));
   if (lead && window.innerWidth >= 900 && !$('sidePane').childElementCount) $('sidePane').append(el('div', 'card note', 'Select a case to review and quote.'));
 }
+/* ---------- Updates inbox: what others did on your cases since you last looked ---------- */
+const EV = {
+  submitted: x => `${x.by || 'Presales'} submitted it for a quote`,
+  discount_requested: x => `${x.by || 'Presales'} asks for ${Number(x.discount_pct)}% discount`,
+  discount_withdrawn: x => `${x.by || 'Presales'} withdrew the discount request`,
+  quote_created: x => `Quote R${x.revision} ready · INR ${inr(x.quote_inr)}` + (Number(x.discount_pct) > 0 ? ` · ${Number(x.discount_pct)}% discount` : ''),
+  returned: x => 'Returned to you' + (x.note ? ': ' + x.note : ''),
+  discount_declined: x => 'Discount declined' + (x.note ? ': ' + x.note : ''),
+  closed: x => 'Closed as ' + x.outcome + (x.note ? ': ' + x.note : '')
+};
+async function loadInbox() {
+  const box = $('inbox'); let r;
+  try { r = await rpc('qd_inbox'); } catch (e) { box.hidden = true; return; }
+  const items = r.items || []; box.replaceChildren(); box.hidden = !items.length || $('listHead').hidden;
+  if (!items.length) return;
+  const h = el('div', 'row between'), mk = el('button', 'btn ghost sm', 'Mark all read');
+  h.append(el('h3', null, `Updates since you last looked (${items.length})`), mk);
+  mk.onclick = async () => { mk.disabled = true; try { await rpc('qd_inbox_seen'); } catch (e) { } loadInbox(); };
+  const list = el('div', 'inbox');
+  items.slice(0, 8).forEach(x => {
+    const b = el('button', 'ev'), l = el('span');
+    l.append(el('b', null, x.project_name), el('span', 'note', ' · ' + x.case_no), el('div', 'note', (EV[x.action] || (() => x.action))(x)));
+    b.append(l, el('span', 'note', ageDays(x.at) ? ageDays(x.at) + 'd ago' : 'today'));
+    b.onclick = guarded(() => { const c = CASES.find(k => k.id === x.case_id); if (!c) return; CUR = c.id; if (ME.role !== 'presales' && window.innerWidth >= 900) drawList(); openCase(c); });
+    list.append(b);
+  });
+  if (items.length > 8) list.append(el('div', 'note', `and ${items.length - 8} more`));
+  box.append(h, list);
+}
+/* ---------- Export the case list as it is filtered on screen ---------- */
+async function exportList() {
+  await need('exceljs'); const q = SEARCH.trim().toLowerCase(), lead = ME.role !== 'presales';
+  const rows = CASES.filter(c => !q || [c.project_name, c.partner_name, c.case_no, c.presales, c.territory].join(' ').toLowerCase().includes(q));
+  const wb = new ExcelJS.Workbook(), ws = wb.addWorksheet('Cases', { views: [{ state: 'frozen', ySplit: 1 }] });
+  const cols = [['Case no', 'case_no', 22], ['Brand', c => c.brand === 'brightsign' ? 'BrightSign' : 'tvONE', 11], ['Project', 'project_name', 30], ['Partner', 'partner_name', 26], ['End customer', 'end_customer', 24], ['State', 'partner_state', 14],
+    ['Territory', 'territory', 16], ['Presales', 'presales', 18], ['Status', c => (STATUS[c.status] || [c.status])[0], 12], ['Quote rev', 'quote_revision', 9]]
+    .concat(lead ? [['Quote INR (ex GST)', c => c.quote_inr != null ? Number(c.quote_inr) : null, 16]] : [])
+    .concat([['Created', c => c.created_at ? new Date(c.created_at) : null, 12], ['Submitted', c => c.submitted_at ? new Date(c.submitted_at) : null, 12], ['Closed', c => c.closed_at ? new Date(c.closed_at) : null, 12]]);
+  ws.columns = cols.map(([h, , w]) => ({ header: h, width: w }));
+  rows.forEach(c => ws.addRow(cols.map(([, f]) => typeof f === 'function' ? f(c) : (c[f] ?? null))));
+  xlHead(ws.getRow(1)); ws.autoFilter = { from: 'A1', to: { row: 1, column: cols.length } };
+  ws.eachRow((r, i) => { if (i > 1) r.eachCell(cl => { if (cl.value instanceof Date) cl.numFmt = 'dd-mmm-yy'; else if (typeof cl.value === 'number' && cl.col > 10) cl.numFmt = INRFMT; }); });
+  xlFont(wb); await saveWb(wb, `Quote_Desk_cases_${todayISO()}.xlsx`);
+}
+$('exportBtn').onclick = async () => { $('exportBtn').disabled = true; try { await exportList(); } catch (e) { alert('Could not export: ' + e.message); } finally { $('exportBtn').disabled = false; } };
 function drawNotice(lead) {
   const n = $('notice'); n.replaceChildren();
   const todo = lead ? CASES.filter(c => c.status === 'submitted').sort((a, b) => new Date(waitT(a)) - new Date(waitT(b)))
@@ -608,7 +756,7 @@ const isEditable = st => !['won', 'lost'].includes(st);
 const bsEditable = () => isEditable(BS.status) && BS.status !== 'submitted';
 
 /* ---------- Editor ---------- */
-function blankCase() { return { id: null, case_no: null, status: 'draft', project_name: '', partner_name: '', n_display: 0, n_projector: 0, req_in_4k60: 0, req_in_4k30: 0, audio_required: false, led: [], territory: ME.territory }; }
+function blankCase() { return { id: null, case_no: null, status: 'draft', project_name: '', partner_name: '', partner_id: null, partner_state: '', end_customer: '', consultant: '', n_display: 0, n_projector: 0, req_in_4k60: 0, req_in_4k30: 0, audio_required: false, led: [], territory: ME.territory }; }
 async function openEditor(id) {
   errBox('eErr', null); errBox('ePdfErr', null); UNSAVED = false;
   let cfg = null;
@@ -625,6 +773,7 @@ async function openEditor(id) {
     : ED.status === 'submitted' ? 'Submitted. You can still change it; the product lead sees your latest version.' : '';
   $('eReturned').hidden = !bn; $('eReturned').textContent = bn;
   $('eProject').value = ED.project_name; $('ePartner').value = ED.partner_name;
+  $('eState').value = ED.partner_state || ''; $('eEnd').value = ED.end_customer || ''; $('eCons').value = ED.consultant || ''; markE();
   $('eLed').value = (ED.led || []).length; $('eDisp').value = ED.n_display; $('eProj').value = ED.n_projector;
   $('eIn60').value = ED.req_in_4k60; $('eIn30').value = ED.req_in_4k30; setAudio(!!ED.audio_required);
   document.querySelectorAll('#vEdit input, #vEdit .stp button, #vEdit .yn button').forEach(x => { if (x.id !== 'ePdf') x.disabled = !editable; });
@@ -695,15 +844,23 @@ function setAudio(v) { AUD = !!v; $('eAudYes').setAttribute('aria-pressed', AUD)
 $('eAudYes').onclick = () => { setAudio(true); calcTotals(); };
 $('eAudNo').onclick = () => { setAudio(false); calcTotals(); };
 function payload() {
-  return { id: ED.id, project_name: $('eProject').value.trim(), partner_name: $('ePartner').value.trim(), n_display: num('eDisp'), n_projector: num('eProj'),
+  return { id: ED.id, project_name: $('eProject').value.trim(), partner_name: $('ePartner').value.trim(), partner_id: ED.partner_id || null,
+    partner_state: $('eState').value, end_customer: $('eEnd').value.trim(), consultant: $('eCons').value.trim(), n_display: num('eDisp'), n_projector: num('eProj'),
     req_in_4k60: num('eIn60'), req_in_4k30: num('eIn30'), audio_required: AUD, led: ED.ledList.map(l => ({ pixel_pitch: l.p, width_px: l.w, height_px: l.h })) };
 }
 function namesOk() {
-  const p = $('eProject').value.trim(), q = $('ePartner').value.trim();
+  const p = $('eProject').value.trim(), q = !!ED.partner_id;
   $('eProject').classList.toggle('miss', !p); $('ePartner').classList.toggle('miss', !q);
-  if (!p || !q) { setPane('details'); errBox('eErr', new Error('Enter the project name and partner\'s name.')); $(!p ? 'eProject' : 'ePartner').focus(); return false; }
+  if (!p || !q) { setPane('details'); errBox('eErr', new Error(!p ? 'Enter the project name.' : 'Pick the partner from the list, or add it as a new partner.')); $(!p ? 'eProject' : 'ePartner').focus(); return false; }
   return true;
 }
+// The partner's state decides IGST or CGST + SGST, so it is needed before a quote.
+function stateOk(prefix) {
+  const ok = !!$(prefix + 'State').value; $(prefix + 'State').classList.toggle('miss', !ok);
+  if (!ok) { if (prefix === 'b') setBPane('details'); else setPane('details'); errBox(prefix + 'Err', new Error('Choose the partner\'s state: it decides how GST is shown on the quote.')); $(prefix + 'State').focus(); }
+  return ok;
+}
+const markE = partnerPicker('e');
 let SAVING = null;
 // One save at a time: a second tap or a PDF upload during a save reuses the same request, so a new case is never created twice.
 function saveCase() {
@@ -720,6 +877,7 @@ async function saveCaseNow() {
 }
 $('eSave').onclick = async () => { const lbl = $('eSave').textContent; if (await saveCase()) { $('eSave').textContent = 'Saved'; setTimeout(() => $('eSave').textContent = lbl, 1500); if (!['draft', 'returned'].includes(ED.status)) openEditor(ED.id); } };
 $('eSubmit').onclick = async () => {
+  if (!namesOk() || !stateOk('e')) return;
   if (!(await saveCase())) return;
   if (!ED.cfg) { setPane('calico'); errBox('eErr', new Error('Upload the Calico PDF before submitting.')); return; }
   if (cfgProblems().length && !ED.ack) { setPane('submit'); errBox('eErr', new Error('The configuration does not match your requirement. Tick the box on the Submit tab to send it anyway, or upload a corrected PDF.')); return; }
@@ -875,7 +1033,7 @@ async function openReview(id) {
   DIRTY.rev = false;
   route('case/' + id); LASTHASH = location.hash;
   const pane = window.innerWidth >= 900 ? $('sidePane') : null, host = pane || $('cases');
-  if (!pane) { show('vList'); $('kpis').hidden = true; $('search').hidden = true; $('notice').hidden = true; $('listHead').hidden = true; }
+  if (!pane) { show('vList'); $('kpis').hidden = true; $('search').hidden = true; $('notice').hidden = true; $('listHead').hidden = true; $('inbox').hidden = true; }
   const done = () => { const root = host.firstElementChild; if (!root) return; root.addEventListener('input', () => { DIRTY.rev = true; }); const h = root.querySelector('h2'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } };
   if (r.case.brand === 'brightsign') { reviewBs(r, pane, host); return done(); }
   const c = r.case, cfg = r.config, b = r.build, quotes = r.quotes || [], last = quotes[0];
@@ -886,7 +1044,8 @@ async function openReview(id) {
   const head = el('div', 'card'), t = el('div', 'row between');
   t.append(el('h2', null, c.project_name), chip(c.status));
   const wait = c.status === 'submitted' && c.submitted_at ? ` · waiting ${ageDays(c.submitted_at)}d` : '';
-  head.append(t, el('div', 'note', `${c.partner_name} · ${c.case_no} · ${r.presales_name || ''} · ${c.territory}${wait}`));
+  head.append(t, el('div', 'note', `${c.partner_name}${c.partner_state ? ' (' + c.partner_state + ')' : ''} · ${c.case_no} · ${r.presales_name || ''} · ${c.territory}${wait}`));
+  if (c.end_customer || c.consultant) head.append(el('div', 'note', [c.end_customer ? 'End customer: ' + c.end_customer : '', c.consultant ? 'Consultant: ' + c.consultant : ''].filter(Boolean).join(' · ')));
   const req = el('div', 'k3'); req.append(kpi(c.req_out, 'Outputs needed'), kpi(c.req_in_4k60, 'Inputs 4K@60'), kpi(c.req_in_4k30, 'Inputs 4K@30')); head.append(req);
   head.append(el('span', 'chip ' + (c.audio_required ? (hasAudio(cfg) ? 'ok' : 'bad') : 'mut'), c.audio_required ? (hasAudio(cfg) ? 'Audio required · card in PDF' : 'Audio required · no card in PDF') : 'Audio not required'));
   if (c.return_note) head.append(el('div', 'banner', 'Returned: ' + c.return_note));
@@ -1046,7 +1205,8 @@ function drawDocs(box, ctx) {
   const g = el('div', 'docs');
   const mk = (label, fn, ok) => { const b = el('button', 'btn ghost', label); b.disabled = !ok; b.onclick = async () => { b.disabled = true; try { await fn(ctx); } catch (e) { alert('Could not create the file: ' + e.message); } finally { b.disabled = false; } }; return b; };
   g.append(mk('Quote Excel', quoteXlsx, !!ctx.cq), mk('Quote PDF', quotePdf, !!ctx.cq), mk('Tender spec Excel', tenderXlsx, true), mk('Tender spec PDF', tenderPdf, true));
-  box.append(g, el('p', 'note', ctx.cq ? `Quote ${ctx.c.case_no}-R${ctx.cq.revision} · INR ${inr(ctx.cq.quote_inr)}` + (ctx.cq.valid_till ? ' · valid till ' + fdate(ctx.cq.valid_till) : '') : 'Quote files unlock once the product lead quotes this case.'));
+  if (ctx.c && ctx.c.id) g.append(waButton(ctx.c, ctx.cq));
+  box.append(g, el('p', 'note', ctx.cq ? `Quote ${ctx.c.case_no}-R${ctx.cq.revision} · INR ${inr(ctx.cq.quote_inr)} + GST` + (ctx.cq.valid_till ? ' · valid till ' + fdate(ctx.cq.valid_till) : '') : 'Quote files unlock once the product lead quotes this case.'));
 }
 
 /* ---------- PDF building blocks (A4, mm) ---------- */
@@ -1064,7 +1224,7 @@ function pdfHeader(d, title, sub, tag) {
 }
 function pdfMeta(d, pairs, y) {
   // two columns of label / value with fixed tab stops
-  const colX = [PG.m, PG.m + CW / 2 + 4], lab = 24; d.setFontSize(9);
+  const colX = [PG.m, PG.m + CW / 2 + 4], lab = 28; d.setFontSize(9);
   pairs.forEach(([k, v], i) => {
     const x = colX[i % 2], yy = y + Math.floor(i / 2) * 6;
     d.setFont('helvetica', 'normal'); d.setTextColor(...PG.mute); d.text(k, x, yy);
@@ -1128,8 +1288,8 @@ function pdfTable(d, y, cols, rows, opt = {}) {
 function quoteData(ctx) {
   const c = ctx.c, cfg = ctx.cfg, q = ctx.cq, amt = Math.round(Number(q.quote_inr));
   return { no: `${c.case_no}-R${q.revision}`, amt, desc: shortDesc(cfg), code: cfg.product_code,
-    meta: [['Quote no', `${c.case_no}-R${q.revision}`], ['Date', today()], ['Project', c.project_name], ['Valid till', q.valid_till ? fdate(q.valid_till) : 'On request'], ['Partner', c.partner_name], ['Prepared by', ctx.presales || '-']],
-    terms: ['Prices are in Indian Rupees for the configuration described, quoted as a single line item.', 'Taxes extra as applicable.'].concat(q.valid_till ? ['This quote is valid until the date shown above.'] : []) };
+    meta: [['Quote no', `${c.case_no}-R${q.revision}`], ['Date', today()], ['Project', c.project_name], ['Valid till', q.valid_till ? fdate(q.valid_till) : 'On request'], ['Partner', c.partner_name], ['Prepared by', ctx.presales || '-'], ['End customer', c.end_customer || '-'], ['Place of supply', c.partner_state || '-']],
+    terms: ['Prices are in Indian Rupees for the configuration described, quoted as a single line item.'].concat(gstTerms(c), q.valid_till ? ['This quote is valid until the date shown above.'] : []) };
 }
 async function quotePdf(ctx) {
   await need('jspdf'); const d = pdfNew(), Q = quoteData(ctx);
@@ -1137,9 +1297,8 @@ async function quotePdf(ctx) {
   y = pdfMeta(d, Q.meta, y) + 2;
   const cols = [{ h: 'Sr', w: 10, align: 'center' }, { h: 'Description', w: 98 }, { h: 'Qty', w: 14, align: 'center' }, { h: 'Unit price (INR)', w: 28, align: 'right' }, { h: 'Amount (INR)', w: CW - 150, align: 'right' }];
   y = pdfTable(d, y, cols, [['1', Q.desc + '\nItem code: ' + Q.code, '1', inr(Q.amt), inr(Q.amt)]], { fs: 9 });
-  y += 2; d.setFillColor(...PG.soft); d.rect(PG.m + 108, y, CW - 108, 10, 'F'); d.setDrawColor(...PG.amber); d.setLineWidth(0.6); d.line(PG.m + 108, y, PG.w - PG.m, y);
-  d.setFont('helvetica', 'bold'); d.setFontSize(10.5); d.setTextColor(...PG.ink); d.text('Total (INR)', PG.m + 112, y + 6.6); d.text(inr(Q.amt), PG.w - PG.m - 2.2, y + 6.6, { align: 'right' });
-  y = pdfPorts(d, ctx.cfg, y + 20);
+  y = pdfTotals(d, y, gstRows(Q.amt, ctx.c.partner_state));
+  y = pdfPorts(d, ctx.cfg, y + 10);
   d.setFont('helvetica', 'bold'); d.setFontSize(9); d.setTextColor(...PG.ink); d.text('Terms', PG.m, y + 2);
   d.setFont('helvetica', 'normal'); d.setFontSize(8.5); d.setTextColor(...PG.mute); Q.terms.forEach((t, i) => d.text('•  ' + t, PG.m, y + 8 + i * 5));
   pdfFooter(d); d.save(`Quote_${safe(ctx.c.project_name)}_${Q.no}.pdf`);
@@ -1151,6 +1310,30 @@ const box = { top: thin, left: thin, bottom: thin, right: thin };
 function xlHead(row) { row.eachCell(c => { c.font = { bold: true, color: { argb: XL.white } }; c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: XL.ink } }; c.alignment = { vertical: 'middle', wrapText: true, horizontal: c.alignment && c.alignment.horizontal }; c.border = box; }); row.height = 22; }
 const estLines = (txt, widthChars) => String(txt || '').split('\n').reduce((s, p) => s + Math.max(1, Math.ceil(p.length / (widthChars * 1.18))), 0);
 function xlFont(wb) { wb.eachSheet(ws => ws.eachRow({ includeEmpty: true }, r => r.eachCell({ includeEmpty: true }, c => { c.font = Object.assign({ size: 10 }, c.font || {}, { name: 'Arial' }); }))); }
+// Subtotal, GST lines and grand total under a quote table, with live formulas.
+function pdfTotals(d, y, rows) {
+  y += 2;
+  rows.forEach(([k, v], i) => {
+    const last = i === rows.length - 1;
+    if (last) { d.setFillColor(...PG.soft); d.rect(PG.m + 108, y, CW - 108, 10, 'F'); d.setDrawColor(...PG.amber); d.setLineWidth(0.6); d.line(PG.m + 108, y, PG.w - PG.m, y); }
+    d.setFont('helvetica', last || i === 0 ? 'bold' : 'normal'); d.setFontSize(last ? 10.5 : 9); d.setTextColor(...(last || i === 0 ? PG.ink : PG.mute));
+    const ty = y + (last ? 6.6 : 5); d.text(k, PG.m + 112, ty); d.text(inr(v), PG.w - PG.m - 2.2, ty, { align: 'right' }); y += last ? 10 : 7;
+  });
+  return y;
+}
+function xlTotals(ws, r, lc, col, rows, sumF) {
+  const sub = r + 1;
+  rows.forEach(([k, v, kind], i) => {
+    const row = ws.getRow(++r), last = kind === 'grand', cl = row.getCell(lc + 1);
+    row.getCell(lc).value = k;
+    cl.value = kind === 'sub' ? { formula: sumF, result: v } : last ? { formula: `SUM(${col}${sub}:${col}${r - 1})`, result: v } : { formula: `ROUND(${col}${sub}*${kind},0)`, result: v };
+    cl.numFmt = INRFMT;
+    [lc, lc + 1].forEach(c => { const x = row.getCell(c); x.alignment = { horizontal: 'right' }; x.font = last ? { bold: true, size: 11 } : i === 0 ? { bold: true } : { color: { argb: XL.mute } };
+      if (last) { x.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: XL.soft } }; x.border = { top: { style: 'medium', color: { argb: XL.amber } }, bottom: thin }; } });
+    row.height = last ? 22 : 17;
+  });
+  return r;
+}
 async function quoteXlsx(ctx) {
   await need('exceljs'); const Q = quoteData(ctx), wb = new ExcelJS.Workbook(); wb.creator = 'Quote Desk';
   const ws = wb.addWorksheet('Quote', { views: [{ showGridLines: false }], pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: 0.5, right: 0.5, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3 } } });
@@ -1172,9 +1355,7 @@ async function quoteXlsx(ctx) {
   const lr = ws.getRow(++r), first = r; lr.values = [1, Q.desc + '\nItem code: ' + Q.code, 1, Q.amt, { formula: `C${r}*D${r}`, result: Q.amt }];
   lr.eachCell(c => { c.border = box; c.alignment = { vertical: 'top', wrapText: true }; }); lr.getCell(1).alignment = { horizontal: 'center', vertical: 'top' }; lr.getCell(3).alignment = { horizontal: 'center', vertical: 'top' };
   [4, 5].forEach(c => { lr.getCell(c).numFmt = INRFMT; lr.getCell(c).alignment = { horizontal: 'right', vertical: 'top' }; }); lr.height = estLines(Q.desc + '\nx', 62) * 15 + 8;
-  const tr = ws.getRow(++r); tr.getCell(4).value = 'Total (INR)'; tr.getCell(5).value = { formula: `SUM(E${first}:E${first})`, result: Q.amt };
-  [4, 5].forEach(c => { const cl = tr.getCell(c); cl.font = { bold: true, size: 11 }; cl.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: XL.soft } }; cl.border = { top: { style: 'medium', color: { argb: XL.amber } }, bottom: thin }; cl.alignment = { horizontal: 'right' }; });
-  tr.getCell(5).numFmt = INRFMT; tr.height = 22;
+  r = xlTotals(ws, r, 4, 'E', gstRows(Q.amt, ctx.c.partner_state), `SUM(E${first}:E${first})`);
   r += 2; ws.getCell(r, 1).value = 'Processor configuration'; ws.getCell(r, 1).font = { bold: true };
   const cfg = ctx.cfg; [['Item code', cfg.product_code], ['Outputs 4K@60 HDMI', cfg.out_4k60], ['Inputs 4K@60 HDMI', cfg.in_4k60], ['Inputs 4K@30 HDMI', cfg.in_4k30], ['RefLock inputs', cfg.reflock], ['Audio I/O card (slot 11)', hasAudio(cfg) ? 'Yes' : 'No'], ['Redundant power supply', cfg.redundant_psu ? 'Yes' : 'No'], ['Fan filter', cfg.fan_filter || is2U(cfg.model) ? 'Yes' : 'No']]
     .forEach(([k, v]) => { r++; ws.getCell(r, 1).value = k; ws.mergeCells(r, 1, r, 2); ws.getCell(r, 1).font = { color: { argb: XL.mute } }; ws.mergeCells(r, 3, r, 5); ws.getCell(r, 3).value = v; ws.getCell(r, 3).alignment = { horizontal: 'left' }; ws.getCell(r, 3).font = { bold: true }; ws.getRow(r).eachCell({ includeEmpty: true }, cl => cl.border = { bottom: thin }); });
@@ -1282,16 +1463,17 @@ async function openBsEditor(id, pane) {
       (r.bs_lines || []).forEach(l => { const p = catById(l.price_id); if (!p) return;
         if (isPlayer(p)) { if (!Array.isArray(saved)) BS.builds.push({ player: p.price_id, qty: Number(l.qty), storage: '', wifi: false }); }
         else if (pickable(p)) BS.qty[l.price_id] = (BS.qty[l.price_id] || 0) + Number(l.qty); });
-    } else BS = { id: null, case_no: null, status: 'draft', brand: 'brightsign', project_name: '', partner_name: '', territory: ME.territory, bs_req: {}, qty: {}, builds: [] };
+    } else BS = { id: null, case_no: null, status: 'draft', brand: 'brightsign', project_name: '', partner_name: '', partner_id: null, partner_state: '', end_customer: '', consultant: '', territory: ME.territory, bs_req: {}, qty: {}, builds: [] };
   } catch (e) { alert(e.message); return; }
-  BS.cms = (BS.bs_req || {}).cms || null; BS.saved = bsSig();
+  BS.cms = (BS.bs_req || {}).cms || null; BS.saved = bsSig(); BS.saved_pid = BS.partner_id || null;
   const req = BS.bs_req || {};
   $('bCaseNo').textContent = BS.case_no || 'New BrightSign case';
   $('bTerritory').textContent = 'Territory · ' + (BS.territory || ME.territory);
   $('bProject').value = BS.project_name; $('bPartner').value = BS.partner_name;
+  $('bState').value = BS.partner_state || ''; $('bEnd').value = BS.end_customer || ''; $('bCons').value = BS.consultant || ''; markB();
   
   const editable = isEditable(BS.status);
-  ['bProject', 'bPartner'].forEach(i => $(i).disabled = !editable);
+  ['bProject', 'bPartner', 'bState', 'bEnd', 'bCons'].forEach(i => $(i).disabled = !editable);
   BQ = ''; $('bSearch').value = ''; BGRP = bsLines().length ? 'sel' : 'players';
   drawBsProducts(); drawBsCms(); drawBsState();
   setBPane(pane || (BS.cq ? 'quote' : id ? 'products' : 'details'));
@@ -1307,7 +1489,7 @@ function drawBsState() {
   else if (st === 'draft' && !BS.cq) bn = bsLines().length ? 'Tap Generate quote to get the price straight away. No approval is needed.' : BS.id ? 'Add products, then tap Generate quote. The price comes straight away.' : '';
   else if (['won', 'lost'].includes(st)) bn = 'This case is closed as ' + st + '.';
   $('bBanner').hidden = !bn; $('bBanner').textContent = bn;
-  const namesChanged = !!BS.id && ($('bProject').value.trim() !== (BS.project_name || '') || $('bPartner').value.trim() !== (BS.partner_name || ''));
+  const namesChanged = !!BS.id && ($('bProject').value.trim() !== (BS.project_name || '') || (BS.partner_id || null) !== (BS.saved_pid || null) || $('bState').value !== (BS.partner_state || '') || $('bEnd').value.trim() !== (BS.end_customer || '') || $('bCons').value.trim() !== (BS.consultant || ''));
   // On a quoted case, Save only appears for a name change; product changes go through Update quote.
   $('bSave').hidden = !editable || (['quoted', 'revised', 'submitted'].includes(st) && (!namesChanged || dirty));
   const go = editable && (['draft', 'returned'].includes(st) || (['quoted', 'revised'].includes(st) && dirty));
@@ -1410,11 +1592,11 @@ $('bSearch').addEventListener('input', e => { BQ = e.target.value; drawBsProduct
 ['bProject', 'bPartner'].forEach(i => $(i).addEventListener('input', () => $(i).classList.remove('miss')));
 
 function qline(cells, cls) { const d = el('div', 'ql' + (cls ? ' ' + cls : '')); cells.forEach(c => d.append(typeof c === 'string' ? el('span', null, c) : c)); return d; }
-function bsQuoteTable(lines, total) {
+function bsQuoteTable(lines, total, state) {
   const box = el('div');
   box.append(qline(['Item', 'Qty', 'Unit, INR', 'Amount, INR'], 'h'));
   lines.forEach(l => { const it = el('span'); it.append(el('b', 'mono', l.sku), el('span', 'note', l.desc || '')); box.append(qline([it, String(l.qty), inr(l.sell_each), inr(l.sell)])); });
-  const t = el('div', 'total qtotal'); t.append(el('span', null, 'Total, INR (taxes extra)'), el('b', null, inr(total))); box.append(t);
+  const sp = el('div'); sp.style.borderTop = '1.5px solid var(--accent)'; sp.style.marginTop = '6px'; sp.style.paddingTop = '6px'; box.append(sp); sp.append(gstBlock(total, state));
   return box;
 }
 function drawBsQuote() {
@@ -1429,11 +1611,11 @@ function drawBsQuote() {
     return;
   }
   const h = el('div', 'row between'); h.append(el('h2', null, `Quote ${BS.case_no}-R${cq.revision}`), el('span', 'chip ok', cq.valid_till ? 'Valid till ' + fdate(cq.valid_till) : 'Current'));
-  box.append(h, bsQuoteTable(cq.lines || [], cq.quote_inr));
+  box.append(h, bsQuoteTable(cq.lines || [], cq.quote_inr, BS.partner_state));
   if (Number(cq.discount_pct) > 0) box.append(el('p', 'note', `Includes the ${Number(cq.discount_pct)}% discount approved by the product lead.`));
   const g = el('div', 'docs'), ctx = { c: BS, cq, presales: BS.presales_name || ME.full_name };
   const mk = (label, fn) => { const b = el('button', 'btn ghost', label); b.onclick = async () => { b.disabled = true; try { await fn(ctx); } catch (e) { alert('Could not create the file: ' + e.message); } finally { b.disabled = false; } }; return b; };
-  g.append(mk('Quote Excel', bsQuoteXlsx), mk('Quote PDF', bsQuotePdf)); box.append(g);
+  g.append(mk('Quote Excel', bsQuoteXlsx), mk('Quote PDF', bsQuotePdf), waButton(BS, cq)); box.append(g);
   if (st === 'submitted') {
     const s = el('div', 'sub'); s.append(el('h3', null, 'Discount request sent'), el('p', 'note', `${Number(BS.disc_request_pct)}%` + (BS.disc_request_note ? ' · ' + BS.disc_request_note : '') + '. You get a revised quote here once the product lead approves.'));
     const w = el('button', 'btn ghost sm', 'Withdraw request');
@@ -1457,25 +1639,28 @@ function drawBsQuote() {
   }
 }
 function bsNamesOk() {
-  const p = $('bProject').value.trim(), q = $('bPartner').value.trim();
+  const p = $('bProject').value.trim(), q = !!BS.partner_id;
   $('bProject').classList.toggle('miss', !p); $('bPartner').classList.toggle('miss', !q);
-  if (!p || !q) { setBPane('details'); errBox('bErr', new Error('Enter the project name and partner\'s name.')); $(!p ? 'bProject' : 'bPartner').focus(); return false; }
+  if (!p || !q) { setBPane('details'); errBox('bErr', new Error(!p ? 'Enter the project name.' : 'Pick the partner from the list, or add it as a new partner.')); $(!p ? 'bProject' : 'bPartner').focus(); return false; }
   return true;
 }
+const markB = partnerPicker('b');
 function saveBs() { if (BSAVING) return BSAVING; BSAVING = saveBsNow().finally(() => { BSAVING = null; }); return BSAVING; }
 async function saveBsNow() {
   if (!bsNamesOk()) return false;
   errBox('bErr', null); $('bSave').disabled = true;
   try {
-    const c = await rpc('qd_case_save', { p: { id: BS.id, brand: 'brightsign', project_name: $('bProject').value.trim(), partner_name: $('bPartner').value.trim(),
+    const c = await rpc('qd_case_save', { p: { id: BS.id, brand: 'brightsign', project_name: $('bProject').value.trim(), partner_name: $('bPartner').value.trim(), partner_id: BS.partner_id || null,
+      partner_state: $('bState').value, end_customer: $('bEnd').value.trim(), consultant: $('bCons').value.trim(),
       bs_lines: bsLines(), bs_req: { builds: BS.builds.filter(b => b.qty > 0).map(b => ({ player: b.player, qty: b.qty, storage: b.storage || null, wifi: !!b.wifi })), cms: BS.cms || null } } });
     const keep = { qty: BS.qty, builds: BS.builds, cms: BS.cms, cq: c.status === 'draft' ? null : BS.cq, presales_name: BS.presales_name };
-    BS = Object.assign(c, keep); BS.saved = bsSig(); UNSAVED = false; $('bCaseNo').textContent = c.case_no; if (/^#new/.test(location.hash)) { history.replaceState(null, '', '#case/' + c.id); LASTHASH = location.hash; } drawBsState(); return true;
+    BS = Object.assign(c, keep); BS.saved = bsSig(); BS.saved_pid = BS.partner_id || null; UNSAVED = false; $('bCaseNo').textContent = c.case_no; if (/^#new/.test(location.hash)) { history.replaceState(null, '', '#case/' + c.id); LASTHASH = location.hash; } drawBsState(); return true;
   } catch (e) { errBox('bErr', e); return false; }
   finally { $('bSave').disabled = false; }
 }
 $('bSave').onclick = async () => { if (await saveBs()) { $('bSave').textContent = 'Saved'; setTimeout(() => $('bSave').textContent = 'Save', 1500); } };
 $('bGo').onclick = async () => {
+  if (!bsNamesOk() || !stateOk('b')) return;
   if (!bsLines().length) { setBPane('products'); errBox('bErr', new Error('Add at least one product.')); return; }
   $('bGo').disabled = true;
   try {
@@ -1555,7 +1740,8 @@ async function openRates() {
   show('vRates'); route('rates'); LASTHASH = location.hash;
 }
 $('ratesBox').addEventListener('input', () => { DIRTY.rates = true; });
-$('cmsRates').onclick = guarded(openRates);
+$('openRates').onclick = guarded(openRates);
+$('adminBtn').onclick = guarded(() => openAdmin());
 $('backFromRates').onclick = guarded(loadCases);
 $('ratesSave').onclick = async () => {
   const rates = [...document.querySelectorAll('#ratesBox input[data-key]')].map(i => { const [vendor, mode, item, term_years] = JSON.parse(i.dataset.key); return { vendor, mode, item, term_years, buy_price: i.value === '' ? null : +i.value }; });
@@ -1564,6 +1750,59 @@ $('ratesSave').onclick = async () => {
   try { const r = await rpc('qd_cms_rates_save', { p: { rates } }); CMSR = null; DIRTY.rates = false; $('ratesSave').textContent = r.changed ? `Saved ${r.changed} change${r.changed > 1 ? 's' : ''}` : 'No changes'; setTimeout(() => $('ratesSave').textContent = 'Save rates', 1800); errBox('ratesErr', null); }
   catch (e) { errBox('ratesErr', e); }
   finally { $('ratesSave').disabled = false; }
+};
+
+/* ---------- Admin (lead): settings, missing prices, backup ---------- */
+async function openAdmin() {
+  errBox('sErr', null); DIRTY.admin = false;
+  try { SET = await rpc('qd_settings'); } catch (e) { alert(e.message); return; }
+  $('sGst').value = SET.gst_rate; $('sState').value = SET.billing_state; $('sValid').value = SET.valid_days; $('sCf').value = SET.bs_cf; $('sMargin').value = SET.bs_margin;
+  $('sPay').value = SET.payment_terms || ''; $('sDel').value = SET.delivery_terms || '';
+  show('vAdmin'); route('admin'); LASTHASH = location.hash;
+  drawMissing();
+}
+async function drawMissing() {
+  const box = $('mpBox'); box.replaceChildren(el('p', 'note', 'Loading…'));
+  let m; try { m = await rpc('qd_missing_prices'); } catch (e) { box.replaceChildren(el('div', 'err', e.message)); return; }
+  const n = m.tvone.length + m.cms.length + m.brightsign.length; $('mpCount').textContent = n ? n + ' missing' : 'All priced'; $('mpCount').className = 'chip ' + (n ? 'warn' : 'ok');
+  box.replaceChildren();
+  if (m.tvone.length) {
+    box.append(el('h3', null, 'tvONE price list (USD buy price)'), el('p', 'note', 'Calico Pro items first. A quote using an item without a price is blocked.'));
+    [...m.tvone].sort((a, b) => (b.family === 'Calico') - (a.family === 'Calico') || a.item.localeCompare(b.item)).forEach(x => {
+      const r = el('div', 'mp'), i = el('input'), sv = el('button', 'btn sm', 'Save'), l = el('span');
+      l.append(el('b', 'mono', x.item), el('span', 'note', ' · ' + (x.family || '') + (x.description ? ' · ' + x.description : '')));
+      i.type = 'number'; i.min = '0'; i.step = '0.01'; i.placeholder = 'USD'; i.setAttribute('aria-label', 'USD price for ' + x.item);
+      i.addEventListener('input', () => { DIRTY.admin = true; });
+      sv.onclick = async () => { if (!(+i.value > 0)) { i.classList.add('miss'); i.focus(); return; } sv.disabled = true;
+        try { await rpc('qd_tvone_price_set', { p_id: x.id, p_usd: +i.value }); toast(x.item + ' priced at USD ' + usd(+i.value)); DIRTY.admin = false; drawMissing(); } catch (e) { alert(e.message); sv.disabled = false; } };
+      r.append(l, i, sv); box.append(r);
+    });
+  }
+  if (m.cms.length) { const r = el('div', 'row between'); const b = el('button', 'btn ghost sm', 'Open CMS rates'); b.onclick = guarded(openRates); r.append(el('span', null, `${m.cms.length} CMS rate${m.cms.length > 1 ? 's' : ''} not set: those CMS options stay greyed out for presales.`), b); box.append(r); }
+  if (m.brightsign.length) box.append(el('p', 'note', 'BrightSign items in the range without a price: ' + m.brightsign.join(', ')));
+  if (!n) box.append(el('p', 'note', 'Every item in the range has a price.'));
+}
+['sGst', 'sState', 'sValid', 'sCf', 'sMargin', 'sPay', 'sDel'].forEach(i => $(i).addEventListener('input', () => { DIRTY.admin = true; }));
+$('sSave').onclick = async () => {
+  $('sSave').disabled = true; errBox('sErr', null);
+  try {
+    SET = await rpc('qd_settings_save', { p: { gst_rate: +$('sGst').value, billing_state: $('sState').value, valid_days: +$('sValid').value, bs_cf: +$('sCf').value, bs_margin: +$('sMargin').value, payment_terms: $('sPay').value, delivery_terms: $('sDel').value } });
+    DIRTY.admin = false; toast('Settings saved');
+  } catch (e) { errBox('sErr', e); }
+  finally { $('sSave').disabled = false; }
+};
+$('backFromAdmin').onclick = guarded(loadCases);
+$('backupBtn').onclick = async () => {
+  const b = $('backupBtn'); b.disabled = true;
+  try {
+    const x = await rpc('qd_export'); await need('exceljs'); const wb = new ExcelJS.Workbook();
+    const sheet = (name, rows) => { const ws = wb.addWorksheet(name); if (!rows.length) { ws.addRow(['No rows']); return; }
+      const keys = [...new Set(rows.flatMap(o => Object.keys(o)))]; ws.addRow(keys); xlHead(ws.getRow(1));
+      rows.forEach(o => ws.addRow(keys.map(k => o[k] == null ? null : typeof o[k] === 'object' ? JSON.stringify(o[k]) : o[k]))); ws.columns.forEach(c => c.width = 18); };
+    sheet('Cases', x.cases); sheet('Quotes', x.quotes); sheet('Quote lines', x.lines); sheet('Case history', x.history);
+    await saveWb(wb, `Quote_Desk_backup_${todayISO()}.xlsx`); toast('Backup downloaded');
+  } catch (e) { alert('Could not make the backup: ' + e.message); }
+  finally { b.disabled = false; }
 };
 
 /* ---------- Autosave ----------
@@ -1579,8 +1818,8 @@ async function autoSave() {
   clearTimeout(AUTO.t); const kind = AUTO.kind; AUTO.n = 0; AUTO.kind = null; if (!kind) return;
   const bs = kind === 'bs', c = bs ? BS : ED, view = bs ? 'vBs' : 'vEdit';
   if (!c || $(view).hidden || !['draft', 'returned'].includes(c.status)) return;
-  const proj = $(bs ? 'bProject' : 'eProject').value.trim(), part = $(bs ? 'bPartner' : 'ePartner').value.trim();
-  if (!proj || !part) return;                     // nothing to save until both names are in
+  const proj = $(bs ? 'bProject' : 'eProject').value.trim(), part = c.partner_id;
+  if (!proj || !part) return;                     // nothing to save until the project name and partner are in
   const btn = $(bs ? 'bSave' : 'eSave'), lbl = btn.textContent;
   btn.textContent = 'Saving…';
   const ok = await (bs ? saveBs() : saveCase());
@@ -1591,7 +1830,9 @@ async function flushAuto() { if (AUTO.kind) await autoSave(); }
 $('vEdit').addEventListener('input', e => { if (e.target.id !== 'ePdf') touched('tv'); });
 $('vEdit').addEventListener('click', e => { if (e.target.closest('[data-step], .yn button')) touched('tv'); });
 // BrightSign editor: name fields (product changes are counted where they happen; search is not a change)
-['bProject', 'bPartner'].forEach(i => $(i).addEventListener('input', () => touched('bs')));
+['bProject', 'bEnd', 'bCons'].forEach(i => $(i).addEventListener('input', () => { touched('bs'); drawBsState(); }));
+$('bState').addEventListener('change', () => { $('bState').classList.remove('miss'); touched('bs'); drawBsState(); });
+$('eState').addEventListener('change', () => $('eState').classList.remove('miss'));
 
 /* ---------- BrightSign review (lead): approve a discount or re-quote ---------- */
 function reviewBs(r, pane, host) {
@@ -1601,7 +1842,8 @@ function reviewBs(r, pane, host) {
   const head = el('div', 'card'), t = el('div', 'row between'), asks = c.status === 'submitted' && c.disc_request_pct != null;
   const sc = chip(c.status); if (asks) sc.textContent = 'Discount requested';
   const tt = el('div', 'row'); tt.style.gap = '8px'; tt.append(el('span', 'bchip bs', 'BrightSign'), el('h2', null, c.project_name)); t.append(tt, sc);
-  head.append(t, el('div', 'note', `${c.partner_name} · ${c.case_no} · ${r.presales_name || ''} · ${c.territory}`));
+  head.append(t, el('div', 'note', `${c.partner_name}${c.partner_state ? ' (' + c.partner_state + ')' : ''} · ${c.case_no} · ${r.presales_name || ''} · ${c.territory}`));
+  if (c.end_customer || c.consultant) head.append(el('div', 'note', [c.end_customer ? 'End customer: ' + c.end_customer : '', c.consultant ? 'Consultant: ' + c.consultant : ''].filter(Boolean).join(' · ')));
   const req = c.bs_req || {};
   if (req.cms) head.append(el('div', 'note mono', `CMS: ${CMS_NAMES[req.cms.vendor]} · ${req.cms.mode === 'onprem' ? 'on-premise' : 'cloud'} · ${req.cms.years} year${req.cms.years > 1 ? 's' : ''}`));
   const sku = id => { const x = (b.lines || []).find(l => l.price_id === id); return x ? x.sku : ''; };
@@ -1675,10 +1917,10 @@ function reviewBs(r, pane, host) {
     rc.append(tlx); B.append(rc);
   }
   if (r.customer_quote) {
-    const dc = el('div', 'card'); dc.append(el('h3', null, 'Customer quote'), bsQuoteTable(r.customer_quote.lines || [], r.customer_quote.quote_inr));
+    const dc = el('div', 'card'); dc.append(el('h3', null, 'Customer quote'), bsQuoteTable(r.customer_quote.lines || [], r.customer_quote.quote_inr, c.partner_state));
     const g = el('div', 'docs'), ctx = { c, cq: r.customer_quote, presales: r.presales_name };
     const mk = (label, fn) => { const bt = el('button', 'btn ghost', label); bt.onclick = async () => { bt.disabled = true; try { await fn(ctx); } catch (e) { alert('Could not create the file: ' + e.message); } finally { bt.disabled = false; } }; return bt; };
-    g.append(mk('Quote Excel', bsQuoteXlsx), mk('Quote PDF', bsQuotePdf)); dc.append(g); B.append(dc);
+    g.append(mk('Quote Excel', bsQuoteXlsx), mk('Quote PDF', bsQuotePdf), waButton(c, r.customer_quote)); dc.append(g); B.append(dc);
   }
   root.append(H, S, B); host.replaceChildren(root);
   if (!pane) window.scrollTo(0, 0);
@@ -1689,8 +1931,8 @@ function bsQuoteData(ctx) {
   const c = ctx.c, q = ctx.cq, lines = (q.lines || []).map(l => ({ ...l, sell_each: Math.round(Number(l.sell_each)), sell: Math.round(Number(l.sell)) }));
   const cloud = lines.some(l => l.group === 'CMS' || l.group === 'CLOUD');
   return { no: `${c.case_no}-R${q.revision}`, lines, total: lines.reduce((s, l) => s + l.sell, 0),
-    meta: [['Quote no', `${c.case_no}-R${q.revision}`], ['Date', today()], ['Project', c.project_name], ['Valid till', q.valid_till ? fdate(q.valid_till) : 'On request'], ['Partner', c.partner_name], ['Prepared by', ctx.presales || '-']],
-    terms: ['Prices are in Indian Rupees for the items and quantities listed.', 'Taxes extra as applicable.'].concat(cloud ? ['CMS licences are per player for the tenure shown.'] : [], q.valid_till ? ['This quote is valid until the date shown above.'] : []) };
+    meta: [['Quote no', `${c.case_no}-R${q.revision}`], ['Date', today()], ['Project', c.project_name], ['Valid till', q.valid_till ? fdate(q.valid_till) : 'On request'], ['Partner', c.partner_name], ['Prepared by', ctx.presales || '-'], ['End customer', c.end_customer || '-'], ['Place of supply', c.partner_state || '-']],
+    terms: ['Prices are in Indian Rupees for the items and quantities listed.'].concat(gstTerms(c), cloud ? ['CMS licences are per player for the tenure shown.'] : [], q.valid_till ? ['This quote is valid until the date shown above.'] : []) };
 }
 async function bsQuotePdf(ctx) {
   await need('jspdf'); const d = pdfNew(), Q = bsQuoteData(ctx);
@@ -1698,10 +1940,9 @@ async function bsQuotePdf(ctx) {
   y = pdfMeta(d, Q.meta, y) + 2;
   const cols = [{ h: 'Sr', w: 9, align: 'center' }, { h: 'Item code', w: 30 }, { h: 'Description', w: 69 }, { h: 'Qty', w: 12, align: 'center' }, { h: 'Unit price (INR)', w: 27, align: 'right' }, { h: 'Amount (INR)', w: CW - 147, align: 'right' }];
   y = pdfTable(d, y, cols, Q.lines.map((l, i) => [String(i + 1), l.sku, l.desc || '', String(l.qty), inr(l.sell_each), inr(l.sell)]), { fs: 8.6, zebra: true, bold: [1], onPage: () => pdfHeader(d, 'QUOTATION', Q.no, BS_TAG) });
-  if (y > PG.h - 60) { d.addPage(); y = pdfHeader(d, 'QUOTATION', Q.no, BS_TAG); }
-  y += 2; d.setFillColor(...PG.soft); d.rect(PG.m + 108, y, CW - 108, 10, 'F'); d.setDrawColor(...PG.amber); d.setLineWidth(0.6); d.line(PG.m + 108, y, PG.w - PG.m, y);
-  d.setFont('helvetica', 'bold'); d.setFontSize(10.5); d.setTextColor(...PG.ink); d.text('Total (INR)', PG.m + 112, y + 6.6); d.text(inr(Q.total), PG.w - PG.m - 2.2, y + 6.6, { align: 'right' });
-  y += 20;
+  if (y > PG.h - 80) { d.addPage(); y = pdfHeader(d, 'QUOTATION', Q.no, BS_TAG); }
+  y = pdfTotals(d, y, gstRows(Q.total, ctx.c.partner_state));
+  y += 10;
   d.setFont('helvetica', 'bold'); d.setFontSize(9); d.setTextColor(...PG.ink); d.text('Terms', PG.m, y);
   d.setFont('helvetica', 'normal'); d.setFontSize(8.5); d.setTextColor(...PG.mute); Q.terms.forEach((t, i) => d.text('•  ' + t, PG.m, y + 6 + i * 5));
   pdfFooter(d); d.save(`Quote_${safe(ctx.c.project_name)}_${Q.no}.pdf`);
@@ -1733,9 +1974,7 @@ async function bsQuoteXlsx(ctx) {
     lr.height = Math.max(estLines(l.desc, 52), estLines(l.sku, 22)) * 14 + 6;
     if (i % 2) lr.eachCell({ includeEmpty: true }, c => c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: XL.soft } });
   });
-  const tr = ws.getRow(++r); tr.getCell(5).value = 'Total (INR)'; tr.getCell(6).value = { formula: `SUM(F${first}:F${r - 1})`, result: Q.total };
-  [5, 6].forEach(c => { const cl = tr.getCell(c); cl.font = { bold: true, size: 11 }; cl.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: XL.soft } }; cl.border = { top: { style: 'medium', color: { argb: XL.amber } }, bottom: thin }; cl.alignment = { horizontal: 'right' }; });
-  tr.getCell(6).numFmt = INRFMT; tr.height = 22;
+  r = xlTotals(ws, r, 5, 'F', gstRows(Q.total, ctx.c.partner_state), `SUM(F${first}:F${r})`);
   r += 2; ws.getCell(r, 1).value = 'Terms'; ws.getCell(r, 1).font = { bold: true };
   Q.terms.forEach(t => { r++; ws.mergeCells(r, 1, r, 6); ws.getCell(r, 1).value = '•  ' + t; ws.getCell(r, 1).font = { size: 9, color: { argb: XL.mute } }; });
   ws.headerFooter.oddFooter = '&L&8Cavitak Marketing Pvt. Ltd.&R&8Page &P of &N';
