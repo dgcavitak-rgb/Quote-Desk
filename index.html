@@ -80,7 +80,7 @@ input:disabled,button:disabled,textarea:disabled{opacity:.55;cursor:not-allowed}
 .kv:last-child{border-bottom:0}
 .kv span:first-child{color:var(--mute)}
 .kv span:last-child{text-align:right;font-family:var(--mono);overflow-wrap:anywhere}
-.case{background:var(--panel);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;border:0;text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
+.case{min-width:0;background:var(--panel);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;border:0;text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
 .case:hover{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 35%,transparent)}
 .list{display:flex;flex-direction:column;gap:10px}
 .filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
@@ -104,7 +104,7 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
 .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:var(--panel);color:var(--fg);border-radius:999px;padding:6px 12px;font:500 12px var(--body);cursor:pointer}
 .docs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .docs .btn{padding:10px 6px;font-size:13px}
-.split{display:grid;gap:16px}
+.split{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
 .wrap.wide{max-width:1440px}
 .k4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 @media (max-width:640px){ .k4{grid-template-columns:repeat(2,minmax(0,1fr))} }
@@ -178,6 +178,9 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
 .ql>span:not(:first-child){text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
 .ql .note{display:block}
 @media (max-width:520px){.ql{grid-template-columns:minmax(0,1fr) 34px 96px}.ql>span:nth-child(3){display:none}}
+@media (pointer:coarse){.seg button{min-height:40px} nav.tabs button{min-height:44px} .qty button{width:40px;height:40px} .qty.sm button{width:36px;height:36px} .qty.sm input{min-height:36px} .wifi{min-height:40px;padding:8px 16px} .addb{min-height:40px} .filters button{min-height:36px;padding:8px 14px} .btn.sm{min-height:40px}}
+.toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);max-width:min(92vw,520px);background:var(--fg);color:var(--panel);padding:11px 18px;border-radius:14px;font:500 13px var(--body);z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.qhint{font-size:12px;color:var(--mute)} .qhint.bad{color:var(--bad)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -200,6 +203,7 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
     <form id="fNewPass" class="list" hidden>
       <label>New password (at least 8 characters)<span class="pw"><input type="password" id="aNew" autocomplete="new-password" minlength="8" required><button type="button" class="eye" data-eye="aNew" aria-label="Show password">Show</button></span></label>
       <button class="btn" type="submit">Save new password</button>
+      <button class="btn ghost sm" type="button" id="aOut2">Sign out</button>
     </form>
     <div class="note" id="authMsg"></div>
   </section>
@@ -214,7 +218,7 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
   <section id="vList" hidden>
     <div class="split" id="listSplit">
       <div class="list">
-        <div class="row between"><h2 id="listTitle">My cases</h2><div class="row"><button class="btn ghost sm" id="cmsRates" hidden>CMS rates</button><button class="btn sm" id="newCase">New case</button></div></div>
+        <div class="row between" id="listHead"><h2 id="listTitle">My cases</h2><div class="row"><button class="btn ghost sm" id="cmsRates" hidden>CMS rates</button><button class="btn sm" id="newCase">New case</button></div></div>
         <div class="notice" id="notice" hidden></div>
         <div class="k3" id="kpis" hidden></div>
         <input id="search" type="search" placeholder="Search project, partner or case no." aria-label="Search cases"><div id="filters" hidden></div>
@@ -271,7 +275,7 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
 
     <div class="card" data-pane="calico" hidden>
       <h2>Calico PDF</h2>
-      <label class="drop" for="ePdf"><b id="ePdfName">Choose the PDF exported from the Calico software</b><span class="note">Save the case first, then upload</span><input type="file" id="ePdf" accept="application/pdf,.pdf" hidden></label>
+      <label class="drop" for="ePdf"><b id="ePdfName">Choose the PDF exported from the Calico software</b><span class="note">Enter the project and partner names first; the case saves itself when you upload</span><input type="file" id="ePdf" accept="application/pdf,.pdf" hidden></label>
       <div class="err" id="ePdfErr" hidden></div>
       <div class="sub" id="eCfg" hidden></div>
       <div class="list" id="eChecks"></div>
@@ -355,7 +359,7 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 'use strict';
-const APP_VERSION = 'v1.7.2';
+const APP_VERSION = 'v1.8.0';
 const SUPABASE_URL = 'https://yhzecukifwnlgowmgkrc.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Rex8QiypJkVmJz2r7UPGtg_3-l1yy1u';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
@@ -388,6 +392,70 @@ async function rpc(name, args) {
   return data;
 }
 function errBox(id, e) { const b = $(id); b.hidden = !e; b.textContent = e ? (e.message || String(e)) : ''; }
+function toast(msg) { const t = el('div', 'toast', msg); t.setAttribute('role', 'status'); document.body.append(t); setTimeout(() => t.remove(), 3200); }
+const isStale = e => /^STALE:/.test(e.message || '');
+const staleMsg = e => (e.message || '').replace(/^STALE:\s*/, '');
+const todayISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+
+/* ---------- Navigation: browser Back / refresh, and unsaved changes ----------
+   Each screen has an address (#case/<id>, #new, #new/bs, #new/tvone, #rates). Leaving a screen with
+   changes that would be lost asks first. */
+let ROUTING = false, UNSAVED = false, DIRTY = { rev: false, rates: false };
+function route(h) {
+  if (ROUTING || /access_token|type=/.test(location.hash)) return;
+  const want = h ? '#' + h : '';
+  if (location.hash === want) return;
+  history.pushState(null, '', want || location.pathname + location.search);
+}
+// The brand chooser is a step, not a place: a new case replaces it in the browser history.
+function navTo(id, fresh) { if (!id && location.hash === '#new' && !ROUTING) history.replaceState(null, '', '#' + fresh); else route(id ? 'case/' + id : fresh); }
+function pendingChanges() {
+  const inBs = !$('vBs').hidden, inTv = !$('vEdit').hidden;
+  if ((inBs || inTv) && AUTO.kind && (!$(inBs ? 'bProject' : 'eProject').value.trim() || !$(inBs ? 'bPartner' : 'ePartner').value.trim())) return 'This case is not saved yet: it needs the project name and partner\'s name.';
+  if (inBs && BS && BS.id && ['quoted', 'revised'].includes(BS.status) && bsDirty()) return 'You changed products or CMS but did not tap Update quote.';
+  if ((inBs || inTv) && UNSAVED) return 'You changed this case but did not save it.';
+  if (!$('vList').hidden && DIRTY.rev) return 'You typed a quote, note or reason on this case and did not send it.';
+  if (!$('vRates').hidden && DIRTY.rates) return 'You changed CMS rates and did not save them.';
+  return '';
+}
+async function leaveOk() {
+  const m = pendingChanges();
+  if (m) { if (!confirm(m + '\n\nLeave and discard the changes?')) return false; AUTO.kind = null; AUTO.n = 0; clearTimeout(AUTO.t); UNSAVED = false; DIRTY.rev = DIRTY.rates = false; }
+  else await flushAuto();
+  return true;
+}
+const guarded = fn => async (...a) => { if (await leaveOk()) return fn(...a); };
+window.addEventListener('beforeunload', e => { if (pendingChanges() || AUTO.kind) { e.preventDefault(); e.returnValue = ''; } });
+let LASTHASH = location.hash;
+window.addEventListener('popstate', async () => {
+  if (!ME || !ME.ok) return;
+  const h = location.hash;
+  if (pendingChanges()) { const back = LASTHASH; if (!(await leaveOk())) { history.pushState(null, '', back || location.pathname); return; } }
+  else await flushAuto();
+  await go(h);
+});
+async function go(h) {
+  ROUTING = true;
+  try {
+    const m = (h || '').replace(/^#/, '');
+    if (m === 'rates' && ME.role === 'lead') await openRates();
+    else if (m === 'new') await pickBrand();
+    else if (m === 'new/bs') await openBsEditor(null);
+    else if (m === 'new/tvone') await openEditor(null);
+    else if (/^case\/[\w-]+$/.test(m)) {
+      const id = m.slice(5);
+      if (!CASES.length) { try { CASES = await rpc('qd_case_list'); } catch (e) { CASES = []; } }
+      const c = CASES.find(x => x.id === id);
+      if (!c) await loadCases();
+      else { if (ME.role !== 'presales' && window.innerWidth >= 900 && $('vList').hidden) await loadCases(); CUR = id; if (!$('vList').hidden) drawList(); await openCase(c); }
+    } else await loadCases();
+  } finally { ROUTING = false; LASTHASH = location.hash; }
+}
+// The lists refresh when you come back to the tab, so changes made by the other side show up.
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState !== 'visible' || !ME || !ME.ok || $('vList').hidden || DIRTY.rev) return;
+  try { CASES = await rpc('qd_case_list'); drawList(); } catch (e) { }
+});
 
 /* ---------- Auth ---------- */
 $('fSignIn').addEventListener('submit', async e => {
@@ -399,9 +467,12 @@ $('fSignIn').addEventListener('submit', async e => {
 });
 document.addEventListener('click', e => { const b = e.target.closest('[data-eye]'); if (!b) return; const i = $(b.dataset.eye); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; b.textContent = show ? 'Hide' : 'Show'; b.setAttribute('aria-label', show ? 'Hide password' : 'Show password'); i.focus(); });
 $('aForgot').onclick = async () => {
-  const email = $('aEmail').value.trim();
-  if (!email) { $('authMsg').textContent = 'Enter your work email first.'; return; }
-  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+  const id = $('aEmail').value.trim().toLowerCase();
+  if (!id) { $('authMsg').textContent = 'Enter your work email first.'; return; }
+  if (!id.includes('@')) { $('authMsg').textContent = 'Password reset needs a work email. Ask the product lead to reset a username login.'; return; }
+  $('aForgot').disabled = true;
+  const { error } = await sb.auth.resetPasswordForEmail(id, { redirectTo: location.origin + location.pathname });
+  $('aForgot').disabled = false;
   $('authMsg').textContent = error ? error.message : 'If this email has an account, a reset link is on its way.';
 };
 $('fNewPass').addEventListener('submit', async e => {
@@ -411,7 +482,8 @@ $('fNewPass').addEventListener('submit', async e => {
   $('authMsg').textContent = error ? error.message : 'Password saved.';
   if (!error) { history.replaceState(null, '', location.pathname); $('fNewPass').hidden = true; $('fSignIn').hidden = false; $('authTitle').textContent = 'Sign in'; boot(); }
 });
-$('signOut').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+$('signOut').onclick = async () => { if (!(await leaveOk())) return; await sb.auth.signOut(); location.replace(location.pathname); };
+$('aOut2').onclick = async () => { await sb.auth.signOut(); location.replace(location.pathname); };
 // Invite and reset links arrive with #...type=invite or type=recovery: ask for a password before anything else.
 const NEEDS_PASSWORD = /type=(invite|recovery)/.test(location.hash);
 function askPassword(title) { show('vAuth'); $('authTitle').textContent = title; $('fSignIn').hidden = true; $('fNewPass').hidden = false; }
@@ -435,15 +507,18 @@ async function boot() {
   $('listSplit').classList.toggle('lead', ME.role !== 'presales');
   $('cmsRates').hidden = ME.role !== 'lead';
   document.querySelector('.wrap').classList.toggle('wide', ME.role !== 'presales');
-  await loadCases();
+  const h = location.hash;
+  if (/^#(case\/|new|rates)/.test(h)) await go(h); else await loadCases();
 }
 
 /* ---------- Case list ---------- */
 async function loadCases() {
   await flushAuto();
-  show('vList'); setTab('cases'); $('search').hidden = false;
+  show('vList'); setTab('cases'); $('search').hidden = false; $('listHead').hidden = false; route(''); LASTHASH = location.hash;
   try { CASES = await rpc('qd_case_list'); } catch (e) { CASES = []; $('cases').replaceChildren(el('div', 'err', e.message)); return; }
   drawList();
+  // keep the lead's side pane in step with the list
+  if (ME.role !== 'presales' && window.innerWidth >= 900 && CUR && CASES.some(c => c.id === CUR)) { const R = ROUTING; ROUTING = true; try { await openReview(CUR); } finally { ROUTING = R; } }
 }
 const DAY = 864e5;
 const waitT = c => (c.brand === 'brightsign' && c.disc_requested_at) ? c.disc_requested_at : (c.submitted_at || c.updated_at);
@@ -460,7 +535,7 @@ function drawList() {
     const need = CASES.filter(c => c.status === 'submitted'), oldest = need.length ? Math.max(...need.map(c => ageDays(waitT(c)))) : 0;
     const pipe = CASES.filter(c => ['quoted', 'revised'].includes(c.status)).reduce((s, c) => s + Number(c.quote_inr || 0), 0);
     const cut = Date.now() - 90 * DAY, cl = CASES.filter(c => ['won', 'lost'].includes(c.status) && c.closed_at && new Date(c.closed_at) > cut), won = cl.filter(c => c.status === 'won').length;
-    k.replaceChildren(kpi(need.length, need.length ? `Needs quote · oldest ${oldest}d` : 'Needs quote'), kpi(CASES.filter(c => c.status === 'returned').length, 'Returned'),
+    k.replaceChildren(kpi(need.length, need.length ? `Waiting for you · oldest ${oldest}d` : 'Waiting for you'), kpi(CASES.filter(c => c.status === 'returned').length, 'Returned'),
       kpi(pipe ? lakh(pipe) : '0', 'Open pipeline, INR'), kpi(cl.length ? Math.round(won / cl.length * 100) + '%' : '-', 'Win rate, 90 days'));
   } else {
     k.replaceChildren(kpi(CASES.filter(c => ['draft', 'returned'].includes(c.status)).length, 'Needs your action'), kpi(CASES.filter(c => c.status === 'submitted').length, 'With product lead'), kpi(CASES.filter(c => ['quoted', 'revised'].includes(c.status)).length, 'Quoted'));
@@ -468,7 +543,7 @@ function drawList() {
   drawNotice(lead);
   const by = st => rows.filter(c => st.includes(c.status));
   const groups = lead ? [
-    ['need', 'Needs quote', by(['submitted']).sort((a, b) => new Date(waitT(a)) - new Date(waitT(b))), true],
+    ['need', 'Waiting for you', by(['submitted']).sort((a, b) => new Date(waitT(a)) - new Date(waitT(b))), true],
     ['quoted', 'Quoted · awaiting outcome', by(['quoted', 'revised']).sort((a, b) => (b.quote_inr || 0) - (a.quote_inr || 0)), true],
     ['returned', 'Returned to presales', by(['returned']), true],
     ['drafts', 'Drafts', by(['draft']), false],
@@ -500,9 +575,9 @@ function drawNotice(lead) {
   const txt = el('div');
   if (todo.length) {
     txt.append(el('b', null, String(todo.length)), el('span', null, lead ? (todo.length === 1 ? 'case is waiting for you' : 'cases are waiting for you') : (todo.length === 1 ? 'case needs your action' : 'cases need your action')));
-    if (lead) txt.append(el('div', 'note', `Oldest: ${todo[0].project_name} · ${ageDays(waitT(todo[0]))}d` + (todo.some(c => c.disc_request_pct != null) ? ` · ${todo.filter(c => c.disc_request_pct != null).length} BrightSign discount request(s)` : '')));
+    if (lead) txt.append(el('div', 'note', `Oldest: ${todo[0].project_name} · ${ageDays(waitT(todo[0]))}d` + (todo.some(c => c.disc_request_pct != null) ? (n => ` · ${n} BrightSign discount request${n > 1 ? 's' : ''}`)(todo.filter(c => c.disc_request_pct != null).length) : '')));
     else { const ret = todo.filter(c => c.status === 'returned').length; if (ret) txt.append(el('div', 'note', `${ret} returned by the product lead`)); }
-    const go = el('button', 'btn sm', lead ? 'Open oldest' : 'Open'); go.onclick = () => { CUR = todo[0].id; if (lead && window.innerWidth >= 900) drawList(); openCase(todo[0]); };
+    const go = el('button', 'btn sm', lead ? 'Open oldest' : 'Open'); go.onclick = guarded(() => { CUR = todo[0].id; if (lead && window.innerWidth >= 900) drawList(); openCase(todo[0]); });
     n.append(txt, go);
   } else { txt.append(el('span', null, lead ? 'Nothing waiting for a quote.' : 'Nothing needs your action right now.')); n.append(txt); }
 }
@@ -516,8 +591,9 @@ function caseRow(c, lead) {
   b.append(l1, l2);
   if ((c.flags || []).some(x => FLAG_CLS[x.code] === 'bad')) b.append(el('span', 'chip bad', 'Short on ports'));
   if (c.status === 'returned' && c.return_note) b.append(el('span', 'note ellip', 'Note: ' + c.return_note));
+  if (c.brand === 'brightsign' && ['quoted', 'revised'].includes(c.status) && c.return_note) b.append(el('span', 'chip warn', 'Discount declined'));
   if (c.status === 'submitted' && c.disc_request_pct != null) b.append(el('span', 'chip info', `Discount ask ${Number(c.disc_request_pct)}%` + (c.disc_request_note ? ' · ' + c.disc_request_note : '')));
-  b.onclick = () => { CUR = c.id; if (lead && window.innerWidth >= 900) drawList(); openCase(c); };
+  b.onclick = guarded(() => { CUR = c.id; if (lead && window.innerWidth >= 900) drawList(); openCase(c); });
   return b;
 }
 function kpi(v, l) { const d = el('div', 'kpi'); d.append(el('b', null, String(v)), el('span', null, l)); return d; }
@@ -528,11 +604,13 @@ function openCase(c) {
   return openReview(c.id);
 }
 const isEditable = st => !['won', 'lost'].includes(st);
+// BrightSign products and CMS are locked while a discount request is with the product lead.
+const bsEditable = () => isEditable(BS.status) && BS.status !== 'submitted';
 
 /* ---------- Editor ---------- */
 function blankCase() { return { id: null, case_no: null, status: 'draft', project_name: '', partner_name: '', n_display: 0, n_projector: 0, req_in_4k60: 0, req_in_4k30: 0, audio_required: false, led: [], territory: ME.territory }; }
 async function openEditor(id) {
-  errBox('eErr', null); errBox('ePdfErr', null);
+  errBox('eErr', null); errBox('ePdfErr', null); UNSAVED = false;
   let cfg = null;
   if (id) {
     try { const r = await rpc('qd_case_get', { p_case: id }); ED = r.case; cfg = r.config; ED.cq = r.customer_quote; ED.presales_name = r.presales_name; } catch (e) { alert(e.message); return; }
@@ -553,11 +631,11 @@ async function openEditor(id) {
   $('ePdf').disabled = !editable; $('eSave').hidden = !editable; $('eSubmit').hidden = !['draft', 'returned'].includes(ED.status);
   $('eSave').textContent = ['draft', 'returned'].includes(ED.status) ? 'Save draft' : 'Save changes';
   ED.ledList = (ED.led || []).map(l => ({ p: Number(l.pixel_pitch), w: l.width_px, h: l.height_px }));
-  drawLeds(); calcTotals(); drawCfg(); drawDocs($('eDocs'), { c: ED, cfg: ED.cfg, cq: ED.cq, presales: ED.presales_name || ME.full_name }); setPane('details'); show('vEdit'); setTab(id ? 'cases' : 'new');
+  drawLeds(); calcTotals(); drawCfg(); drawDocs($('eDocs'), { c: ED, cfg: ED.cfg, cq: ED.cq, presales: ED.presales_name || ME.full_name }); setPane('details'); show('vEdit'); setTab(id ? 'cases' : 'new'); navTo(id, 'new/tvone'); LASTHASH = location.hash;
 }
 const ledOut = l => Math.ceil((l.w || 0) / 3840) * Math.ceil((l.h || 0) / 2160);
 function drawLeds() {
-  const n = Math.max(0, Math.min(20, +$('eLed').value || 0));
+  const n = num('eLed');
   while (ED.ledList.length < n) ED.ledList.push({ p: 1.5, w: 3840, h: 2160 });
   ED.ledList.length = n;
   const box = $('eLeds'); box.replaceChildren();
@@ -586,10 +664,12 @@ function drawLeds() {
     paint(); card.append(head, prev, f3, size); box.append(card);
   });
 }
+// Whole numbers within the field's min and max; out-of-range values are corrected in the box itself.
+function num(id) { const i = $(id), mx = +i.max || 99999, v = Math.max(0, Math.min(mx, Math.floor(+i.value || 0))); if (i.value !== '' && +i.value !== v) i.value = v; return v; }
 function calcTotals() {
-  const out = ED.ledList.reduce((s, l) => s + ledOut(l), 0) + (+$('eDisp').value || 0) + (+$('eProj').value || 0);
-  $('tOut').textContent = out; $('tIn60').textContent = +$('eIn60').value || 0; $('tIn30').textContent = +$('eIn30').value || 0;
-  ED.req = { out, in60: +$('eIn60').value || 0, in30: +$('eIn30').value || 0, audio: AUD };
+  const out = ED.ledList.reduce((s, l) => s + ledOut(l), 0) + num('eDisp') + num('eProj');
+  $('tOut').textContent = out; $('tIn60').textContent = num('eIn60'); $('tIn30').textContent = num('eIn30');
+  ED.req = { out, in60: num('eIn60'), in30: num('eIn30'), audio: AUD };
   // 2U fit: base 8 in + 4 out; slot 10 outputs, slot 11 standard input or audio, slot 12 any input
   const x60 = Math.max(0, Math.ceil((ED.req.in60 - 8) / 4)), x30 = Math.ceil(ED.req.in30 / 2), inSlots = AUD ? 1 : 2;
   const msgs = [];
@@ -615,13 +695,13 @@ function setAudio(v) { AUD = !!v; $('eAudYes').setAttribute('aria-pressed', AUD)
 $('eAudYes').onclick = () => { setAudio(true); calcTotals(); };
 $('eAudNo').onclick = () => { setAudio(false); calcTotals(); };
 function payload() {
-  return { id: ED.id, project_name: $('eProject').value.trim(), partner_name: $('ePartner').value.trim(), n_display: +$('eDisp').value || 0, n_projector: +$('eProj').value || 0,
-    req_in_4k60: +$('eIn60').value || 0, req_in_4k30: +$('eIn30').value || 0, audio_required: AUD, led: ED.ledList.map(l => ({ pixel_pitch: l.p, width_px: l.w, height_px: l.h })) };
+  return { id: ED.id, project_name: $('eProject').value.trim(), partner_name: $('ePartner').value.trim(), n_display: num('eDisp'), n_projector: num('eProj'),
+    req_in_4k60: num('eIn60'), req_in_4k30: num('eIn30'), audio_required: AUD, led: ED.ledList.map(l => ({ pixel_pitch: l.p, width_px: l.w, height_px: l.h })) };
 }
 function namesOk() {
   const p = $('eProject').value.trim(), q = $('ePartner').value.trim();
   $('eProject').classList.toggle('miss', !p); $('ePartner').classList.toggle('miss', !q);
-  if (!p || !q) { setPane('details'); errBox('eErr', new Error('Enter the project name and partner\'s name.')); return false; }
+  if (!p || !q) { setPane('details'); errBox('eErr', new Error('Enter the project name and partner\'s name.')); $(!p ? 'eProject' : 'ePartner').focus(); return false; }
   return true;
 }
 let SAVING = null;
@@ -634,7 +714,7 @@ function saveCase() {
 async function saveCaseNow() {
   if (!namesOk()) return false;
   errBox('eErr', null); $('eSave').disabled = true;
-  try { const c = await rpc('qd_case_save', { p: payload() }); const cfg = ED.cfg, list = ED.ledList; ED = c; ED.cfg = cfg; ED.ledList = list; $('eCaseNo').textContent = c.case_no; return true; }
+  try { const c = await rpc('qd_case_save', { p: payload() }); const cfg = ED.cfg, list = ED.ledList, ack = ED.ack, cq = ED.cq; ED = c; ED.cfg = cfg; ED.ledList = list; ED.ack = ack; ED.cq = cq; UNSAVED = false; $('eCaseNo').textContent = c.case_no; if (/^#new/.test(location.hash)) { history.replaceState(null, '', '#case/' + c.id); LASTHASH = location.hash; } return true; }
   catch (e) { errBox('eErr', e); return false; }
   finally { $('eSave').disabled = false; }
 }
@@ -642,14 +722,13 @@ $('eSave').onclick = async () => { const lbl = $('eSave').textContent; if (await
 $('eSubmit').onclick = async () => {
   if (!(await saveCase())) return;
   if (!ED.cfg) { setPane('calico'); errBox('eErr', new Error('Upload the Calico PDF before submitting.')); return; }
-  const shortBad = (ED.cfg.flags || []).some(f => FLAG_CLS[f.code] === 'bad');
-  if (shortBad && !$('ackShort')?.checked) { setPane('submit'); errBox('eErr', new Error('The configuration is short on ports. Tick the box on the Submit tab to send it anyway, or upload a corrected PDF.')); return; }
+  if (cfgProblems().length && !ED.ack) { setPane('submit'); errBox('eErr', new Error('The configuration does not match your requirement. Tick the box on the Submit tab to send it anyway, or upload a corrected PDF.')); return; }
   try { await rpc('qd_case_submit', { p_case: ED.id }); await loadCases(); } catch (e) { errBox('eErr', e); }
 };
-$('backFromEdit').onclick = async () => { await flushAuto(); loadCases(); };
-$('newCase').onclick = () => pickBrand();
-$('tabNew').onclick = () => pickBrand();
-$('tabCases').onclick = loadCases;
+$('backFromEdit').onclick = guarded(loadCases);
+$('newCase').onclick = guarded(() => pickBrand());
+$('tabNew').onclick = guarded(() => pickBrand());
+$('tabCases').onclick = guarded(loadCases);
 function setTab(t) { $('tabCases').setAttribute('aria-pressed', t === 'cases'); $('tabNew').setAttribute('aria-pressed', t === 'new'); }
 
 /* ---------- Calico PDF ---------- */
@@ -671,6 +750,7 @@ function parsePdf(t) {
 $('ePdf').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   errBox('ePdfErr', null);
+  if (['quoted', 'revised'].includes(ED.status) && !confirm('This case has a quote. A new PDF sends it back to the product lead for a new quote; the current quote stays in the history. Continue?')) return;
   if (!ED.id && !(await saveCase())) { errBox('ePdfErr', new Error('Save the case first: enter the project name and partner\'s name.')); return; }
   $('ePdfName').textContent = 'Reading ' + f.name + '…';
   try {
@@ -681,7 +761,8 @@ $('ePdf').addEventListener('change', async e => {
     if (!r.product_code || !(r.out_4k60 + r.in_4k60 + r.in_4k30)) throw new Error('Could not read this file as a Calico export. Upload the PDF exported from the Calico software.');
     if (!(await saveCase())) return;
     ED.cfg = await rpc('qd_config_save', { p_case: ED.id, p: { ...r, file_name: f.name, raw_text: t.slice(0, 20000) } });
-    drawCfg(); calcTotals();
+    if (ED.status !== 'draft' && ED.status !== 'returned') ED.cq = null;
+    drawCfg(); calcTotals(); drawDocs($('eDocs'), { c: ED, cfg: ED.cfg, cq: ED.cq, presales: ED.presales_name || ME.full_name });
   } catch (err) { errBox('ePdfErr', err); }
   $('ePdfName').textContent = ED.cfg ? ED.cfg.file_name + ' · tap to replace' : 'Choose the PDF exported from the Calico software';
 });
@@ -714,25 +795,94 @@ function drawSummary() {
   [['Project', $('eProject').value.trim() || 'missing'], ['Partner', $('ePartner').value.trim() || 'missing'], ['Required', (ED.req ? `${ED.req.out} out · ${ED.req.in60} in 4K@60 · ${ED.req.in30} in 4K@30` : '-')], ['Audio ports', AUD ? 'Required (slot 11)' : 'Not required'], ['Calico PDF', ED.cfg ? ED.cfg.product_code : 'not uploaded']]
     .forEach(([k, v]) => { const d = el('div', 'kv'); d.append(el('span', null, k), el('span', null, v)); s.append(d); });
   box.append(s);
-  if (ED.cfg && (ED.cfg.flags || []).some(f => FLAG_CLS[f.code] === 'bad')) {
+  const probs = cfgProblems();
+  if (probs.length) {
+    const w = el('div', 'list'); w.style.gap = '6px'; probs.forEach(t => w.append(el('div', 'chip bad', t))); box.append(w);
     const lb = el('label'); lb.style.flexDirection = 'row'; lb.style.alignItems = 'center';
-    const cb = el('input'); cb.type = 'checkbox'; cb.id = 'ackShort'; cb.style.width = '22px'; cb.style.minHeight = '22px';
-    lb.append(cb, el('span', null, 'The configuration is short on ports. Send it anyway with my explanation in the project notes.')); box.append(lb);
+    const cb = el('input'); cb.type = 'checkbox'; cb.id = 'ackShort'; cb.style.width = '22px'; cb.style.minHeight = '22px'; cb.checked = !!ED.ack; cb.onchange = () => { ED.ack = cb.checked; };
+    lb.append(cb, el('span', null, 'Send it anyway. The product lead sees these warnings with the case.')); box.append(lb);
   }
+}
+// What does not match between the port calculation and the uploaded PDF.
+function cfgProblems() {
+  const c = ED && ED.cfg; if (!c || !ED.req) return [];
+  const p = [];
+  if (c.out_4k60 < ED.req.out) p.push(`Outputs: need ${ED.req.out}, PDF has ${c.out_4k60}`);
+  if (c.in_4k60 < ED.req.in60) p.push(`4K@60 inputs: need ${ED.req.in60}, PDF has ${c.in_4k60}`);
+  if (c.in_4k30 < ED.req.in30) p.push(`4K@30 inputs: need ${ED.req.in30}, PDF has ${c.in_4k30}`);
+  if (ED.req.audio && !hasAudio(c)) p.push('Audio required: the PDF has no audio card');
+  return p;
 }
 
 /* ---------- Review and quote (lead) ---------- */
+// Checks the quote fields; returns a message for the first problem, or '' when they are fine.
+function quoteFieldsCheck(mi, di, ci, vi) {
+  const m = mi.value === '' ? NaN : +mi.value, d = di.value === '' ? 0 : +di.value, cf = ci.value === '' ? NaN : +ci.value;
+  const bad = [[mi, !(m >= 0 && m < 100), mi.value === '' ? 'Enter the margin %.' : 'Margin must be at least 0 and below 100%.'],
+               [di, !(d >= 0 && d <= 90), 'Discount must be between 0 and 90%.'],
+               [ci, !(cf > 0), 'CF must be more than 0.'],
+               [vi, !!vi.value && vi.value < todayISO(), 'Valid till can not be in the past.']];
+  bad.forEach(([i, b]) => i.classList.toggle('miss', b));
+  const f = bad.find(x => x[1]); return f ? f[2] : '';
+}
+// Wires a quote panel: live preview, validation, no duplicate revision with unchanged terms, Enter to send.
+function wireQuote(o) {
+  const { c, last, mi, di, ci, vi, go, hint, preview, label } = o;
+  vi.min = todayISO();
+  const sameTerms = () => last && ['quoted', 'revised'].includes(c.status) && +mi.value === +last.margin_pct && +(di.value || 0) === +last.discount_pct && +ci.value === +last.cf && (vi.value || null) === (last.valid_till || null);
+  const refresh = () => {
+    const err = quoteFieldsCheck(mi, di, ci, vi);
+    preview(!err);
+    go.textContent = label(+(di.value || 0));
+    const same = !err && sameTerms();
+    hint.textContent = err || (same ? `Same terms as R${last.revision}. Change a value to issue a new revision.` : '');
+    hint.className = 'qhint' + (err ? ' bad' : ''); hint.hidden = !hint.textContent;
+    go.disabled = !o.ok || !!err || same || o.busy;
+  };
+  [mi, di, ci, vi].forEach(i => i.addEventListener('input', refresh));
+  [mi, di, ci, vi].forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter' && !go.disabled) { e.preventDefault(); go.click(); } }));
+  go.onclick = async () => {
+    if (quoteFieldsCheck(mi, di, ci, vi) || o.busy) return refresh();
+    o.busy = true; go.disabled = true;
+    try {
+      const q = await rpc('qd_quote_create_v3', { p_case: c.id, p_margin_pct: +mi.value, p_discount_pct: +(di.value || 0), p_cf: +ci.value, p_valid_till: vi.value || null, p_seen: c.updated_at });
+      DIRTY.rev = false; toast(`Quote R${q.revision} issued · INR ${inr(q.quote_inr)}`); await refreshAfter(c.id);
+    } catch (e) {
+      o.busy = false;
+      if (isStale(e)) { toast(staleMsg(e)); DIRTY.rev = false; await refreshAfter(c.id); return; }
+      hint.hidden = false; hint.className = 'qhint bad'; hint.textContent = e.message; refresh(); hint.hidden = false; hint.textContent = e.message;
+    }
+  };
+  refresh();
+}
+// Return / decline / close: a note is required and each sends once.
+function noteAction(btns, ta, fn) {
+  btns.forEach(b => b.addEventListener('click', async () => {
+    if (!ta.value.trim()) { ta.classList.add('miss'); ta.focus(); return; }
+    if (btns.some(x => x.disabled)) return;
+    btns.forEach(x => x.disabled = true);
+    try { await fn(b); DIRTY.rev = false; }
+    catch (e) { if (isStale(e)) { toast(staleMsg(e)); DIRTY.rev = false; await refreshAfter(CUR); return; } alert(e.message); }
+    finally { btns.forEach(x => x.disabled = false); }
+  }));
+  ta.addEventListener('input', () => ta.classList.remove('miss'));
+}
+let REVSEQ = 0;
 async function openReview(id) {
-  let r; try { r = await rpc('qd_case_get', { p_case: id }); } catch (e) { alert(e.message); return; }
-  CUR = id;
+  const seq = ++REVSEQ; CUR = id;
+  let r; try { r = await rpc('qd_case_get', { p_case: id }); } catch (e) { if (seq === REVSEQ) alert(e.message); return; }
+  if (seq !== REVSEQ) return;                 // a newer case was picked while this one loaded
+  DIRTY.rev = false;
+  route('case/' + id); LASTHASH = location.hash;
   const pane = window.innerWidth >= 900 ? $('sidePane') : null, host = pane || $('cases');
-  if (!pane) { show('vList'); $('kpis').hidden = true; $('search').hidden = true; $('notice').hidden = true; }
-  if (r.case.brand === 'brightsign') return reviewBs(r, pane, host);
+  if (!pane) { show('vList'); $('kpis').hidden = true; $('search').hidden = true; $('notice').hidden = true; $('listHead').hidden = true; }
+  const done = () => { const root = host.firstElementChild; if (!root) return; root.addEventListener('input', () => { DIRTY.rev = true; }); const h = root.querySelector('h2'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } };
+  if (r.case.brand === 'brightsign') { reviewBs(r, pane, host); return done(); }
   const c = r.case, cfg = r.config, b = r.build, quotes = r.quotes || [], last = quotes[0];
   const root = el('div', 'rv'), H = el('div', 'list rvh'), S = el('div', 'list rvside'), B = el('div', 'list rvbody');
 
   /* header */
-  if (!pane) { const back = el('button', 'btn ghost sm', 'Back to cases'); back.onclick = loadCases; H.append(back); }
+  if (!pane) { const back = el('button', 'btn ghost sm', 'Back to cases'); back.onclick = guarded(loadCases); H.append(back); }
   const head = el('div', 'card'), t = el('div', 'row between');
   t.append(el('h2', null, c.project_name), chip(c.status));
   const wait = c.status === 'submitted' && c.submitted_at ? ` · waiting ${ageDays(c.submitted_at)}d` : '';
@@ -740,7 +890,7 @@ async function openReview(id) {
   const req = el('div', 'k3'); req.append(kpi(c.req_out, 'Outputs needed'), kpi(c.req_in_4k60, 'Inputs 4K@60'), kpi(c.req_in_4k30, 'Inputs 4K@30')); head.append(req);
   head.append(el('span', 'chip ' + (c.audio_required ? (hasAudio(cfg) ? 'ok' : 'bad') : 'mut'), c.audio_required ? (hasAudio(cfg) ? 'Audio required · card in PDF' : 'Audio required · no card in PDF') : 'Audio not required'));
   if (c.return_note) head.append(el('div', 'banner', 'Returned: ' + c.return_note));
-  if (isEditable(c.status)) { const eb = el('button', 'btn ghost sm', 'Edit case'); eb.onclick = () => openEditor(c.id); const rr = el('div', 'row'); rr.append(eb); head.append(rr); }
+  if (isEditable(c.status)) { const eb = el('button', 'btn ghost sm', 'Edit case'); eb.onclick = guarded(() => openEditor(c.id)); const rr = el('div', 'row'); rr.append(eb); head.append(rr); }
   H.append(head);
 
   /* configuration */
@@ -772,7 +922,7 @@ async function openReview(id) {
     const canQuote = ['submitted', 'quoted', 'revised'].includes(c.status);
     const qp = el('div', 'card'); qp.append(el('h3', null, last ? `Re-quote (current R${last.revision})` : 'Quote'));
     const field = (label, val, step, min, max) => { const l = el('label', null, label), i = el('input'); i.type = 'number'; i.step = step; i.min = min; if (max != null) i.max = max; i.value = val; i.disabled = !canQuote; l.append(i); return [l, i]; };
-    const [ml, mi] = field('Margin %', last && last.margin_pct != null ? last.margin_pct : 0, 0.5, 0, 99);
+    const [ml, mi] = field('Margin %', last && last.margin_pct != null ? last.margin_pct : '', 0.5, 0, 99); if (!last) mi.placeholder = 'Enter margin';
     const [dl, di] = field('Discount %', last ? last.discount_pct : 0, 0.5, 0, 100);
     const [cl, ci] = field('CF', last ? last.cf : (b.default_cf || 120), 1, 1);
     const vl = el('label', null, 'Valid till'), vi = el('input'); vi.type = 'date'; vi.disabled = !canQuote;
@@ -782,19 +932,18 @@ async function openReview(id) {
     const sx = line('Total USD (x)'), sl = line('Landing (x × CF)'), sm = line('With margin'), sd = line('Discount');
     qp.append(steps);
     const tot = el('div', 'total qtotal'), tv = el('b'); tot.append(el('span', null, 'Quote, INR'), tv); qp.append(tot);
-    const calc = () => {
-      const x = Number(b.list_usd), y = +ci.value || 0, z = Math.min(+mi.value || 0, 99.99), d = +di.value || 0, land = x * y, pre = land / (1 - z / 100), fin = pre * (1 - d / 100);
-      sx.textContent = usd(x); sl.textContent = inr(land); sm.textContent = inr(pre); sd.textContent = '− ' + inr(pre - fin) + ' (' + d + '%)'; tv.textContent = inr(fin);
+    const preview = ok => {
+      const x = Number(b.list_usd), y = +ci.value || 0, z = +mi.value || 0, d = +di.value || 0, land = x * y, pre = land / (1 - z / 100), fin = pre * (1 - d / 100);
+      sx.textContent = usd(x); sl.textContent = inr(land); sm.textContent = ok ? inr(pre) : '-'; sd.textContent = ok ? '− ' + inr(pre - fin) + ' (' + d + '%)' : '-'; tv.textContent = ok ? inr(fin) : '-';
     };
-    [mi, di, ci].forEach(i => i.oninput = calc); calc();
-    if (last) qp.append(el('div', 'note', `R${last.revision}: INR ${inr(last.quote_inr != null ? last.quote_inr : last.landing_inr)} · margin ${last.margin_pct != null ? last.margin_pct : '-'}% · disc ${last.discount_pct}% · CF ${last.cf}`));
-    const qe = el('div', 'err'); qe.hidden = true; qp.append(qe);
+    if (last) qp.append(el('div', 'note', `R${last.revision}: INR ${inr(last.quote_inr != null ? last.quote_inr : last.landing_inr)} · margin ${last.margin_pct != null ? last.margin_pct : '-'}% · discount ${last.discount_pct}% · CF ${last.cf}`));
+    const hint = el('div', 'qhint'); hint.hidden = true; qp.append(hint);
+    const go = el('button', 'btn');
     if (canQuote) {
-      const go = el('button', 'btn', last ? `Generate re-quote R${last.revision + 1}` : 'Approve and generate quote');
-      go.disabled = !b.ok; if (!b.ok) qp.append(el('div', 'note', 'Fix the items marked in the build-up to enable quoting.'));
-      go.onclick = async () => { go.disabled = true; try { await rpc('qd_quote_create_v2', { p_case: c.id, p_margin_pct: +mi.value || 0, p_discount_pct: +di.value || 0, p_cf: +ci.value || 0, p_valid_till: vi.value || null }); await refreshAfter(c.id); } catch (e) { qe.hidden = false; qe.textContent = e.message; go.disabled = false; } };
+      if (!b.ok) qp.append(el('div', 'note', 'Fix the items marked in the build-up to enable quoting.'));
       qp.append(go);
     }
+    wireQuote({ c, last, mi, di, ci, vi, go, hint, preview, ok: canQuote && b.ok, label: () => last ? `Generate re-quote R${last.revision + 1}` : 'Approve and generate quote' });
     S.append(qp);
   }
 
@@ -804,15 +953,15 @@ async function openReview(id) {
     act.append(el('h3', null, 'Return to presales'));
     const ta = el('textarea'); ta.placeholder = 'What should presales change?'; ta.maxLength = 500; const lb = el('label', null, 'Note'); lb.append(ta);
     const rb = el('button', 'btn ghost', 'Return with note');
-    rb.onclick = async () => { try { await rpc('qd_case_return', { p_case: c.id, p_note: ta.value }); await refreshAfter(c.id); } catch (e) { alert(e.message); } };
+    noteAction([rb], ta, async () => { await rpc('qd_case_return_v2', { p_case: c.id, p_note: ta.value.trim(), p_seen: c.updated_at }); toast('Returned to presales'); await refreshAfter(c.id); });
     act.append(lb, rb);
   }
   if (['quoted', 'revised'].includes(c.status)) {
     act.append(el('h3', null, 'Close the case'), el('p', 'note', 'Re-quote stays open until the case is closed as won or lost.'));
     const ta = el('input'); ta.placeholder = 'Reason (required)'; ta.maxLength = 300; const lb = el('label', null, 'Reason'); lb.append(ta);
     const row = el('div', 'row'), w = el('button', 'btn', 'Won'), l = el('button', 'btn ghost', 'Lost');
-    const close = async o => { if (!ta.value.trim()) { ta.classList.add('miss'); ta.focus(); return; } try { await rpc('qd_case_close', { p_case: c.id, p_outcome: o, p_reason: ta.value }); await refreshAfter(c.id); } catch (e) { alert(e.message); } };
-    w.onclick = () => close('won'); l.onclick = () => close('lost'); row.append(w, l); act.append(lb, row);
+    noteAction([w, l], ta, async bt => { const o = bt === w ? 'won' : 'lost'; await rpc('qd_case_close', { p_case: c.id, p_outcome: o, p_reason: ta.value.trim() }); toast('Case closed as ' + o); await refreshAfter(c.id); });
+    row.append(w, l); act.append(lb, row);
   }
   if (c.close_reason) act.append(el('div', 'note', 'Closed: ' + c.close_reason));
   if (act.childElementCount) S.append(act);
@@ -820,7 +969,7 @@ async function openReview(id) {
   /* revisions and documents */
   if (quotes.length) {
     const rc = el('div', 'card'); rc.append(el('h3', null, 'Quote revisions')); const tl = el('div', 'tl');
-    quotes.forEach((x, i) => { const d = el('div'); d.append(el('span', 'mono', `R${x.revision}${i === 0 ? ' · current' : ''} · ${fdate(x.created_at)}`), el('span', 'mono', `INR ${inr(x.quote_inr != null ? x.quote_inr : x.landing_inr)} · m ${x.margin_pct != null ? x.margin_pct : '-'}% · d ${x.discount_pct}% · CF ${x.cf}`)); tl.append(d); });
+    quotes.forEach((x, i) => { const d = el('div'); d.append(el('span', 'mono', `R${x.revision}${i === 0 ? ' · current' : ''} · ${fdate(x.created_at)}`), el('span', 'mono', `INR ${inr(x.quote_inr != null ? x.quote_inr : x.landing_inr)} · margin ${x.margin_pct != null ? x.margin_pct : '-'}% · discount ${x.discount_pct}% · CF ${x.cf}`)); tl.append(d); });
     rc.append(tl); B.append(rc);
   }
   const dc = el('div', 'card'); dc.append(el('h3', null, 'Documents')); const dbox = el('div', 'list'); dc.append(dbox);
@@ -828,8 +977,9 @@ async function openReview(id) {
 
   root.append(H, S, B); host.replaceChildren(root);
   if (!pane) window.scrollTo(0, 0);
+  done();
 }
-async function refreshAfter(id) { CASES = await rpc('qd_case_list'); drawList(); await openReview(id); }
+async function refreshAfter(id) { DIRTY.rev = false; CASES = await rpc('qd_case_list'); drawList(); await openReview(id); }
 
 /* ---------- Documents: quote PDF, quote Excel, tender spec ---------- */
 // Tender wording from Cavitak's CALICO PRO tender spec workbook (1U, 2U, 4U); port clauses are set from the case's configuration.
@@ -1083,8 +1233,8 @@ async function saveWb(wb, name) {
 }
 
 /* ---------- New case: brand picker ---------- */
-async function pickBrand() { await flushAuto(); show('vBrand'); setTab('new'); }
-$('backFromBrand').onclick = loadCases;
+async function pickBrand() { await flushAuto(); show('vBrand'); setTab('new'); route('new'); LASTHASH = location.hash; }
+$('backFromBrand').onclick = guarded(loadCases);
 document.querySelectorAll('[data-brand]').forEach(b => b.onclick = () => b.dataset.brand === 'brightsign' ? openBsEditor(null) : openEditor(null));
 
 /* ---------- BrightSign case (presales, or lead creating one) ----------
@@ -1121,7 +1271,7 @@ function setBPane(t) { document.querySelectorAll('[data-btab]').forEach(b => b.s
 document.querySelectorAll('[data-btab]').forEach(b => b.onclick = () => setBPane(b.dataset.btab));
 
 async function openBsEditor(id, pane) {
-  errBox('bErr', null);
+  errBox('bErr', null); UNSAVED = false;
   try {
     await loadCat();
     if (id) {
@@ -1145,19 +1295,21 @@ async function openBsEditor(id, pane) {
   BQ = ''; $('bSearch').value = ''; BGRP = bsLines().length ? 'sel' : 'players';
   drawBsProducts(); drawBsCms(); drawBsState();
   setBPane(pane || (BS.cq ? 'quote' : id ? 'products' : 'details'));
-  show('vBs'); setTab(id ? 'cases' : 'new');
+  show('vBs'); setTab(id ? 'cases' : 'new'); navTo(id, 'new/bs'); LASTHASH = location.hash;
 }
 function drawBsState() {
   const st = BS.status, s = STATUS[st] || [st, 'mut'], editable = isEditable(st), dirty = bsDirty();
   $('bStatus').className = 'chip ' + s[1]; $('bStatus').textContent = st === 'submitted' ? 'Discount requested' : s[0];
   let bn = '';
-  if (st === 'submitted') bn = `Your discount request of ${Number(BS.disc_request_pct)}% is with the product lead. The current quote stays valid meanwhile.`;
+  if (st === 'submitted') bn = `Your discount request of ${Number(BS.disc_request_pct)}% is with the product lead. The current quote stays valid meanwhile. Products and CMS are locked until the lead answers, or you withdraw the request.`;
   else if (['quoted', 'revised'].includes(st) && BS.return_note) bn = 'Discount request declined by the product lead: ' + BS.return_note;
   else if (['quoted', 'revised'].includes(st) && dirty) bn = 'Products or CMS changed. Tap Update quote to price the new list; any approved discount carries over.';
-  else if (st === 'draft' && !BS.cq) bn = BS.id ? 'Add products, then tap Generate quote. The price comes straight away.' : '';
+  else if (st === 'draft' && !BS.cq) bn = bsLines().length ? 'Tap Generate quote to get the price straight away. No approval is needed.' : BS.id ? 'Add products, then tap Generate quote. The price comes straight away.' : '';
   else if (['won', 'lost'].includes(st)) bn = 'This case is closed as ' + st + '.';
   $('bBanner').hidden = !bn; $('bBanner').textContent = bn;
-  $('bSave').hidden = !editable;
+  const namesChanged = !!BS.id && ($('bProject').value.trim() !== (BS.project_name || '') || $('bPartner').value.trim() !== (BS.partner_name || ''));
+  // On a quoted case, Save only appears for a name change; product changes go through Update quote.
+  $('bSave').hidden = !editable || (['quoted', 'revised', 'submitted'].includes(st) && (!namesChanged || dirty));
   const go = editable && (['draft', 'returned'].includes(st) || (['quoted', 'revised'].includes(st) && dirty));
   $('bGo').hidden = !go; $('bGo').textContent = ['quoted', 'revised'].includes(st) ? 'Update quote' : 'Generate quote';
   drawBsQuote();
@@ -1171,7 +1323,7 @@ function bsMatches(p) {
   return grpOf(p.group) === BGRP;
 }
 function drawBsProducts() {
-  const editable = isEditable(BS.status), sel = bsLines();
+  const editable = bsEditable(), sel = bsLines();
   const g = $('bGroups'); g.replaceChildren();
   BS_GROUPS.forEach(([k, lab]) => {
     if (k === 'sel' && !sel.length) return;
@@ -1247,7 +1399,8 @@ function bsCount() {
   const players = sel.filter(l => PLAYER_GROUPS.includes((catById(l.price_id) || {}).group)).reduce((s, l) => s + l.qty, 0);
   $('bCount').textContent = sel.length ? `${players} player${players === 1 ? '' : 's'} · ${sel.length} line${sel.length > 1 ? 's' : ''}` : 'Nothing selected';
   const nostore = BS.builds.filter(b => b.qty > 0 && !b.storage && storageFor(catById(b.player)).length).reduce((t, b) => t + b.qty, 0);
-  if (!players && BS.cms) { BS.cms = null; drawBsCms(); }    // no players, no licences
+  if (!players && BS.cms) { BS.cmsLast = BS.cms; BS.cms = null; drawBsCms(); }    // no players, no licences
+  else if (players && !BS.cms && BS.cmsLast) { BS.cms = BS.cmsLast; BS.cmsLast = null; drawBsCms(); }    // players back: restore the CMS choice
   const h = $('bHint'); let t = '';
   if (players && !BS.cms) t = `Tip: no CMS chosen yet. Add one on the CMS tab if the customer needs content management.`;
   if (nostore) t = (t ? t + ' ' : '') + `${nostore} player${nostore > 1 ? 's have' : ' has'} no storage selected.`;
@@ -1282,7 +1435,10 @@ function drawBsQuote() {
   const mk = (label, fn) => { const b = el('button', 'btn ghost', label); b.onclick = async () => { b.disabled = true; try { await fn(ctx); } catch (e) { alert('Could not create the file: ' + e.message); } finally { b.disabled = false; } }; return b; };
   g.append(mk('Quote Excel', bsQuoteXlsx), mk('Quote PDF', bsQuotePdf)); box.append(g);
   if (st === 'submitted') {
-    const s = el('div', 'sub'); s.append(el('h3', null, 'Discount request sent'), el('p', 'note', `${Number(BS.disc_request_pct)}%` + (BS.disc_request_note ? ' · ' + BS.disc_request_note : '') + '. You get a revised quote here once the product lead approves.')); box.append(s);
+    const s = el('div', 'sub'); s.append(el('h3', null, 'Discount request sent'), el('p', 'note', `${Number(BS.disc_request_pct)}%` + (BS.disc_request_note ? ' · ' + BS.disc_request_note : '') + '. You get a revised quote here once the product lead approves.'));
+    const w = el('button', 'btn ghost sm', 'Withdraw request');
+    w.onclick = async () => { if (!confirm('Withdraw the discount request? You can then change products or ask again.')) return; w.disabled = true; try { await rpc('qd_bs_withdraw_discount', { p_case: BS.id }); toast('Discount request withdrawn'); await openBsEditor(BS.id, 'quote'); } catch (e) { alert(e.message); w.disabled = false; } };
+    const rr = el('div', 'row'); rr.append(w); s.append(rr); box.append(s);
   } else if (['quoted', 'revised'].includes(st) && !bsDirty()) {
     const s = el('div', 'sub'); s.append(el('h3', null, 'Need a better price?'));
     const r = el('div', 'row'), pl = el('label', null, 'Discount %'), pi = el('input'), nl = el('label', null, 'Reason'), ni = el('input');
@@ -1290,9 +1446,12 @@ function drawBsQuote() {
     ni.maxLength = 300; ni.placeholder = 'e.g. competitor price, project size'; nl.append(ni); r.append(pl, nl);
     const err = el('div', 'err'); err.hidden = true;
     const b = el('button', 'btn', 'Ask for discount');
+    [pi, ni].forEach(i => i.addEventListener('input', () => { i.classList.remove('miss'); err.hidden = true; }));
     b.onclick = async () => {
-      const v = +pi.value; if (!(v > 0 && v <= 50)) { pi.classList.add('miss'); pi.focus(); return; }
-      b.disabled = true; try { await rpc('qd_bs_request_discount', { p_case: BS.id, p_pct: v, p_note: ni.value }); await openBsEditor(BS.id, 'quote'); } catch (e) { err.hidden = false; err.textContent = e.message; b.disabled = false; }
+      const v = +pi.value, why = ni.value.trim();
+      if (!(v >= 0.5 && v <= 50)) { pi.classList.add('miss'); pi.focus(); err.hidden = false; err.textContent = 'Enter a discount between 0.5% and 50%.'; return; }
+      if (!why) { ni.classList.add('miss'); ni.focus(); err.hidden = false; err.textContent = 'Give a reason, for example a competitor\'s price or the project size.'; return; }
+      b.disabled = true; try { await rpc('qd_bs_request_discount', { p_case: BS.id, p_pct: v, p_note: why }); toast('Discount request sent to the product lead'); await openBsEditor(BS.id, 'quote'); } catch (e) { err.hidden = false; err.textContent = e.message; b.disabled = false; }
     };
     s.append(el('p', 'note', 'The product lead reviews the request. Once approved you get a revised quote here.'), r, err, b); box.append(s);
   }
@@ -1300,7 +1459,7 @@ function drawBsQuote() {
 function bsNamesOk() {
   const p = $('bProject').value.trim(), q = $('bPartner').value.trim();
   $('bProject').classList.toggle('miss', !p); $('bPartner').classList.toggle('miss', !q);
-  if (!p || !q) { setBPane('details'); errBox('bErr', new Error('Enter the project name and partner\'s name.')); return false; }
+  if (!p || !q) { setBPane('details'); errBox('bErr', new Error('Enter the project name and partner\'s name.')); $(!p ? 'bProject' : 'bPartner').focus(); return false; }
   return true;
 }
 function saveBs() { if (BSAVING) return BSAVING; BSAVING = saveBsNow().finally(() => { BSAVING = null; }); return BSAVING; }
@@ -1311,7 +1470,7 @@ async function saveBsNow() {
     const c = await rpc('qd_case_save', { p: { id: BS.id, brand: 'brightsign', project_name: $('bProject').value.trim(), partner_name: $('bPartner').value.trim(),
       bs_lines: bsLines(), bs_req: { builds: BS.builds.filter(b => b.qty > 0).map(b => ({ player: b.player, qty: b.qty, storage: b.storage || null, wifi: !!b.wifi })), cms: BS.cms || null } } });
     const keep = { qty: BS.qty, builds: BS.builds, cms: BS.cms, cq: c.status === 'draft' ? null : BS.cq, presales_name: BS.presales_name };
-    BS = Object.assign(c, keep); BS.saved = bsSig(); $('bCaseNo').textContent = c.case_no; drawBsState(); return true;
+    BS = Object.assign(c, keep); BS.saved = bsSig(); UNSAVED = false; $('bCaseNo').textContent = c.case_no; if (/^#new/.test(location.hash)) { history.replaceState(null, '', '#case/' + c.id); LASTHASH = location.hash; } drawBsState(); return true;
   } catch (e) { errBox('bErr', e); return false; }
   finally { $('bSave').disabled = false; }
 }
@@ -1326,7 +1485,7 @@ $('bGo').onclick = async () => {
   } catch (e) { errBox('bErr', e); }
   finally { $('bGo').disabled = false; }
 };
-$('backFromBs').onclick = async () => { await flushAuto(); loadCases(); };
+$('backFromBs').onclick = guarded(loadCases);
 
 /* ---------- CMS tab (BrightSign case) ----------
    One CMS per case: BrightSign, Korbyt or Pickcel; cloud or on-premise; 1 to 5 years. Licences = players.
@@ -1346,10 +1505,10 @@ function cmsItems() {
   if (c.mode === 'onprem') { const i = cmsRate(c.vendor, 'onprem', 'install', 0); if (i) out.push({ sku: i.sku, desc: i.desc, qty: 1 }); }
   return out;
 }
-function setCms(next) { BS.cms = next; touched('bs'); drawBsCms(); drawBsState(); bsCount(); }
+function setCms(next) { BS.cms = next; BS.cmsLast = null; touched('bs'); drawBsCms(); drawBsState(); bsCount(); }
 function drawBsCms() {
   const box = $('bCms'); if (!box || !BS) return; box.replaceChildren();
-  const editable = isEditable(BS.status), n = nPlayers(), c = BS.cms;
+  const editable = bsEditable(), n = nPlayers(), c = BS.cms;
   box.append(el('h2', null, 'Content management (CMS)'));
   if (!n) { box.append(el('p', 'note', 'Add players on the Products tab first. CMS licences are one per player.')); return; }
   box.append(el('p', 'note', `Licences are one per player: ${n} licence${n > 1 ? 's' : ''}.`));
@@ -1375,7 +1534,7 @@ function drawBsCms() {
 /* ---------- CMS rates (lead) ---------- */
 let RATES = null;
 async function openRates() {
-  await flushAuto(); errBox('ratesErr', null);
+  errBox('ratesErr', null); DIRTY.rates = false;
   try { RATES = await rpc('qd_cms_rates'); } catch (e) { alert(e.message); return; }
   const box = $('ratesBox'); box.replaceChildren();
   Object.keys(CMS_NAMES).forEach(v => {
@@ -1393,15 +1552,16 @@ async function openRates() {
     row('On-premise installation and setup, one time', [it]);
     wrap.append(t); card.append(wrap); box.append(card);
   });
-  show('vRates');
+  show('vRates'); route('rates'); LASTHASH = location.hash;
 }
-$('cmsRates').onclick = openRates;
-$('backFromRates').onclick = loadCases;
+$('ratesBox').addEventListener('input', () => { DIRTY.rates = true; });
+$('cmsRates').onclick = guarded(openRates);
+$('backFromRates').onclick = guarded(loadCases);
 $('ratesSave').onclick = async () => {
   const rates = [...document.querySelectorAll('#ratesBox input[data-key]')].map(i => { const [vendor, mode, item, term_years] = JSON.parse(i.dataset.key); return { vendor, mode, item, term_years, buy_price: i.value === '' ? null : +i.value }; });
   if (rates.some(r => r.buy_price != null && !(r.buy_price > 0))) { errBox('ratesErr', new Error('Rates must be more than 0, or left empty.')); return; }
   $('ratesSave').disabled = true;
-  try { const r = await rpc('qd_cms_rates_save', { p: { rates } }); CMSR = null; $('ratesSave').textContent = r.changed ? `Saved ${r.changed} change${r.changed > 1 ? 's' : ''}` : 'No changes'; setTimeout(() => $('ratesSave').textContent = 'Save rates', 1800); errBox('ratesErr', null); }
+  try { const r = await rpc('qd_cms_rates_save', { p: { rates } }); CMSR = null; DIRTY.rates = false; $('ratesSave').textContent = r.changed ? `Saved ${r.changed} change${r.changed > 1 ? 's' : ''}` : 'No changes'; setTimeout(() => $('ratesSave').textContent = 'Save rates', 1800); errBox('ratesErr', null); }
   catch (e) { errBox('ratesErr', e); }
   finally { $('ratesSave').disabled = false; }
 };
@@ -1411,6 +1571,7 @@ $('ratesSave').onclick = async () => {
    saving a quoted case sends it back for a new quote, so that stays a deliberate tap on Save. */
 let AUTO = { n: 0, t: null, kind: null };
 function touched(kind) {
+  const c = kind === 'bs' ? BS : ED; if (c && !['draft', 'returned'].includes(c.status)) { UNSAVED = true; if (kind === 'bs') drawBsState(); return; }
   AUTO.kind = kind; AUTO.n++; clearTimeout(AUTO.t);
   if (AUTO.n >= 3) autoSave(); else AUTO.t = setTimeout(autoSave, 2500);
 }
@@ -1436,7 +1597,7 @@ $('vEdit').addEventListener('click', e => { if (e.target.closest('[data-step], .
 function reviewBs(r, pane, host) {
   const c = r.case, b = r.build || { lines: [], list_usd: 0, ok: false }, quotes = r.quotes || [], last = quotes[0], dflt = r.defaults || {};
   const root = el('div', 'rv'), H = el('div', 'list rvh'), S = el('div', 'list rvside'), B = el('div', 'list rvbody');
-  if (!pane) { const back = el('button', 'btn ghost sm', 'Back to cases'); back.onclick = loadCases; H.append(back); }
+  if (!pane) { const back = el('button', 'btn ghost sm', 'Back to cases'); back.onclick = guarded(loadCases); H.append(back); }
   const head = el('div', 'card'), t = el('div', 'row between'), asks = c.status === 'submitted' && c.disc_request_pct != null;
   const sc = chip(c.status); if (asks) sc.textContent = 'Discount requested';
   const tt = el('div', 'row'); tt.style.gap = '8px'; tt.append(el('span', 'bchip bs', 'BrightSign'), el('h2', null, c.project_name)); t.append(tt, sc);
@@ -1447,7 +1608,7 @@ function reviewBs(r, pane, host) {
   (req.builds || []).forEach(x => { const st = x.storage ? sku(x.storage) : ''; head.append(el('div', 'note mono', `${x.qty} × ${x.sku}` + (st ? ' · ' + st : ' · no storage') + (x.wifi ? ' · Wi-Fi' : ''))); });
   if (asks) { const bn = el('div', 'banner'); bn.append(el('b', null, `Presales asks for ${Number(c.disc_request_pct)}% discount`), document.createTextNode((c.disc_request_note ? ' · ' + c.disc_request_note : '') + ` · ${ageDays(c.disc_requested_at)}d ago`)); head.append(bn); }
   if (c.return_note && !asks) head.append(el('div', 'note', 'Last decline note: ' + c.return_note));
-  if (isEditable(c.status)) { const eb = el('button', 'btn ghost sm', 'Edit products'); eb.onclick = () => openBsEditor(c.id, 'products'); const rr = el('div', 'row'); rr.append(eb); head.append(rr); }
+  if (isEditable(c.status)) { const eb = el('button', 'btn ghost sm', 'Edit products'); eb.onclick = guarded(() => openBsEditor(c.id, 'products')); const rr = el('div', 'row'); rr.append(eb); head.append(rr); }
   H.append(head);
 
   /* build-up (internal, buy price) */
@@ -1475,21 +1636,17 @@ function reviewBs(r, pane, host) {
   qp.append(steps);
   const tot = el('div', 'total qtotal'), tv = el('b'); tot.append(el('span', null, 'Quote, INR'), tv); qp.append(tot);
   const go = el('button', 'btn');
-  const calc = () => {
-    const y = +ci.value || 0, z = Math.min(+mi.value || 0, 99.99), d = +di.value || 0, x = Number(b.list_usd), land = x * y + Number(b.list_inr || 0), pre = land / (1 - z / 100);
+  const preview = ok => {
+    const y = +ci.value || 0, z = +mi.value || 0, d = +di.value || 0, x = Number(b.list_usd), land = x * y + Number(b.list_inr || 0), pre = land / (1 - z / 100);
     // same rounding as the server: each unit price rounded to the rupee, then times quantity; INR (CMS) lines take no CF
     const fin = (b.lines || []).reduce((s, l) => s + Math.round((l.inr_each != null ? Number(l.inr_each) : Number(l.usd_each) * y) / (1 - z / 100) * (1 - d / 100)) * l.qty, 0);
-    sx.textContent = usd(x); sl.textContent = inr(land); sm.textContent = inr(pre); sd.textContent = '− ' + inr(pre - fin) + ' (' + d + '%)'; tv.textContent = inr(fin);
-    go.textContent = asks ? `Approve ${d}% · issue R${last ? last.revision + 1 : 0}` : last ? `Generate re-quote R${last.revision + 1}` : 'Generate quote';
+    sx.textContent = usd(x); sl.textContent = inr(land); sm.textContent = ok ? inr(pre) : '-'; sd.textContent = ok ? '− ' + inr(pre - fin) + ' (' + d + '%)' : '-'; tv.textContent = ok ? inr(fin) : '-';
   };
-  [mi, di, ci].forEach(i => i.oninput = calc); calc();
-  if (last) qp.append(el('div', 'note', `R${last.revision}: INR ${inr(last.quote_inr)} · margin ${last.margin_pct}% · disc ${last.discount_pct}% · CF ${last.cf}`));
-  const qe = el('div', 'err'); qe.hidden = true; qp.append(qe);
-  if (isEditable(c.status)) {
-    go.disabled = !canQuote;
-    go.onclick = async () => { go.disabled = true; try { await rpc('qd_quote_create_v2', { p_case: c.id, p_margin_pct: +mi.value || 0, p_discount_pct: +di.value || 0, p_cf: +ci.value || 0, p_valid_till: vi.value || null }); await refreshAfter(c.id); } catch (e) { qe.hidden = false; qe.textContent = e.message; go.disabled = false; } };
-    qp.append(go);
-  }
+  if (last) qp.append(el('div', 'note', `R${last.revision}: INR ${inr(last.quote_inr)} · margin ${last.margin_pct}% · discount ${last.discount_pct}% · CF ${last.cf}`));
+  const hint = el('div', 'qhint'); hint.hidden = true; qp.append(hint);
+  if (isEditable(c.status)) qp.append(go);
+  wireQuote({ c, last: asks ? null : last, mi, di, ci, vi, go, hint, preview, ok: canQuote,
+    label: d => asks ? `Approve ${d}% · issue R${last ? last.revision + 1 : 0}` : last ? `Generate re-quote R${last.revision + 1}` : 'Generate quote' });
   S.append(qp);
 
   /* actions */
@@ -1498,15 +1655,15 @@ function reviewBs(r, pane, host) {
     act.append(el('h3', null, 'Decline the request'), el('p', 'note', 'Presales keep the current quote and see your note.'));
     const ta = el('textarea'); ta.placeholder = 'Why the discount is not possible'; ta.maxLength = 500; const lb = el('label', null, 'Note'); lb.append(ta);
     const rb = el('button', 'btn ghost', 'Decline with note');
-    rb.onclick = async () => { try { await rpc('qd_case_return', { p_case: c.id, p_note: ta.value }); await refreshAfter(c.id); } catch (e) { alert(e.message); } };
+    noteAction([rb], ta, async () => { await rpc('qd_case_return_v2', { p_case: c.id, p_note: ta.value.trim(), p_seen: c.updated_at }); toast('Discount request declined'); await refreshAfter(c.id); });
     act.append(lb, rb);
   }
   if (['quoted', 'revised'].includes(c.status)) {
     act.append(el('h3', null, 'Close the case'), el('p', 'note', 'Presales can re-quote and ask for discounts until the case is closed.'));
     const ta = el('input'); ta.placeholder = 'Reason (required)'; ta.maxLength = 300; const lb = el('label', null, 'Reason'); lb.append(ta);
     const row = el('div', 'row'), w = el('button', 'btn', 'Won'), l = el('button', 'btn ghost', 'Lost');
-    const close = async o => { if (!ta.value.trim()) { ta.classList.add('miss'); ta.focus(); return; } try { await rpc('qd_case_close', { p_case: c.id, p_outcome: o, p_reason: ta.value }); await refreshAfter(c.id); } catch (e) { alert(e.message); } };
-    w.onclick = () => close('won'); l.onclick = () => close('lost'); row.append(w, l); act.append(lb, row);
+    noteAction([w, l], ta, async bt => { const o = bt === w ? 'won' : 'lost'; await rpc('qd_case_close', { p_case: c.id, p_outcome: o, p_reason: ta.value.trim() }); toast('Case closed as ' + o); await refreshAfter(c.id); });
+    row.append(w, l); act.append(lb, row);
   }
   if (c.close_reason) act.append(el('div', 'note', 'Closed: ' + c.close_reason));
   if (act.childElementCount) S.append(act);
@@ -1514,7 +1671,7 @@ function reviewBs(r, pane, host) {
   /* revisions and documents */
   if (quotes.length) {
     const rc = el('div', 'card'); rc.append(el('h3', null, 'Quote revisions')); const tlx = el('div', 'tl');
-    quotes.forEach((x, i) => { const d = el('div'); d.append(el('span', 'mono', `R${x.revision}${i === 0 ? ' · current' : ''} · ${fdate(x.created_at)}${x.created_by === c.created_by ? ' · by presales' : ''}`), el('span', 'mono', `INR ${inr(x.quote_inr)} · m ${x.margin_pct}% · d ${x.discount_pct}% · CF ${x.cf}`)); tlx.append(d); });
+    quotes.forEach((x, i) => { const d = el('div'); d.append(el('span', 'mono', `R${x.revision}${i === 0 ? ' · current' : ''} · ${fdate(x.created_at)}${x.created_by === c.created_by ? ' · by presales' : ''}`), el('span', 'mono', `INR ${inr(x.quote_inr)} · margin ${x.margin_pct}% · discount ${x.discount_pct}% · CF ${x.cf}`)); tlx.append(d); });
     rc.append(tlx); B.append(rc);
   }
   if (r.customer_quote) {
