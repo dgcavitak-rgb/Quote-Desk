@@ -67,6 +67,13 @@ input:disabled,button:disabled,textarea:disabled{opacity:.55;cursor:not-allowed}
 .stp input::-webkit-inner-spin-button,.f3 input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .f3 label{flex:none;font-size:11px}
 .f3 input{background:var(--panel);padding:9px 10px}
+.mgk{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tscroll{overflow-x:auto}
+table.mg{width:100%;border-collapse:collapse;font-size:13px}
+table.mg th{font:500 11px var(--mono);color:var(--mute);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.mg td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.mg td.num{font-family:var(--mono);text-align:right;white-space:nowrap}
+table.mg tr.low td{background:color-mix(in srgb,var(--bad) 8%,transparent)}
 .kpi{background:var(--panel2);border-radius:16px;padding:12px 6px;text-align:center;min-width:0}
 .kpi b{display:block;font:600 24px var(--mono);color:var(--accent);line-height:1.2}
 .kpi span{font-size:12px;color:var(--mute)}
@@ -354,6 +361,7 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
       <div class="err" id="sErr" hidden></div>
       <div class="row"><button class="btn" id="sSave">Save settings</button></div>
     </div>
+    <div class="card"><div class="row between"><h2>Margin tracking</h2><span class="chip" id="mgCount"></span></div><div class="row"><p class="note" style="flex:1">Margin after discount on every quote, against the floors above. Only you can issue a quote below the floor.</p><label style="flex:0 0 140px">Period<select id="mgDays"><option value="30">30 days</option><option value="90" selected>90 days</option><option value="365">1 year</option></select></label></div><div class="list" id="mgBox"></div></div>
     <div class="card"><div class="row between"><h2>Missing prices</h2><span class="chip warn" id="mpCount"></span></div><div class="list" id="mpBox"></div></div>
     <div class="card"><div class="row between"><h2>People</h2><span class="note">Each new login or reset gets its own one-time password, changed at first sign-in</span></div><div class="list" id="pplBox"></div></div>
     <div class="card"><h2>Backup</h2><p class="note">Every case, quote revision, quote line and history entry in one Excel file. Download it weekly and keep it on the company drive.</p><div class="row"><button class="btn ghost" id="backupBtn">Download backup (Excel)</button></div></div>
@@ -434,7 +442,7 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 'use strict';
-const APP_VERSION = 'v2.0.0';
+const APP_VERSION = 'v2.1.0';
 const SUPABASE_URL = 'https://yhzecukifwnlgowmgkrc.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Rex8QiypJkVmJz2r7UPGtg_3-l1yy1u';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
@@ -473,12 +481,19 @@ const staleMsg = e => (e.message || '').replace(/^STALE:\s*/, '');
 let SET = {};
 /* ---------- Partner picker: Cavitak One's partner list ----------
    Typing searches the list; picking sets the case's partner. A partner not in the list is added with one tap. */
+// A partner can buy from several states (e.g. Actis: Bangalore, Mumbai, Chennai), so the state stays a per-case choice; we only pre-fill the last one used.
+async function suggestState(prefix, id) {
+  const sel = $(prefix + 'State'); if (!sel || sel.value) return;
+  if (!CASES.length) { try { CASES = await rpc('qd_case_list'); } catch (e) { return; } if (sel.value) return; }
+  const last = CASES.filter(c => c.partner_id === id && c.partner_state).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''))[0];
+  if (last && [...sel.options].some(o => o.value === last.partner_state)) { sel.value = last.partner_state; toast(`State set to ${last.partner_state} from the last case with this partner. Change it if they buy from another state.`); }
+}
 function partnerPicker(prefix) {
   const inp = $(prefix + 'Partner'), tag = $(prefix + 'Picked'), lab = inp.parentNode, obj = () => prefix === 'b' ? BS : ED;
   let box = null, t = null, seq = 0;
   const close = () => { if (box) { box.remove(); box = null; } };
   const mark = () => { const o = obj(), ok = !!(o && o.partner_id); tag.className = 'picked' + (ok ? '' : ' no'); tag.textContent = ok ? 'From the partner list' : 'Pick from the partner list'; };
-  const pick = (id, name) => { const o = obj(); o.partner_id = id; inp.value = name; inp.classList.remove('miss'); close(); mark(); touched(prefix === 'b' ? 'bs' : 'tv'); if (prefix === 'b') drawBsState(); };
+  const pick = (id, name) => { const o = obj(); o.partner_id = id; inp.value = name; inp.classList.remove('miss'); close(); mark(); suggestState(prefix, id); touched(prefix === 'b' ? 'bs' : 'tv'); if (prefix === 'b') drawBsState(); };
   const search = async () => {
     const q = inp.value.trim(), my = ++seq; let rows = [];
     try { rows = await rpc('qd_partners', { p_q: q }); } catch (e) { rows = []; }
@@ -829,7 +844,7 @@ async function openEditor(id) {
   $('eSave').textContent = ['draft', 'returned'].includes(ED.status) ? 'Save draft' : 'Save changes';
   ED.ledList = (ED.led || []).map(l => ({ p: Number(l.pixel_pitch), w: l.width_px, h: l.height_px }));
   drawLeds(); calcTotals(); drawCfg(); drawDocs($('eDocs'), { c: ED, cfg: ED.cfg, cq: ED.cq, presales: ED.presales_name || ME.full_name });
-  $('eExtra').replaceChildren(); if (ED.id) $('eExtra').append(caseTools(ED)); setPane('details'); show('vEdit'); setTab(id ? 'cases' : 'new'); navTo(id, 'new/tvone'); LASTHASH = location.hash;
+  $('eExtra').replaceChildren(); if (ED.id) { if (ME.role === 'presales' && ['quoted', 'revised'].includes(ED.status)) $('eExtra').append(closeForm(ED)); if (closedNote(ED)) $('eExtra').append(closedNote(ED)); $('eExtra').append(caseTools(ED)); } setPane('details'); show('vEdit'); setTab(id ? 'cases' : 'new'); navTo(id, 'new/tvone'); LASTHASH = location.hash;
 }
 const ledOut = l => Math.ceil((l.w || 0) / 3840) * Math.ceil((l.h || 0) / 2160);
 function drawLeds() {
@@ -1171,6 +1186,7 @@ async function openReview(id) {
   }
   if (['quoted', 'revised'].includes(c.status)) act.append(closeForm(c));
   if (closedNote(c)) act.append(closedNote(c));
+  if (reopenForm(c)) act.append(reopenForm(c));
   if (act.childElementCount) S.append(act);
   { const tc = el('div', 'card'), tw = caseTools(c, () => refreshAfter(c.id)); tw.className = 'list'; tw.style.gap = '10px'; tc.append(tw); S.append(tc); }
 
@@ -1493,8 +1509,9 @@ const isPlayer = p => !!p && PLAYER_GROUPS.includes(p.group);
 const isWifi = p => !!p && /^WD10[45]$/.test(p.sku);
 const pickable = p => p.group !== 'STORAGE' && p.group !== 'CLOUD' && !isWifi(p);          // storage and Wi-Fi are chosen per player build
 const canWifi = p => !!p && ['HD', 'XD', 'XT'].includes(p.group);
-const wifiItem = () => (CAT || []).find(p => p.sku === 'WD105');
-const storageFor = p => !p || p.group === 'AU' || p.variant === 'win' ? [] : (CAT || []).filter(s => s.group === 'STORAGE' && (p.ssd || !/SSD/i.test(s.sku)));
+const wifiItem = () => (CAT || []).find(p => p.sku === 'WD107') || (CAT || []).find(p => p.sku === 'WD105');
+const gbOf = s => +(((s.sku + ' ' + s.desc).match(/(\d+)\s*GB/i) || [, 0])[1]);
+const storageFor = p => !p || p.group === 'AU' || p.variant === 'win' ? [] : (CAT || []).filter(s => s.group === 'STORAGE' && (p.ssd || !/SSD/i.test(s.sku))).sort((a, b) => (/SSD/i.test(a.sku) - /SSD/i.test(b.sku)) || gbOf(a) - gbOf(b));
 const storageLabel = s => ((s.sku + ' ' + s.desc).match(/(\d+)\s*GB/i) || [, '?'])[1] + ' GB ' + (/SSD/i.test(s.sku) ? 'SSD' : 'microSD');
 const playerQty = id => BS.builds.filter(b => b.player === id).reduce((t, b) => t + b.qty, 0);
 function bsLines() {
@@ -1659,7 +1676,12 @@ function bsQuoteTable(lines, total, state) {
   const sp = el('div'); sp.style.borderTop = '1.5px solid var(--accent)'; sp.style.marginTop = '6px'; sp.style.paddingTop = '6px'; box.append(sp); sp.append(gstBlock(total, state && state.gst_rate));
   return box;
 }
-function drawBsQuote() { drawBsQuoteBody(); if (BS && BS.id && BS.cq && BS.status !== 'draft') $('bQuote').append(caseTools(BS, () => drawBsState())); }
+function drawBsQuote() {
+  drawBsQuoteBody(); if (!BS || !BS.id) return;
+  if (ME.role === 'presales' && ['quoted', 'revised'].includes(BS.status) && !bsDirty()) { const s = el('div', 'sub'); s.append(closeForm(BS)); $('bQuote').append(s); }
+  if (closedNote(BS)) $('bQuote').append(closedNote(BS));
+  if (BS.cq && BS.status !== 'draft') $('bQuote').append(caseTools(BS, () => drawBsState()));
+}
 function drawBsQuoteBody() {
   const box = $('bQuote'); box.replaceChildren();
   const st = BS.status, cq = BS.cq, sel = bsLines();
@@ -1822,7 +1844,7 @@ async function openAdmin() {
   $('sGst').value = SET.gst_rate; $('sState').value = SET.billing_state; $('sValid').value = SET.valid_days; $('sCf').value = SET.bs_cf; $('sMargin').value = SET.bs_margin;
   $('sPay').value = SET.payment_terms || ''; $('sDel').value = SET.delivery_terms || ''; $('sFloorTv').value = SET.margin_floor_tvone ?? 0; $('sFloorBs').value = SET.margin_floor_bs ?? 0;
   show('vAdmin'); route('admin'); LASTHASH = location.hash;
-  drawMissing(); drawPeople();
+  drawMissing(); drawPeople(); drawMargins();
 }
 async function drawMissing() {
   const box = $('mpBox'); box.replaceChildren(el('p', 'note', 'Loading…'));
@@ -1891,7 +1913,8 @@ const HIST = {
   discount_withdrawn: () => 'Discount request withdrawn', discount_declined: x => 'Discount declined' + (x.detail.note ? ': ' + x.detail.note : ''),
   returned: x => 'Returned to presales' + (x.detail.note ? ': ' + x.detail.note : ''),
   closed: x => 'Closed as ' + x.detail.outcome + (x.detail.category ? ' · ' + x.detail.category : '') + (x.detail.competitor ? ' · vs ' + x.detail.competitor : '') + (x.detail.competitor_price ? ' at INR ' + inr(x.detail.competitor_price) : '') + (x.detail.reason ? ' · ' + x.detail.reason : ''),
-  follow_up_set: x => x.detail.date ? 'Follow-up set for ' + fdate(x.detail.date) : 'Follow-up cleared'
+  follow_up_set: x => x.detail.date ? 'Follow-up set for ' + fdate(x.detail.date) : 'Follow-up cleared',
+  reopened: x => 'Reopened by the product lead' + (x.detail.note ? ': ' + x.detail.note : '')
 };
 function caseTools(c, after) {
   const w = el('div', 'sub');
@@ -1930,7 +1953,7 @@ const WHY = { won: ['Price', 'Spec or features', 'Relationship', 'Brand preferen
 const RIVALS = { tvone: ['Novastar', 'Datapath', 'Barco', 'Christie', 'Analog Way', 'Extron', 'RGB Spectrum', 'Kramer', 'Other'], brightsign: ['Android media box', 'Samsung SoC / MagicInfo', 'LG webOS', 'Mini PC', 'Xibo / Yodeck box', 'Other'] };
 function closeForm(c) {
   const w = el('div', 'list'); w.style.gap = '8px';
-  w.append(el('h3', null, 'Close the case'), el('p', 'note', 'Presales can re-quote until the case is closed. The reason and competitor feed win/loss reporting.'));
+  w.append(el('h3', null, 'Close the case'), el('p', 'note', ME.role === 'presales' ? 'Close the case as soon as the partner tells you the result. The reason and competitor feed win/loss reporting.' : 'Presales can re-quote until the case is closed. The reason and competitor feed win/loss reporting.'));
   let outcome = null;
   const seg = el('div', 'row'), bw = el('button', 'btn ghost', 'Won'), bl = el('button', 'btn ghost', 'Lost'); seg.append(bw, bl);
   const form = el('div', 'list'); form.hidden = true; form.style.gap = '8px';
@@ -1956,15 +1979,57 @@ function closeForm(c) {
     if (needComp && !comp.value.trim()) { err.hidden = false; err.textContent = 'Name the competitor brand.'; comp.focus(); return; }
     go.disabled = true;
     try { await rpc('qd_case_close_v2', { p_case: c.id, p_outcome: outcome, p_category: cat.value, p_competitor: comp.value.trim() || null, p_competitor_price: +price.value > 0 ? +price.value : null, p_reason: note.value.trim() || null });
-      DIRTY.rev = false; toast('Case closed as ' + outcome); await refreshAfter(c.id); }
+      DIRTY.rev = false; toast('Case closed as ' + outcome); await afterClose(c); }
     catch (e) { err.hidden = false; err.textContent = e.message; go.disabled = false; }
   };
   form.append(cl, kl, pl, nl, err, go); w.append(seg, form);
   return w;
 }
+async function afterClose(c) {
+  if (ME.role !== 'presales') return refreshAfter(c.id);
+  UNSAVED = false; CASES = await rpc('qd_case_list'); drawList();
+  if (c.brand === 'brightsign') await openBsEditor(c.id, 'quote'); else await openEditor(c.id);
+}
+function reopenForm(c) {
+  if (ME.role !== 'lead' || !['won', 'lost'].includes(c.status)) return null;
+  const w = el('div', 'list'); w.style.gap = '8px';
+  const ta = el('input'); ta.placeholder = 'Why reopen (required)'; ta.maxLength = 300; const lb = el('label', null, 'Correct the outcome'); lb.append(ta);
+  const b = el('button', 'btn ghost', 'Reopen case');
+  noteAction([b], ta, async () => { await rpc('qd_case_reopen', { p_case: c.id, p_note: ta.value.trim() }); toast('Case reopened — close it again with the right outcome'); await refreshAfter(c.id); });
+  w.append(lb, b); return w;
+}
 function closedNote(c) {
   if (!['won', 'lost'].includes(c.status)) return null;
   return el('div', 'note', `Closed as ${c.status}` + (c.close_category ? ' · ' + c.close_category : '') + (c.competitor ? ' · vs ' + c.competitor : '') + (c.competitor_price ? ' at INR ' + inr(c.competitor_price) : '') + (c.close_reason ? ' · ' + c.close_reason : ''));
+}
+
+/* ---------- Margin tracking (lead) ---------- */
+document.addEventListener('change', e => { if (e.target && e.target.id === 'mgDays') drawMargins(); });
+async function drawMargins() {
+  const box = $('mgBox'); box.replaceChildren(el('p', 'note', 'Loading…'));
+  let rows; try { rows = await rpc('qd_margin_report', { p_days: +$('mgDays').value || 90 }); } catch (e) { box.replaceChildren(el('div', 'err', e.message)); return; }
+  box.replaceChildren();
+  if (!rows.length) { box.append(el('p', 'note', 'No quotes in this period.')); $('mgCount').textContent = '0 below floor'; return; }
+  const low = rows.filter(r => r.floor_pct > 0 && r.eff_pct < r.floor_pct);
+  $('mgCount').textContent = low.length + ' below floor'; $('mgCount').className = 'chip ' + (low.length ? 'bad' : 'ok');
+  const avg = a => a.length ? (a.reduce((t, r) => t + Number(r.eff_pct), 0) / a.length).toFixed(1) + '%' : '-';
+  const grid = el('div', 'mgk');
+  [['tvone', 'tvONE'], ['brightsign', 'BrightSign']].forEach(([b, n]) => { const a = rows.filter(r => r.brand === b); const d = el('div', 'kpi'); d.append(el('b', null, avg(a)), el('span', null, `${n} avg margin · ${a.length} quotes`)); grid.append(d); });
+  const byP = {}; low.forEach(r => byP[r.presales] = (byP[r.presales] || 0) + 1);
+  box.append(grid);
+  if (Object.keys(byP).length) box.append(el('p', 'note', 'Below floor by presales: ' + Object.entries(byP).map(([k, v]) => `${k} ${v}`).join(' · ')));
+  const t = el('table', 'mg'), h = el('tr');
+  ['Case', 'Brand', 'Presales', 'Rev', 'Quote, INR', 'Margin', 'Disc.', 'After disc.', 'Floor'].forEach(x => h.append(el('th', null, x))); t.append(h);
+  (low.length ? low : rows.slice(0, 15)).forEach(r => {
+    const tr = el('tr'); tr.className = r.floor_pct > 0 && r.eff_pct < r.floor_pct ? 'low' : '';
+    const a = el('a', null, r.case_no); a.href = '#case/' + r.case_id;
+    const td = el('td'); td.append(a, el('div', 'note', r.project));
+    tr.append(td, el('td', null, r.brand === 'brightsign' ? 'BrightSign' : 'tvONE'), el('td', null, r.presales || '-'), el('td', null, 'R' + r.revision), el('td', 'num', inr(r.quote_inr)),
+      el('td', 'num', Number(r.margin_pct) + '%'), el('td', 'num', Number(r.discount_pct) + '%'), el('td', 'num', Number(r.eff_pct).toFixed(1) + '%'), el('td', 'num', r.floor_pct > 0 ? r.floor_pct + '%' : 'off'));
+    t.append(tr);
+  });
+  const sc = el('div', 'tscroll'); sc.append(t);
+  box.append(el('p', 'note', low.length ? 'Quotes issued below the floor (you confirmed each one):' : 'No quote went below the floor. Latest quotes:'), sc);
 }
 
 /* ---------- People (lead) ---------- */
@@ -2121,6 +2186,7 @@ function reviewBs(r, pane, host) {
   }
   if (['quoted', 'revised'].includes(c.status)) act.append(closeForm(c));
   if (closedNote(c)) act.append(closedNote(c));
+  if (reopenForm(c)) act.append(reopenForm(c));
   if (act.childElementCount) S.append(act);
   { const tc = el('div', 'card'), tw = caseTools(c, () => refreshAfter(c.id)); tw.className = 'list'; tw.style.gap = '10px'; tc.append(tw); S.append(tc); }
 
