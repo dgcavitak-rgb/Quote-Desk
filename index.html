@@ -67,7 +67,7 @@ input:disabled,button:disabled,textarea:disabled{opacity:.55;cursor:not-allowed}
 .stp input::-webkit-inner-spin-button,.f3 input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .f3 label{flex:none;font-size:11px}
 .f3 input{background:var(--panel);padding:9px 10px}
-.mgk{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mgk{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
 .tscroll{overflow-x:auto}
 table.mg{width:100%;border-collapse:collapse;font-size:13px}
 table.mg th{font:500 11px var(--mono);color:var(--mute);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -152,9 +152,18 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
 .brand b{font:600 20px var(--disp)}
 .brand .lg{display:inline-flex;width:38px;height:38px;border-radius:12px;align-items:center;justify-content:center;font:600 13px var(--mono);color:var(--accent-ink);background:var(--accent)}
 .brand .lg.bs{background:var(--bs);color:#fff}
-:root{--bs:#6b4fd8}
-@media (prefers-color-scheme: dark){:root{--bs:#a996ff}}
+:root{--bs:#6b4fd8;--gh:#2f9e44}
+@media (prefers-color-scheme: dark){:root{--bs:#a996ff;--gh:#69db7c}}
 .bchip{font:600 10px var(--mono);letter-spacing:.06em;padding:2px 8px;border-radius:999px;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);flex:none}
+.bchip.gh{color:var(--gh);background:color-mix(in srgb,var(--gh) 14%,transparent)}
+.brand .lg.gh{background:var(--gh);color:#fff}
+.ghopt{border:1.5px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--panel)}
+.ghopt.on{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
+.ghopt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.ghopt .ln span:last-child{font-family:var(--mono);white-space:nowrap}
+.ghled{display:grid;grid-template-columns:1fr 1fr 80px 40px;gap:8px;align-items:end}
+.ghled button{height:44px}
+.k4{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
 .bchip.bs{color:var(--bs);background:color-mix(in srgb,var(--bs) 13%,transparent)}
 .prods{display:flex;flex-direction:column;gap:8px}
 .prod{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--panel2);border-radius:14px;padding:10px 12px;border:1.5px solid transparent}
@@ -220,7 +229,7 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
 <body>
 <div class="wrap">
   <header class="top">
-    <div><div class="eyebrow">Cavitak · tvONE · BrightSign</div><h1>Quote <span>Desk</span></h1></div>
+    <div><div class="eyebrow">Cavitak · tvONE · BrightSign · Green Hippo</div><h1>Quote <span>Desk</span></h1></div>
     <div class="row" id="who" hidden><span class="pill" id="whoPill"></span><button class="btn ghost sm" id="signOut">Sign out</button></div>
   </header>
 
@@ -355,12 +364,14 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
         <label>BrightSign margin %<input type="number" id="sMargin" min="0" max="99" step="0.5"></label>
         <label>Margin floor, tvONE %<input type="number" id="sFloorTv" min="0" max="90" step="0.5"></label>
         <label>Margin floor, BrightSign %<input type="number" id="sFloorBs" min="0" max="90" step="0.5"></label>
+        <label>Margin floor, Green Hippo %<input type="number" id="sFloorGh" min="0" max="90" step="0.5"></label>
       </div>
       <label>Payment terms <em>printed on quotes; leave empty to omit</em><textarea id="sPay" maxlength="600" placeholder="e.g. 100% advance along with PO"></textarea></label>
       <label>Delivery terms <em>printed on quotes; leave empty to omit</em><textarea id="sDel" maxlength="600" placeholder="e.g. 3–4 weeks from PO and advance"></textarea></label>
       <div class="err" id="sErr" hidden></div>
       <div class="row"><button class="btn" id="sSave">Save settings</button></div>
     </div>
+    <div class="card"><div class="row between"><h2>Green Hippo prices</h2><span class="chip" id="ghpCount"></span></div><p class="note">Buy prices for the servers, FX4 and options the sizing uses. USD lines take the CF you set on each quote; INR lines don't.</p><div class="list" id="ghpBox"></div></div>
     <div class="card"><div class="row between"><h2>Margin tracking</h2><span class="chip" id="mgCount"></span></div><div class="row"><p class="note" style="flex:1">Margin after discount on every quote, against the floors above. Only you can issue a quote below the floor.</p><label style="flex:0 0 140px">Period<select id="mgDays"><option value="30">30 days</option><option value="90" selected>90 days</option><option value="365">1 year</option></select></label></div><div class="list" id="mgBox"></div></div>
     <div class="card"><div class="row between"><h2>Missing prices</h2><span class="chip warn" id="mpCount"></span></div><div class="list" id="mpBox"></div></div>
     <div class="card"><div class="row between"><h2>People</h2><span class="note">Each new login or reset gets its own one-time password, changed at first sign-in</span></div><div class="list" id="pplBox"></div></div>
@@ -384,7 +395,57 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
       <div class="brands">
         <button class="brand" data-brand="tvone"><span class="lg">tv1</span><b>tvONE</b><span>Calico Pro video wall processor</span><span class="note">Port calculation and Calico PDF. The product lead prices the quote.</span></button>
         <button class="brand" data-brand="brightsign"><span class="lg bs">BS</span><b>BrightSign</b><span>Media players, BSN.cloud and accessories</span><span class="note">Pick products and get the quote straight away. Ask for a discount if you need one.</span></button>
+        <button class="brand" data-brand="greenhippo"><span class="lg gh">GH</span><b>Green Hippo</b><span>Hippotizer MX media servers</span><span class="note">Enter LED screens, projectors and displays. The app sizes the servers; the product lead prices the quote.</span></button>
       </div>
+    </div>
+  </section>
+
+  <!-- Green Hippo case -->
+  <section id="vGh" class="list" hidden>
+    <div class="row between"><button class="btn ghost sm" id="backFromGh">Back to cases</button><span class="chip" id="gStatus"></span></div>
+    <div class="banner" id="gBanner" hidden></div>
+    <div class="card">
+      <div class="row between"><h2 id="gCaseNo">New Green Hippo case</h2><span class="pill" id="gTerritory"></span></div>
+      <label>Project name <em>required</em><input id="gProject" placeholder="Enter project name" maxlength="120"></label>
+      <label class="pplab">Partner <em>required</em><input id="gPartner" placeholder="Search partner, or add a new one" maxlength="120" autocomplete="off"><span class="picked no" id="gPicked">Pick from the partner list</span></label>
+      <label>Partner's state <em>optional</em><select id="gState"><option value="">Choose state</option></select></label>
+      <label>End customer / site<input id="gEnd" maxlength="160" placeholder="e.g. Science City dome"></label>
+      <label>Consultant <em>optional</em><input id="gCons" maxlength="160" placeholder="Consultant or PMC, if any"></label>
+      <details class="tdet" id="gTdet"><summary>Tender / GeM details</summary>
+        <div class="adm">
+          <label>Tender or GeM bid no.<input id="gTender" maxlength="80" placeholder="e.g. GEM/2026/B/1234567"></label>
+          <label>Bid due date<input type="date" id="gBid"></label>
+          <label>EMD, INR<input type="number" id="gEmd" min="0" step="1"></label>
+        </div>
+        <div class="row"><label class="chk"><input type="checkbox" id="gGem"> GeM bid</label><label class="chk"><input type="checkbox" id="gMaf"> Authorisation letter (MAF) needed</label></div>
+      </details>
+    </div>
+    <div class="card">
+      <h2>What the servers must drive</h2>
+      <h3>LED screens <span class="note">resolution in pixels</span></h3>
+      <div class="list" id="gLeds"></div>
+      <div class="row"><button type="button" class="btn ghost sm" id="gAddLed">+ Add LED screen</button></div>
+      <div class="k4">
+        <label>Projectors, Full HD<input type="number" id="gPf" min="0" max="500" value="0"></label>
+        <label>Projectors, 4K<input type="number" id="gP4" min="0" max="500" value="0"></label>
+        <label>Displays, Full HD<input type="number" id="gDf" min="0" max="500" value="0"></label>
+        <label>Displays, 4K<input type="number" id="gD4" min="0" max="500" value="0"></label>
+      </div>
+      <div class="adm">
+        <label>Where it is used<select id="gUse"><option value="install">Fixed installation</option><option value="touring">Live events / touring</option></select></label>
+        <label>Content<select id="gContent"><option value="standard">Standard playback</option><option value="heavy">Heavy: many 4K layers, Notch / generative</option></select></label>
+      </div>
+      <details class="tdet" id="gXdet"><summary>Extras, only if the project needs them</summary>
+        <div class="row"><label class="chk"><input type="checkbox" id="gBackup"> Backup server (doubles the servers)</label></div>
+        <label style="max-width:220px">Live camera inputs (capture cards)<input type="number" id="gCap" min="0" max="20" value="0"></label>
+      </details>
+    </div>
+    <div class="card"><div class="row between"><h2>Suggested setup</h2><span class="note">The product lead picks the option and prices it</span></div><div class="list" id="gPlan"></div></div>
+    <div class="card" id="gQuoteCard" hidden><div class="list" id="gQuote"></div></div>
+    <div class="err" id="gErr" hidden></div>
+    <div class="sticky">
+      <button class="btn ghost" id="gSave">Save</button>
+      <button class="btn" id="gGo">Send to product lead</button>
     </div>
   </section>
 
@@ -442,7 +503,7 @@ nav.tabs button[aria-pressed="true"]{color:var(--accent);background:color-mix(in
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 'use strict';
-const APP_VERSION = 'v2.1.0';
+const APP_VERSION = 'v2.2.0';
 const SUPABASE_URL = 'https://yhzecukifwnlgowmgkrc.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Rex8QiypJkVmJz2r7UPGtg_3-l1yy1u';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
@@ -464,10 +525,11 @@ const FLAG_TEXT = {
   audio_not_required: () => 'The PDF has an audio card, but audio ports are marked as not required'
 };
 const FLAG_CLS = { short_outputs: 'bad', short_in_4k60: 'bad', short_in_4k30: 'bad', audio_missing: 'bad' };
+const BRAND = { tvone: 'tvONE', brightsign: 'BrightSign', greenhippo: 'Green Hippo' };
 const hasAudio = cfg => !!cfg && (cfg.other_lines || []).some(x => /S\/PDIF|analog audio/i.test(x));
 let ME = null, CASES = [], FILTER = 'all', ED = null;
 
-function show(view) { ['vAuth', 'vNoAccess', 'vList', 'vEdit', 'vBrand', 'vBs', 'vRates', 'vAdmin'].forEach(v => $(v).hidden = v !== view); window.scrollTo(0, 0); }
+function show(view) { ['vAuth', 'vNoAccess', 'vList', 'vEdit', 'vBrand', 'vBs', 'vGh', 'vRates', 'vAdmin'].forEach(v => $(v).hidden = v !== view); window.scrollTo(0, 0); }
 function chip(status) { const s = STATUS[status] || [status, 'mut']; return el('span', 'chip ' + s[1], s[0]); }
 async function rpc(name, args) {
   const { data, error } = await sb.rpc(name, args || {});
@@ -489,11 +551,11 @@ async function suggestState(prefix, id) {
   if (last && [...sel.options].some(o => o.value === last.partner_state)) { sel.value = last.partner_state; toast(`State set to ${last.partner_state} from the last case with this partner. Change it if they buy from another state.`); }
 }
 function partnerPicker(prefix) {
-  const inp = $(prefix + 'Partner'), tag = $(prefix + 'Picked'), lab = inp.parentNode, obj = () => prefix === 'b' ? BS : ED;
+  const inp = $(prefix + 'Partner'), tag = $(prefix + 'Picked'), lab = inp.parentNode, obj = () => prefix === 'b' ? BS : prefix === 'g' ? GH : ED;
   let box = null, t = null, seq = 0;
   const close = () => { if (box) { box.remove(); box = null; } };
   const mark = () => { const o = obj(), ok = !!(o && o.partner_id); tag.className = 'picked' + (ok ? '' : ' no'); tag.textContent = ok ? 'From the partner list' : 'Pick from the partner list'; };
-  const pick = (id, name) => { const o = obj(); o.partner_id = id; inp.value = name; inp.classList.remove('miss'); close(); mark(); suggestState(prefix, id); touched(prefix === 'b' ? 'bs' : 'tv'); if (prefix === 'b') drawBsState(); };
+  const pick = (id, name) => { const o = obj(); o.partner_id = id; inp.value = name; inp.classList.remove('miss'); close(); mark(); suggestState(prefix, id); touched(prefix === 'b' ? 'bs' : prefix === 'g' ? 'gh' : 'tv'); if (prefix === 'b') drawBsState(); };
   const search = async () => {
     const q = inp.value.trim(), my = ++seq; let rows = [];
     try { rows = await rpc('qd_partners', { p_q: q }); } catch (e) { rows = []; }
@@ -555,7 +617,7 @@ function route(h) {
 // The brand chooser is a step, not a place: a new case replaces it in the browser history.
 function navTo(id, fresh) { if (!id && location.hash === '#new' && !ROUTING) history.replaceState(null, '', '#' + fresh); else route(id ? 'case/' + id : fresh); }
 function pendingChanges() {
-  const inBs = !$('vBs').hidden, inTv = !$('vEdit').hidden;
+  const inBs = !$('vBs').hidden, inTv = !$('vEdit').hidden || !$('vGh').hidden;
   if ((inBs || inTv) && AUTO.kind && (!$(inBs ? 'bProject' : 'eProject').value.trim() || !((inBs ? BS : ED) || {}).partner_id)) return 'This case is not saved yet: it needs the project name and a partner picked from the list.';
   if (inBs && BS && BS.id && ['quoted', 'revised'].includes(BS.status) && bsDirty()) return 'You changed products or CMS but did not tap Update quote.';
   if ((inBs || inTv) && UNSAVED) return 'You changed this case but did not save it.';
@@ -589,6 +651,7 @@ async function go(h) {
     else if (m === 'new') await pickBrand();
     else if (m === 'new/bs') await openBsEditor(null);
     else if (m === 'new/tvone') await openEditor(null);
+    else if (m === 'new/gh') await openGhEditor(null);
     else if (/^case\/[\w-]+$/.test(m)) {
       const id = m.slice(5);
       if (!CASES.length) { try { CASES = await rpc('qd_case_list'); } catch (e) { CASES = []; } }
@@ -656,7 +719,7 @@ async function boot() {
   BOOTED = session.user.id;
   $('adminBtn').hidden = ME.role !== 'lead';
   try { SET = await rpc('qd_settings'); } catch (e) { SET = { gst_rate: 18, billing_state: 'Gujarat', states: [] }; }
-  ['eState', 'bState', 'sState'].forEach(id => { const sel = $(id); if (sel.options.length > 1) return; (SET.states || []).forEach(st => { const o = el('option', null, st); o.value = st; sel.append(o); }); });
+  ['eState', 'bState', 'gState', 'sState'].forEach(id => { const sel = $(id); if (sel.options.length > 1) return; (SET.states || []).forEach(st => { const o = el('option', null, st); o.value = st; sel.append(o); }); });
   document.querySelector('.wrap').classList.toggle('wide', ME.role !== 'presales');
   const h = location.hash;
   if (/^#(case\/|new|rates|admin)/.test(h)) await go(h); else await loadCases();
@@ -755,7 +818,7 @@ async function exportList() {
   await need('exceljs'); const q = SEARCH.trim().toLowerCase(), lead = ME.role !== 'presales';
   const rows = CASES.filter(c => !q || [c.project_name, c.partner_name, c.case_no, c.presales, c.territory, c.end_customer, c.tender_no].join(' ').toLowerCase().includes(q));
   const wb = new ExcelJS.Workbook(), ws = wb.addWorksheet('Cases', { views: [{ state: 'frozen', ySplit: 1 }] });
-  const cols = [['Case no', 'case_no', 22], ['Brand', c => c.brand === 'brightsign' ? 'BrightSign' : 'tvONE', 11], ['Project', 'project_name', 30], ['Partner', 'partner_name', 26], ['End customer', 'end_customer', 24], ['State', 'partner_state', 14],
+  const cols = [['Case no', 'case_no', 22], ['Brand', c => BRAND[c.brand] || c.brand, 11], ['Project', 'project_name', 30], ['Partner', 'partner_name', 26], ['End customer', 'end_customer', 24], ['State', 'partner_state', 14],
     ['Territory', 'territory', 16], ['Presales', 'presales', 18], ['Status', c => (STATUS[c.status] || [c.status])[0], 12], ['Quote rev', 'quote_revision', 9]]
     .concat(lead ? [['Quote INR (ex GST)', c => c.quote_inr != null ? Number(c.quote_inr) : null, 16]] : [])
     .concat([['Created', c => c.created_at ? new Date(c.created_at) : null, 12], ['Submitted', c => c.submitted_at ? new Date(c.submitted_at) : null, 12], ['Closed', c => c.closed_at ? new Date(c.closed_at) : null, 12]]);
@@ -787,7 +850,7 @@ function caseRow(c, lead) {
   const b = el('button', 'case' + (CUR === c.id ? ' sel' : ''));
   const l1 = el('div', 'r1'); l1.append(el('span', 'ttl', c.project_name + ' · ' + c.partner_name), c.status === 'submitted' ? (!lead && c.disc_request_pct != null ? el('span', 'chip info', 'Discount requested') : ageChip(ageDays(waitT(c)))) : chip(c.status));
   const l2 = el('div', 'r2'), ini = (c.presales || '').split(' ').map(x => x[0]).join('').slice(0, 3);
-  const bsc = c.brand === 'brightsign', lt = el('span', 'note'); lt.append(el('span', 'bchip' + (bsc ? ' bs' : ''), bsc ? 'BrightSign' : 'tvONE'), document.createTextNode(' ' + c.case_no + (lead ? ' · ' + ini : '') + ' · ' + c.territory)); l2.append(lt);
+  const bsc = c.brand === 'brightsign', lt = el('span', 'note'); lt.append(el('span', 'bchip' + (bsc ? ' bs' : c.brand === 'greenhippo' ? ' gh' : ''), BRAND[c.brand] || c.brand), document.createTextNode(' ' + c.case_no + (lead ? ' · ' + ini : '') + ' · ' + c.territory)); l2.append(lt);
   if (lead && c.quote_inr != null) l2.append(el('span', 'mono', 'R' + c.quote_revision + ' · ' + inr(c.quote_inr)));
   else if (c.quote_revision != null) l2.append(el('span', 'mono note', 'Quote R' + c.quote_revision));
   b.append(l1, l2);
@@ -806,6 +869,7 @@ function caseRow(c, lead) {
 }
 function kpi(v, l) { const d = el('div', 'kpi'); d.append(el('b', null, String(v)), el('span', null, l)); return d; }
 function openCase(c) {
+  if (c.brand === 'greenhippo') return ME.role === 'presales' || (c.mine && ['draft', 'returned'].includes(c.status)) ? openGhEditor(c.id) : openReview(c.id);
   if (c.brand === 'brightsign') return ME.role === 'presales' || (c.mine && c.status === 'draft' && c.quote_revision == null) ? openBsEditor(c.id) : openReview(c.id);
   if (ME.role === 'presales') return openEditor(c.id);
   if (c.mine && ['draft', 'returned'].includes(c.status)) return openEditor(c.id);
@@ -1058,7 +1122,7 @@ function wireQuote(o) {
     const quiet = err && !o.touched && mi.value === '';
     if (quiet) mi.classList.remove('miss');
     const eff = (1 - (1 - (+mi.value || 0) / 100) / (1 - (+di.value || 0) / 100)) * 100;
-    const floor = Number(SET[c.brand === 'brightsign' ? 'margin_floor_bs' : 'margin_floor_tvone'] || 0);
+    const floor = Number(SET[{ brightsign: 'margin_floor_bs', greenhippo: 'margin_floor_gh' }[c.brand] || 'margin_floor_tvone'] || 0);
     o.low = !err && floor > 0 && eff < floor;
     hint.textContent = quiet ? 'Enter the margin % to see the quote.' : err || (same ? `Same terms as R${last.revision}. Change a value to issue a new revision.` : `Margin after discount: ${eff.toFixed(1)}%` + (o.low ? ` — below your ${floor}% floor` : ''));
     hint.className = 'qhint' + ((err && !quiet) || o.low ? ' bad' : ''); hint.hidden = !hint.textContent;
@@ -1104,6 +1168,7 @@ async function openReview(id) {
   if (!pane) { show('vList'); $('kpis').hidden = true; $('search').hidden = true; $('notice').hidden = true; $('listHead').hidden = true; $('inbox').hidden = true; }
   const done = () => { const root = host.firstElementChild; if (!root) return; root.addEventListener('input', () => { DIRTY.rev = true; }); const h = root.querySelector('h2'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } };
   if (r.case.brand === 'brightsign') { reviewBs(r, pane, host); return done(); }
+  if (r.case.brand === 'greenhippo') { reviewGh(r, pane, host); return done(); }
   const c = r.case, cfg = r.config, b = r.build, quotes = r.quotes || [], last = quotes[0];
   const root = el('div', 'rv'), H = el('div', 'list rvh'), S = el('div', 'list rvside'), B = el('div', 'list rvbody');
 
@@ -1492,7 +1557,7 @@ async function saveWb(wb, name) {
 /* ---------- New case: brand picker ---------- */
 async function pickBrand() { await flushAuto(); show('vBrand'); setTab('new'); route('new'); LASTHASH = location.hash; }
 $('backFromBrand').onclick = guarded(loadCases);
-document.querySelectorAll('[data-brand]').forEach(b => b.onclick = () => b.dataset.brand === 'brightsign' ? openBsEditor(null) : openEditor(null));
+document.querySelectorAll('[data-brand]').forEach(b => b.onclick = () => b.dataset.brand === 'brightsign' ? openBsEditor(null) : b.dataset.brand === 'greenhippo' ? openGhEditor(null) : openEditor(null));
 
 /* ---------- BrightSign case (presales, or lead creating one) ----------
    Presales pick products and generate the quote themselves at the brand defaults (CF 120, margin 35%).
@@ -1502,6 +1567,7 @@ const PLAYER_GROUPS = ['AU', 'LS', 'HD', 'XD', 'XT', 'XC'];
 const grpOf = g => PLAYER_GROUPS.includes(g) ? 'players' : ['SUPPORT', 'SVC', 'TRAINING'].includes(g) ? 'svc' : g;
 const BS_GROUPS = [['sel', 'Selected'], ['players', 'Players'], ['all', 'All']];
 const BS_TAG = 'Authorised distributor for BrightSign in India';
+const TAG = ctx => ctx && ctx.c && ctx.c.brand === 'greenhippo' ? 'Authorised distributor for Green Hippo in India' : BS_TAG;
 let CMSR = null;
 async function loadCat() { if (!CAT) CAT = await rpc('qd_bs_catalog'); CMSR = await rpc('qd_cms_rates'); return CAT; }
 const catById = id => (CAT || []).find(p => p.price_id === id);
@@ -1842,9 +1908,9 @@ async function openAdmin() {
   errBox('sErr', null); DIRTY.admin = false;
   try { SET = await rpc('qd_settings'); } catch (e) { alert(e.message); return; }
   $('sGst').value = SET.gst_rate; $('sState').value = SET.billing_state; $('sValid').value = SET.valid_days; $('sCf').value = SET.bs_cf; $('sMargin').value = SET.bs_margin;
-  $('sPay').value = SET.payment_terms || ''; $('sDel').value = SET.delivery_terms || ''; $('sFloorTv').value = SET.margin_floor_tvone ?? 0; $('sFloorBs').value = SET.margin_floor_bs ?? 0;
+  $('sPay').value = SET.payment_terms || ''; $('sDel').value = SET.delivery_terms || ''; $('sFloorTv').value = SET.margin_floor_tvone ?? 0; $('sFloorBs').value = SET.margin_floor_bs ?? 0; $('sFloorGh').value = SET.margin_floor_gh ?? 0;
   show('vAdmin'); route('admin'); LASTHASH = location.hash;
-  drawMissing(); drawPeople(); drawMargins();
+  drawMissing(); drawPeople(); drawMargins(); drawGhPrices();
 }
 async function drawMissing() {
   const box = $('mpBox'); box.replaceChildren(el('p', 'note', 'Loading…'));
@@ -1867,14 +1933,14 @@ async function drawMissing() {
   if (m.brightsign.length) box.append(el('p', 'note', 'BrightSign items in the range without a price: ' + m.brightsign.join(', ')));
   if (!n) box.append(el('p', 'note', 'Every item in the range has a price.'));
 }
-['sGst', 'sState', 'sValid', 'sCf', 'sMargin', 'sPay', 'sDel', 'sFloorTv', 'sFloorBs'].forEach(i => $(i).addEventListener('input', () => { DIRTY.admin = true; }));
+['sGst', 'sState', 'sValid', 'sCf', 'sMargin', 'sPay', 'sDel', 'sFloorTv', 'sFloorBs', 'sFloorGh'].forEach(i => $(i).addEventListener('input', () => { DIRTY.admin = true; }));
 $('sSave').onclick = async () => {
   const chk = [['sGst', 0, 40, 'GST must be 0 to 40%.'], ['sValid', 1, 365, 'Validity must be 1 to 365 days.'], ['sCf', 0.01, 100000, 'BrightSign CF must be more than 0.'], ['sMargin', 0, 99, 'BrightSign margin must be 0 to 99%.'],
-    ['sFloorTv', 0, 90, 'Margin floor must be 0 to 90%.'], ['sFloorBs', 0, 90, 'Margin floor must be 0 to 90%.']];
+    ['sFloorTv', 0, 90, 'Margin floor must be 0 to 90%.'], ['sFloorBs', 0, 90, 'Margin floor must be 0 to 90%.'], ['sFloorGh', 0, 90, 'Margin floor must be 0 to 90%.']];
   for (const [id, lo, hi, msg] of chk) { const v = $(id).value; const bad = v === '' || !(+v >= lo && +v <= hi); $(id).classList.toggle('miss', bad); if (bad) { errBox('sErr', new Error(msg)); $(id).focus(); return; } }
   $('sSave').disabled = true; errBox('sErr', null);
   try {
-    SET = await rpc('qd_settings_save', { p: { gst_rate: +$('sGst').value, billing_state: $('sState').value, valid_days: +$('sValid').value, bs_cf: +$('sCf').value, bs_margin: +$('sMargin').value, margin_floor_tvone: +$('sFloorTv').value, margin_floor_bs: +$('sFloorBs').value, payment_terms: $('sPay').value, delivery_terms: $('sDel').value } });
+    SET = await rpc('qd_settings_save', { p: { gst_rate: +$('sGst').value, billing_state: $('sState').value, valid_days: +$('sValid').value, bs_cf: +$('sCf').value, bs_margin: +$('sMargin').value, margin_floor_tvone: +$('sFloorTv').value, margin_floor_bs: +$('sFloorBs').value, margin_floor_gh: +$('sFloorGh').value, payment_terms: $('sPay').value, delivery_terms: $('sDel').value } });
     DIRTY.admin = false; toast('Settings saved');
   } catch (e) { errBox('sErr', e); }
   finally { $('sSave').disabled = false; }
@@ -1930,7 +1996,7 @@ function caseTools(c, after) {
   cp.onclick = guarded(async () => {
     if (!confirm('Make a new draft case with the same partner, end customer and requirement? Use it for a repeat site.')) return;
     cp.disabled = true;
-    try { const n = await rpc('qd_case_clone', { p_case: c.id }); toast('Copied as ' + n.case_no); UNSAVED = false; if (n.brand === 'brightsign') await openBsEditor(n.id, 'details'); else await openEditor(n.id); }
+    try { const n = await rpc('qd_case_clone', { p_case: c.id }); toast('Copied as ' + n.case_no); UNSAVED = false; if (n.brand === 'greenhippo') await openGhEditor(n.id); else if (n.brand === 'brightsign') await openBsEditor(n.id, 'details'); else await openEditor(n.id); }
     catch (e) { alert(e.message); cp.disabled = false; }
   });
   const hbox = el('div', 'hist'); hbox.hidden = true;
@@ -1950,7 +2016,7 @@ function caseTools(c, after) {
 
 /* ---------- Close as won or lost: why, and against whom ---------- */
 const WHY = { won: ['Price', 'Spec or features', 'Relationship', 'Brand preference', 'Other'], lost: ['Price', 'Competitor brand preferred', 'Project dropped or postponed', 'Spec changed', 'Partner lost the bid', 'Other'] };
-const RIVALS = { tvone: ['Novastar', 'Datapath', 'Barco', 'Christie', 'Analog Way', 'Extron', 'RGB Spectrum', 'Kramer', 'Other'], brightsign: ['Android media box', 'Samsung SoC / MagicInfo', 'LG webOS', 'Mini PC', 'Xibo / Yodeck box', 'Other'] };
+const RIVALS = { greenhippo: ['disguise', 'Pixera', 'Resolume', 'Watchout', 'Millumin', 'TouchDesigner', 'Other'], tvone: ['Novastar', 'Datapath', 'Barco', 'Christie', 'Analog Way', 'Extron', 'RGB Spectrum', 'Kramer', 'Other'], brightsign: ['Android media box', 'Samsung SoC / MagicInfo', 'LG webOS', 'Mini PC', 'Xibo / Yodeck box', 'Other'] };
 function closeForm(c) {
   const w = el('div', 'list'); w.style.gap = '8px';
   w.append(el('h3', null, 'Close the case'), el('p', 'note', ME.role === 'presales' ? 'Close the case as soon as the partner tells you the result. The reason and competitor feed win/loss reporting.' : 'Presales can re-quote until the case is closed. The reason and competitor feed win/loss reporting.'));
@@ -1988,7 +2054,7 @@ function closeForm(c) {
 async function afterClose(c) {
   if (ME.role !== 'presales') return refreshAfter(c.id);
   UNSAVED = false; CASES = await rpc('qd_case_list'); drawList();
-  if (c.brand === 'brightsign') await openBsEditor(c.id, 'quote'); else await openEditor(c.id);
+  if (c.brand === 'greenhippo') await openGhEditor(c.id); else if (c.brand === 'brightsign') await openBsEditor(c.id, 'quote'); else await openEditor(c.id);
 }
 function reopenForm(c) {
   if (ME.role !== 'lead' || !['won', 'lost'].includes(c.status)) return null;
@@ -2014,7 +2080,7 @@ async function drawMargins() {
   $('mgCount').textContent = low.length + ' below floor'; $('mgCount').className = 'chip ' + (low.length ? 'bad' : 'ok');
   const avg = a => a.length ? (a.reduce((t, r) => t + Number(r.eff_pct), 0) / a.length).toFixed(1) + '%' : '-';
   const grid = el('div', 'mgk');
-  [['tvone', 'tvONE'], ['brightsign', 'BrightSign']].forEach(([b, n]) => { const a = rows.filter(r => r.brand === b); const d = el('div', 'kpi'); d.append(el('b', null, avg(a)), el('span', null, `${n} avg margin · ${a.length} quotes`)); grid.append(d); });
+  [['tvone', 'tvONE'], ['brightsign', 'BrightSign'], ['greenhippo', 'Green Hippo']].forEach(([b, n]) => { const a = rows.filter(r => r.brand === b); const d = el('div', 'kpi'); d.append(el('b', null, avg(a)), el('span', null, `${n} avg margin · ${a.length} quotes`)); grid.append(d); });
   const byP = {}; low.forEach(r => byP[r.presales] = (byP[r.presales] || 0) + 1);
   box.append(grid);
   if (Object.keys(byP).length) box.append(el('p', 'note', 'Below floor by presales: ' + Object.entries(byP).map(([k, v]) => `${k} ${v}`).join(' · ')));
@@ -2024,7 +2090,7 @@ async function drawMargins() {
     const tr = el('tr'); tr.className = r.floor_pct > 0 && r.eff_pct < r.floor_pct ? 'low' : '';
     const a = el('a', null, r.case_no); a.href = '#case/' + r.case_id;
     const td = el('td'); td.append(a, el('div', 'note', r.project));
-    tr.append(td, el('td', null, r.brand === 'brightsign' ? 'BrightSign' : 'tvONE'), el('td', null, r.presales || '-'), el('td', null, 'R' + r.revision), el('td', 'num', inr(r.quote_inr)),
+    tr.append(td, el('td', null, BRAND[r.brand] || r.brand), el('td', null, r.presales || '-'), el('td', null, 'R' + r.revision), el('td', 'num', inr(r.quote_inr)),
       el('td', 'num', Number(r.margin_pct) + '%'), el('td', 'num', Number(r.discount_pct) + '%'), el('td', 'num', Number(r.eff_pct).toFixed(1) + '%'), el('td', 'num', r.floor_pct > 0 ? r.floor_pct + '%' : 'off'));
     t.append(tr);
   });
@@ -2092,6 +2158,7 @@ async function drawPeople() {
    saving a quoted case sends it back for a new quote, so that stays a deliberate tap on Save. */
 let AUTO = { n: 0, t: null, kind: null };
 function touched(kind) {
+  if (kind === 'gh') { UNSAVED = true; drawGhState(); return; }
   const c = kind === 'bs' ? BS : ED; if (c && !['draft', 'returned'].includes(c.status)) { UNSAVED = true; if (kind === 'bs') drawBsState(); return; }
   AUTO.kind = kind; AUTO.n++; clearTimeout(AUTO.t);
   if (AUTO.n >= 3) autoSave(); else AUTO.t = setTimeout(autoSave, 2500);
@@ -2116,6 +2183,228 @@ $('vEdit').addEventListener('click', e => { if (e.target.closest('[data-step], .
 ['bProject', 'bEnd', 'bCons', 'bTender', 'bBid', 'bEmd', 'bGem', 'bMaf'].forEach(i => $(i).addEventListener('input', () => { touched('bs'); drawBsState(); }));
 $('bState').addEventListener('change', () => { $('bState').classList.remove('miss'); touched('bs'); drawBsState(); });
 $('eState').addEventListener('change', () => $('eState').classList.remove('miss'));
+
+/* ---------- Green Hippo: presales enters what must be driven, the app sizes the servers ---------- */
+let GH = null, GHLEDS = [], GHSEQ = 0, GHT = null;
+const markG = partnerPicker('g');
+async function openGhEditor(id) {
+  let r = null;
+  if (id) { try { r = await rpc('qd_case_get', { p_case: id }); } catch (e) { alert(e.message); return loadCases(); } }
+  GH = r ? { ...r.case, cq: r.customer_quote, presales_name: r.presales_name } : { id: null, status: 'draft', gh_req: {}, territory: ME.territory };
+  UNSAVED = false; $('gErr').hidden = true;
+  $('gCaseNo').textContent = GH.case_no || 'New Green Hippo case'; $('gTerritory').textContent = GH.territory || ME.territory || '';
+  $('gProject').value = GH.project_name || ''; $('gPartner').value = GH.partner_name || ''; $('gState').value = GH.partner_state || '';
+  $('gEnd').value = GH.end_customer || ''; $('gCons').value = GH.consultant || ''; markG(); loadTender('g', GH);
+  const q = GH.gh_req || {};
+  GHLEDS = (q.leds || []).map(x => ({ w: x.w, h: x.h, qty: x.qty || 1 }));
+  $('gPf').value = q.proj_fhd || 0; $('gP4').value = q.proj_4k || 0; $('gDf').value = q.disp_fhd || 0; $('gD4').value = q.disp_4k || 0;
+  $('gUse').value = q.use || 'install'; $('gContent').value = q.content || 'standard'; $('gBackup').checked = !!q.backup; $('gCap').value = q.capture || 0;
+  $('gXdet').open = !!(q.backup || q.capture);
+  drawGhLeds(); drawGhState(); planGh();
+  show('vGh'); setTab(id ? 'cases' : 'new'); navTo(id, 'new/gh'); LASTHASH = location.hash;
+}
+const ghReq = () => ({
+  leds: GHLEDS.filter(l => l.w || l.h).map(l => ({ w: +l.w || null, h: +l.h || null, qty: +l.qty || 1 })),
+  proj_fhd: +$('gPf').value || 0, proj_4k: +$('gP4').value || 0, disp_fhd: +$('gDf').value || 0, disp_4k: +$('gD4').value || 0,
+  use: $('gUse').value, content: $('gContent').value, backup: $('gBackup').checked, capture: +$('gCap').value || 0
+});
+function ghChanged() { touched('gh'); clearTimeout(GHT); GHT = setTimeout(planGh, 350); }
+function drawGhLeds() {
+  const box = $('gLeds'), ed = ghEditable(); box.replaceChildren();
+  GHLEDS.forEach((l, i) => {
+    const row = el('div', 'ghled');
+    const f = (lab, k, ph) => { const lb = el('label', null, lab), x = el('input'); x.type = 'number'; x.min = '1'; x.placeholder = ph; x.value = l[k] ?? ''; x.disabled = !ed; x.oninput = () => { l[k] = x.value; ghChanged(); }; lb.append(x); return lb; };
+    const rm = el('button', 'btn ghost sm', '×'); rm.type = 'button'; rm.setAttribute('aria-label', 'Remove LED screen ' + (i + 1)); rm.disabled = !ed;
+    rm.onclick = () => { GHLEDS.splice(i, 1); drawGhLeds(); ghChanged(); };
+    row.append(f(`Screen ${i + 1} width, px`, 'w', 'e.g. 7680'), f('Height, px', 'h', 'e.g. 2160'), f('Qty', 'qty', '1'), rm); box.append(row);
+  });
+  if (!GHLEDS.length) box.append(el('p', 'note', 'No LED screens. Add one if the project has LED.'));
+}
+$('gAddLed').onclick = () => { GHLEDS.push({ w: '', h: '', qty: 1 }); drawGhLeds(); const ins = $('gLeds').querySelectorAll('input'); if (ins.length) ins[ins.length - 3].focus(); };
+['gPf', 'gP4', 'gDf', 'gD4', 'gCap'].forEach(i => $(i).addEventListener('input', ghChanged));
+['gUse', 'gContent', 'gBackup'].forEach(i => $(i).addEventListener('change', ghChanged));
+['gProject', 'gEnd', 'gCons', 'gTender', 'gBid', 'gEmd', 'gGem', 'gMaf'].forEach(i => $(i).addEventListener('input', () => touched('gh')));
+$('gState').addEventListener('change', () => { $('gState').classList.remove('miss'); touched('gh'); });
+$('backFromGh').onclick = guarded(loadCases);
+async function planGh() {
+  const my = ++GHSEQ; let p;
+  try { p = await rpc('qd_gh_plan', { p_req: ghReq() }); } catch (e) { if (my === GHSEQ) $('gPlan').replaceChildren(el('div', 'err', e.message)); return; }
+  if (my === GHSEQ) drawGhPlan($('gPlan'), p);
+}
+// Shared by the presales editor (no prices) and the lead review (prices + choose)
+function drawGhPlan(box, p, lead) {
+  box.replaceChildren();
+  const k = el('div', 'k4'); k.append(kpi(p.out_4k, '4K outputs'), kpi(p.out_fhd, 'Full HD screens'), kpi(p.led_outputs, 'of which LED outputs')); box.append(k);
+  if (!p.options.length) { box.append(el('p', 'note', 'Enter LED screens, projectors or displays to see the servers.')); return; }
+  if (p.options.length > 1) box.append(el('p', 'note', 'Two ways to drive the Full HD screens. Option A splits 4K outputs with Datapath FX4; Option B gives each screen its own server output.'));
+  p.options.forEach(o => {
+    const pr = lead && lead.priced[o.key], on = lead && lead.pick === o.key, c = el('div', 'ghopt' + (on ? ' on' : ''));
+    const h = el('div', 'row between'); h.append(el('b', null, o.label), on ? el('span', 'chip ok', 'Chosen') : el('span'));
+    c.append(h, el('span', 'note', o.note));
+    (pr ? pr.lines : o.lines).forEach(l => { const d = el('div', 'ln'); d.append(el('span', null, `${l.qty} × ${l.model || l.sku}`), el('span', null, pr ? (l.usd_each != null ? 'USD ' + usd(l.usd_each) : l.inr_each != null ? 'INR ' + inr(l.inr_each) : 'no price') : '')); c.append(d); });
+    if (pr) {
+      c.append(el('div', 'kv', `Buy total: USD ${usd(pr.list_usd)}` + (Number(pr.list_inr) ? ` + INR ${inr(pr.list_inr)}` : '')));
+      if (!pr.ok) c.append(el('span', 'chip bad', 'No price: ' + pr.missing_prices.join(', ')));
+      if (!on && lead.canPick) { const b = el('button', 'btn ghost sm', 'Use this option'); b.onclick = () => lead.onPick(o.key, b); c.append(b); }
+    }
+    box.append(c);
+  });
+}
+const ghEditable = () => !!GH && ['draft', 'returned', 'submitted', 'quoted', 'revised'].includes(GH.status) && (ME.role === 'presales' || GH.status === 'draft' || GH.status === 'returned');
+function drawGhState() {
+  if (!GH) return;
+  const st = GH.status, ed = ghEditable(), ban = $('gBanner');
+  $('gStatus').replaceWith(Object.assign(chip(st), { id: 'gStatus' }));
+  ['gProject', 'gPartner', 'gState', 'gEnd', 'gCons', 'gTender', 'gBid', 'gEmd', 'gGem', 'gMaf', 'gPf', 'gP4', 'gDf', 'gD4', 'gUse', 'gContent', 'gBackup', 'gCap', 'gAddLed'].forEach(i => $(i).disabled = !ed);
+  let bn = '';
+  if (st === 'returned' && GH.return_note) bn = 'Returned by the product lead: ' + GH.return_note;
+  else if (st === 'submitted') bn = 'With the product lead for pricing. You can still change the requirement; save to update it.';
+  else if (['quoted', 'revised'].includes(st)) bn = UNSAVED ? 'Saving this change sends the case back to the product lead for a new quote.' : 'Quoted. Changing the requirement sends it back to the product lead for a new quote.';
+  ban.textContent = bn; ban.hidden = !bn;
+  const go = $('gGo'); go.hidden = !ed || st === 'submitted' || (['quoted', 'revised'].includes(st) && !UNSAVED);
+  go.textContent = ['quoted', 'revised'].includes(st) ? 'Save and ask for a new quote' : 'Send to product lead';
+  $('gSave').hidden = !ed; $('gSave').textContent = UNSAVED ? 'Save' : 'Saved'; $('gSave').disabled = !UNSAVED;
+  // quote and case tools
+  const qc = $('gQuoteCard'), qb = $('gQuote'); qb.replaceChildren();
+  if (GH.id && GH.cq) {
+    qb.append(el('h2', null, `Quote R${GH.cq.revision}`), bsQuoteTable(GH.cq.lines || [], GH.cq.quote_inr, GH.cq));
+    const g = el('div', 'docs'), ctx = { c: GH, cq: GH.cq, presales: GH.presales_name || ME.full_name };
+    const mk = (label, fn) => { const bt = el('button', 'btn ghost', label); bt.onclick = async () => { bt.disabled = true; try { await fn(ctx); } catch (e) { alert('Could not create the file: ' + e.message); } finally { bt.disabled = false; } }; return bt; };
+    g.append(mk('Quote Excel', bsQuoteXlsx), mk('Quote PDF', bsQuotePdf), waButton(GH, GH.cq)); qb.append(g);
+  }
+  if (GH.id && ME.role === 'presales' && ['quoted', 'revised'].includes(st) && !UNSAVED) { const sb2 = el('div', 'sub'); sb2.append(closeForm(GH)); qb.append(sb2); }
+  if (GH.id && closedNote(GH)) qb.append(closedNote(GH));
+  if (GH.id && st !== 'draft') qb.append(caseTools(GH, () => drawGhState()));
+  qc.hidden = !qb.childElementCount;
+}
+async function saveGh() {
+  $('gErr').hidden = true;
+  const proj = $('gProject').value.trim(), part = $('gPartner').value.trim();
+  $('gProject').classList.toggle('miss', !proj); $('gPartner').classList.toggle('miss', !part);
+  if (!proj || !part) { $('gErr').hidden = false; $('gErr').textContent = 'Enter the project name and pick the partner.'; return false; }
+  const btn = $('gSave'); btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const c = await rpc('qd_case_save', { p: { id: GH.id, brand: 'greenhippo', project_name: proj, partner_name: part, partner_id: GH.partner_id || null,
+      partner_state: $('gState').value, end_customer: $('gEnd').value.trim(), consultant: $('gCons').value.trim(), ...tenderPayload('g'), gh_req: ghReq() } });
+    const was = GH.status, cq = GH.cq, pn = GH.presales_name; GH = { ...c, cq: c.status === 'submitted' && ['quoted', 'revised'].includes(was) ? cq : cq, presales_name: pn };
+    UNSAVED = false; $('gCaseNo').textContent = GH.case_no; navTo(GH.id, 'new/gh'); LASTHASH = location.hash;
+    if (['quoted', 'revised'].includes(was) && c.status === 'submitted') toast('Requirement changed: sent back to the product lead for a new quote');
+    drawGhState(); return true;
+  } catch (e) { $('gErr').hidden = false; $('gErr').textContent = e.message; drawGhState(); return false; }
+}
+$('gSave').onclick = () => saveGh();
+$('gGo').onclick = async () => {
+  const go = $('gGo'); if (go.disabled) return; go.disabled = true;
+  try {
+    if (!(await saveGh())) return;
+    if (['draft', 'returned'].includes(GH.status)) { await rpc('qd_case_submit', { p_case: GH.id }); toast('Sent to the product lead'); }
+    CASES = await rpc('qd_case_list'); await openGhEditor(GH.id);
+  } catch (e) { $('gErr').hidden = false; $('gErr').textContent = e.message; }
+  finally { go.disabled = false; }
+};
+
+/* ---------- Green Hippo review (lead): choose the option, then price it ---------- */
+function reviewGh(r, pane, host) {
+  const c = r.case, gh = r.gh || { plan: { options: [] } }, b = r.build || { lines: [], ok: false }, quotes = r.quotes || [], last = quotes[0], dflt = r.defaults || {};
+  const root = el('div', 'rv'), H = el('div', 'list rvh'), S = el('div', 'list rvside'), B = el('div', 'list rvbody');
+  if (!pane) { const back = el('button', 'btn ghost sm', 'Back to cases'); back.onclick = guarded(loadCases); H.append(back); }
+  const head = el('div', 'card'), t = el('div', 'row between');
+  t.append(el('h2', null, c.project_name), chip(c.status));
+  const wait = c.status === 'submitted' && c.submitted_at ? ` · waiting ${ageDays(c.submitted_at)}d` : '';
+  head.append(t, el('div', 'note', `Green Hippo · ${c.partner_name}${c.partner_state ? ' (' + c.partner_state + ')' : ''} · ${c.case_no} · ${r.presales_name || ''} · ${c.territory}${wait}`));
+  if (c.end_customer || c.consultant) head.append(el('div', 'note', [c.end_customer ? 'End customer: ' + c.end_customer : '', c.consultant ? 'Consultant: ' + c.consultant : ''].filter(Boolean).join(' · ')));
+  if (c.tender_no || c.bid_due || c.gem) head.append(el('div', 'note', [c.gem ? 'GeM bid' : 'Tender', c.tender_no, c.bid_due ? 'due ' + fdate(c.bid_due) : '', c.emd_inr ? 'EMD INR ' + inr(c.emd_inr) : '', c.maf_needed ? 'MAF needed' : ''].filter(Boolean).join(' · ')));
+  const q = gh.plan.req || {};
+  const reqTxt = [(q.leds || []).map(l => `LED ${l.w}×${l.h}${l.qty > 1 ? ' ×' + l.qty : ''}`).join(', '), q.proj_fhd ? q.proj_fhd + ' Full HD projector(s)' : '', q.proj_4k ? q.proj_4k + ' 4K projector(s)' : '',
+    q.disp_fhd ? q.disp_fhd + ' Full HD display(s)' : '', q.disp_4k ? q.disp_4k + ' 4K display(s)' : '', q.use === 'touring' ? 'Live events / touring' : 'Fixed installation', q.content === 'heavy' ? 'Heavy content' : 'Standard content',
+    q.backup ? 'Backup server' : '', q.capture ? q.capture + ' capture card(s)' : ''].filter(Boolean).join(' · ');
+  head.append(el('div', 'note', reqTxt));
+  if (c.return_note && c.status === 'returned') head.append(el('div', 'banner', 'Returned: ' + c.return_note));
+  H.append(head);
+  const canQuote = ['submitted', 'quoted', 'revised'].includes(c.status);
+  const oc = el('div', 'card'); oc.append(el('h3', null, 'Server options'));
+  const ob = el('div', 'list'); oc.append(ob);
+  drawGhPlan(ob, gh.plan, { priced: r.gh_priced || {}, pick: b.option, canPick: canQuote, onPick: async (k, btn) => {
+    btn.disabled = true; try { await rpc('qd_gh_pick', { p_case: c.id, p_option: k }); DIRTY.rev = false; await openReview(c.id); } catch (e) { alert(e.message); btn.disabled = false; } } });
+  B.append(oc);
+  /* quote panel */
+  const qp = el('div', 'card'); qp.append(el('h3', null, last ? `Re-quote (current R${last.revision})` : 'Quote'), el('div', 'note', b.label ? 'Pricing ' + b.label : ''));
+  const field = (label, val, step, min, max) => { const l = el('label', null, label), i = el('input'); i.type = 'number'; i.step = step; i.min = min; if (max != null) i.max = max; i.value = val; i.disabled = !canQuote; l.append(i); return [l, i]; };
+  const [ml, mi] = field('Margin %', last ? last.margin_pct : (dflt.margin_pct || ''), 0.5, 0, 99);
+  const [dl, di] = field('Discount %', last ? last.discount_pct : 0, 0.5, 0, 100);
+  const [cl, ci] = field('CF', last ? last.cf : (dflt.cf ?? 120), 1, 1);
+  const vl = el('label', null, 'Valid till'), vi = el('input'); vi.type = 'date'; vi.disabled = !canQuote;
+  vi.value = last && last.valid_till && last.valid_till >= todayISO() ? last.valid_till : plusDaysISO(SET.valid_days || 30); vl.append(vi);
+  const r1 = el('div', 'row'); r1.append(ml, dl); const r2 = el('div', 'row'); r2.append(cl, vl); qp.append(r1, r2);
+  const steps = el('div', 'sub'), line = k => { const d = el('div', 'kv'), v = el('span'); d.append(el('span', null, k), v); steps.append(d); return v; };
+  const sx = line('Total USD (x)'), sl = line('Landing (x × CF' + (Number(b.list_inr) > 0 ? ' + INR lines)' : ')')), sm = line('With margin'), sd = line('Discount');
+  qp.append(steps);
+  const tot = el('div', 'total qtotal'), tv = el('b'); tot.append(el('span', null, 'Quote, INR'), tv); qp.append(tot);
+  const go = el('button', 'btn');
+  const preview = ok => {
+    const y = +ci.value || 0, z = +mi.value || 0, d = +di.value || 0, x = Number(b.list_usd || 0), land = x * y + Number(b.list_inr || 0), pre = land / (1 - z / 100);
+    const fin = (b.lines || []).reduce((s2, l) => s2 + Math.round((l.inr_each != null ? Number(l.inr_each) : Number(l.usd_each) * y) / (1 - z / 100) * (1 - d / 100)) * l.qty, 0);
+    sx.textContent = usd(x); sl.textContent = inr(land); sm.textContent = ok ? inr(pre) : '-'; sd.textContent = ok ? '− ' + inr(pre - fin) + ' (' + d + '%)' : '-'; tv.textContent = ok ? inr(fin) : '-';
+  };
+  if (last) qp.append(el('div', 'note', `R${last.revision}: INR ${inr(last.quote_inr)} · margin ${last.margin_pct}% · discount ${last.discount_pct}% · CF ${last.cf}`));
+  if (!b.ok && b.missing_prices && b.missing_prices.length) qp.append(el('div', 'banner', 'Set the buy price in Admin → Green Hippo prices for: ' + b.missing_prices.join(', ')));
+  const hint = el('div', 'qhint'); hint.hidden = true; qp.append(hint);
+  if (canQuote) qp.append(go);
+  wireQuote({ c, last, mi, di, ci, vi, go, hint, preview, ok: canQuote && b.ok, label: () => last ? `Generate re-quote R${last.revision + 1}` : 'Generate quote' });
+  S.append(qp);
+  /* actions */
+  const act = el('div', 'card');
+  if (c.status === 'submitted') {
+    act.append(el('h3', null, 'Return to presales'), el('p', 'note', 'Ask for missing details before pricing.'));
+    const ta = el('textarea'); ta.placeholder = 'What presales should change or add'; ta.maxLength = 500; const lb = el('label', null, 'Note'); lb.append(ta);
+    const rb = el('button', 'btn ghost', 'Return with note');
+    noteAction([rb], ta, async () => { await rpc('qd_case_return_v2', { p_case: c.id, p_note: ta.value.trim(), p_seen: c.updated_at }); toast('Returned to presales'); await refreshAfter(c.id); });
+    act.append(lb, rb);
+  }
+  if (['quoted', 'revised'].includes(c.status)) act.append(closeForm(c));
+  if (closedNote(c)) act.append(closedNote(c));
+  if (reopenForm(c)) act.append(reopenForm(c));
+  if (act.childElementCount) S.append(act);
+  { const tc = el('div', 'card'), tw = caseTools(c, () => refreshAfter(c.id)); tw.className = 'list'; tw.style.gap = '10px'; tc.append(tw); S.append(tc); }
+  if (quotes.length) {
+    const rc = el('div', 'card'); rc.append(el('h3', null, 'Quote revisions')); const tlx = el('div', 'tl');
+    quotes.forEach((x, i) => { const d = el('div'); d.append(el('span', 'mono', `R${x.revision}${i === 0 ? ' · current' : ''} · ${fdate(x.created_at)}`), el('span', 'mono', `INR ${inr(x.quote_inr)} · m ${x.margin_pct}% · d ${x.discount_pct}% · CF ${x.cf}`)); tlx.append(d); });
+    rc.append(tlx); B.append(rc);
+  }
+  if (r.customer_quote) {
+    const dc = el('div', 'card'); dc.append(el('h3', null, 'Customer quote'), bsQuoteTable(r.customer_quote.lines || [], r.customer_quote.quote_inr, r.customer_quote));
+    const g = el('div', 'docs'), ctx = { c, cq: r.customer_quote, presales: r.presales_name };
+    const mk = (label, fn) => { const bt = el('button', 'btn ghost', label); bt.onclick = async () => { bt.disabled = true; try { await fn(ctx); } catch (e) { alert('Could not create the file: ' + e.message); } finally { bt.disabled = false; } }; return bt; };
+    g.append(mk('Quote Excel', bsQuoteXlsx), mk('Quote PDF', bsQuotePdf), waButton(c, r.customer_quote)); dc.append(g); B.append(dc);
+  }
+  root.append(H, S, B); host.replaceChildren(root);
+  if (!pane) window.scrollTo(0, 0);
+}
+
+/* ---------- Green Hippo prices (lead, Admin) ---------- */
+async function drawGhPrices() {
+  const box = $('ghpBox'); box.replaceChildren(el('p', 'note', 'Loading…'));
+  let items; try { items = await rpc('qd_gh_items'); } catch (e) { box.replaceChildren(el('div', 'err', e.message)); return; }
+  box.replaceChildren();
+  const miss = items.filter(i => i.buy_price == null).length;
+  $('ghpCount').textContent = miss ? miss + ' without price' : 'All priced'; $('ghpCount').className = 'chip ' + (miss ? 'bad' : 'ok');
+  items.forEach(i => {
+    const row = el('div', 'ghled'); row.style.gridTemplateColumns = 'minmax(0,2fr) minmax(0,1.2fr) 90px minmax(0,1fr) auto';
+    const nm = el('div'); nm.append(el('b', null, i.model), el('div', 'note', i.descr));
+    const sk = el('input'); sk.placeholder = 'SKU'; sk.value = i.sku || ''; sk.setAttribute('aria-label', i.model + ' SKU');
+    const cu = el('select'); ['USD', 'INR'].forEach(x => { const o = el('option', null, x); o.value = x; cu.append(o); }); cu.value = i.currency; cu.setAttribute('aria-label', i.model + ' currency');
+    const pr = el('input'); pr.type = 'number'; pr.min = '0'; pr.step = '0.01'; pr.placeholder = 'Buy price'; pr.value = i.buy_price ?? ''; pr.setAttribute('aria-label', i.model + ' buy price');
+    const sv = el('button', 'btn ghost sm', 'Save');
+    [sk, cu, pr].forEach(x => x.addEventListener('input', () => { DIRTY.admin = true; sv.className = 'btn sm'; }));
+    sv.onclick = async () => {
+      if (pr.value !== '' && !(+pr.value > 0)) { pr.classList.add('miss'); return; }
+      sv.disabled = true;
+      try { await rpc('qd_gh_price_set', { p_key: i.key, p_sku: sk.value.trim(), p_price: pr.value === '' ? null : +pr.value, p_currency: cu.value }); DIRTY.admin = false; toast(i.model + ' saved'); drawGhPrices(); }
+      catch (e) { alert(e.message); sv.disabled = false; }
+    };
+    row.append(nm, sk, cu, pr, sv); box.append(row);
+  });
+}
 
 /* ---------- BrightSign review (lead): approve a discount or re-quote ---------- */
 function reviewBs(r, pane, host) {
@@ -2216,15 +2505,15 @@ function bsQuoteData(ctx) {
 }
 async function bsQuotePdf(ctx) {
   await need('jspdf'); const d = pdfNew(), Q = bsQuoteData(ctx);
-  let y = pdfHeader(d, 'QUOTATION', Q.no, BS_TAG);
+  let y = pdfHeader(d, 'QUOTATION', Q.no, TAG(ctx));
   y = pdfMeta(d, Q.meta, y) + 2;
   const cols = [{ h: 'Sr', w: 9, align: 'center' }, { h: 'Item code', w: 30 }, { h: 'Description', w: 69 }, { h: 'Qty', w: 12, align: 'center' }, { h: 'Unit price (INR)', w: 27, align: 'right' }, { h: 'Amount (INR)', w: CW - 147, align: 'right' }];
-  y = pdfTable(d, y, cols, Q.lines.map((l, i) => [String(i + 1), l.sku, l.desc || '', String(l.qty), inr(l.sell_each), inr(l.sell)]), { fs: 8.6, zebra: true, bold: [1], onPage: () => pdfHeader(d, 'QUOTATION', Q.no, BS_TAG) });
-  if (y > PG.h - 80) { d.addPage(); y = pdfHeader(d, 'QUOTATION', Q.no, BS_TAG); }
+  y = pdfTable(d, y, cols, Q.lines.map((l, i) => [String(i + 1), l.sku, l.desc || '', String(l.qty), inr(l.sell_each), inr(l.sell)]), { fs: 8.6, zebra: true, bold: [1], onPage: () => pdfHeader(d, 'QUOTATION', Q.no, TAG(ctx)) });
+  if (y > PG.h - 80) { d.addPage(); y = pdfHeader(d, 'QUOTATION', Q.no, TAG(ctx)); }
   y = pdfTotals(d, y, gstRows(Q.total, ctx.cq.gst_rate));
   y += 10;
   d.setFont('helvetica', 'bold'); d.setFontSize(9); d.setTextColor(...PG.ink); d.text('Terms', PG.m, y);
-  y = pdfTerms(d, Q.terms, y + 6, () => pdfHeader(d, 'QUOTATION', Q.no, BS_TAG)); if (false) Q.terms.forEach((t, i) => d.text('•  ' + t, PG.m, y + 6 + i * 5));
+  y = pdfTerms(d, Q.terms, y + 6, () => pdfHeader(d, 'QUOTATION', Q.no, TAG(ctx))); if (false) Q.terms.forEach((t, i) => d.text('•  ' + t, PG.m, y + 6 + i * 5));
   pdfFooter(d); d.save(`Quote_${safe(ctx.c.project_name)}_${Q.no}.pdf`);
 }
 async function bsQuoteXlsx(ctx) {
@@ -2233,7 +2522,7 @@ async function bsQuoteXlsx(ctx) {
   ws.columns = [{ width: 6 }, { width: 22 }, { width: 52 }, { width: 8 }, { width: 17 }, { width: 18 }];
   ws.mergeCells('A1:C1'); ws.getCell('A1').value = 'Cavitak Marketing Pvt. Ltd.'; ws.getCell('A1').font = { bold: true, size: 15, color: { argb: XL.ink } };
   ws.mergeCells('D1:F1'); ws.getCell('D1').value = 'QUOTATION'; ws.getCell('D1').font = { bold: true, size: 15, color: { argb: XL.ink } }; ws.getCell('D1').alignment = { horizontal: 'right' };
-  ws.mergeCells('A2:C2'); ws.getCell('A2').value = BS_TAG; ws.getCell('A2').font = { size: 9, color: { argb: XL.mute } };
+  ws.mergeCells('A2:C2'); ws.getCell('A2').value = TAG(ctx); ws.getCell('A2').font = { size: 9, color: { argb: XL.mute } };
   ws.mergeCells('D2:F2'); ws.getCell('D2').value = Q.no; ws.getCell('D2').font = { size: 9, color: { argb: XL.mute } }; ws.getCell('D2').alignment = { horizontal: 'right' };
   ws.getRow(1).height = 24; ['A3', 'B3', 'C3', 'D3', 'E3', 'F3'].forEach(a => ws.getCell(a).border = { bottom: { style: 'medium', color: { argb: XL.amber } } });
   let r = 5;
