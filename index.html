@@ -410,9 +410,10 @@ h1:focus,h2:focus,[tabindex="-1"]:focus{outline:0}
       <button class="btn" type="submit" id="aGo">Sign in</button>
       <button class="btn ghost sm" type="button" id="aForgot">Forgot password</button>
     </form>
-    <form id="fNewPass" class="list" hidden>
-      <label>New password (at least 8 characters)<span class="pw"><input type="password" id="aNew" autocomplete="new-password" minlength="8" required><button type="button" class="eye" data-eye="aNew" aria-label="Show password">Show</button></span></label>
-      <button class="btn" type="submit">Save new password</button>
+    <form id="fNewPass" class="list" hidden novalidate>
+      <label>New password<span class="pw"><input type="password" id="aNew" autocomplete="new-password" minlength="12" required aria-describedby="aNewHint"><button type="button" class="eye" data-eye="aNew" aria-label="Show password">Show</button></span><span class="note" id="aNewHint">At least 12 characters. A short phrase works well, e.g. "Quotes by Monday 9am".</span></label>
+      <div class="err" id="aNewErr" role="alert" hidden></div>
+      <button class="btn" type="submit" id="aNewGo">Save new password</button>
       <button class="btn ghost sm" type="button" id="aOut2">Sign out</button>
     </form>
     <div class="note" id="authMsg"></div>
@@ -671,7 +672,7 @@ h1:focus,h2:focus,[tabindex="-1"]:focus{outline:0}
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 'use strict';
-const APP_VERSION = 'v2.7.0';
+const APP_VERSION = 'v2.7.1';
 
 /* ---------- Icons: every field, button, status and heading gets a picture ---------- */
 const ICONS = {
@@ -987,8 +988,13 @@ $('aForgot').onclick = async () => {
 };
 $('fNewPass').addEventListener('submit', async e => {
   e.preventDefault();
-  const { error } = await sb.auth.updateUser({ password: $('aNew').value });
-  $('authMsg').textContent = error ? error.message : 'Password saved.';
+  const pw = $('aNew').value, er = $('aNewErr'); er.hidden = true;
+  if (pw.length < 12) { er.hidden = false; er.textContent = `Use at least 12 characters (you have ${pw.length}).`; $('aNew').focus(); return; }
+  $('aNewGo').disabled = true;
+  const { error } = await sb.auth.updateUser({ password: pw });
+  $('aNewGo').disabled = false;
+  if (error) { er.hidden = false; er.textContent = /different from the old/i.test(error.message) ? 'Choose a password different from the one-time password.' : /at least/i.test(error.message) ? error.message : 'Could not save the password: ' + error.message; return; }
+  $('authMsg').textContent = 'Password saved.'; toast('Password saved');
   if (!error) { history.replaceState(null, '', location.pathname); $('fNewPass').hidden = true; $('fSignIn').hidden = false; $('authTitle').textContent = 'Sign in'; BOOTED = null; ME = null; boot(); }
 });
 $('signOut').onclick = async () => { if (!(await leaveOk())) return; await sb.auth.signOut(); location.replace(location.pathname); };
