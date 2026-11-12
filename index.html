@@ -642,7 +642,7 @@ h1:focus,h2:focus,[tabindex="-1"]:focus{outline:0}
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 'use strict';
-const APP_VERSION = 'v2.4.0';
+const APP_VERSION = 'v2.4.1';
 
 /* ---------- Icons: every field, button, status and heading gets a picture ---------- */
 const ICONS = {
@@ -2554,6 +2554,7 @@ async function planGh() {
   try { p = await rpc('qd_gh_plan', { p_req: ghReq() }); } catch (e) { if (my === GHSEQ) $('gPlan').replaceChildren(el('div', 'err', e.message)); return; }
   if (my === GHSEQ) drawGhPlan($('gPlan'), p);
 }
+const GH_MARGIN = 20;   // default Green Hippo margin % for a first quote (agreed 13 Nov 2026)
 const GH_OUT = { TEKA: 1, 'TEKA-GPU': 4, TAGUS: 2, KASAI: 2, MEUSE: 4, HYCO: 4 };
 // A picture of the option: servers with their output ports → FX4 splitters → the screens they drive
 function ghFlow(o, p) {
@@ -2674,7 +2675,7 @@ function reviewGh(r, pane, host) {
   /* quote panel */
   const qp = el('div', 'card'); qp.append(el('h3', null, last ? `Re-quote (current R${last.revision})` : 'Quote'), el('div', 'note', b.label ? 'Pricing ' + b.label : ''));
   const field = (label, val, step, min, max) => { const l = el('label', null, label), i = el('input'); i.type = 'number'; i.step = step; i.min = min; if (max != null) i.max = max; i.value = val; i.disabled = !canQuote; l.append(i); return [l, i]; };
-  const [ml, mi] = field('Margin %', last ? last.margin_pct : (dflt.margin_pct || ''), 0.5, 0, 99);
+  const [ml, mi] = field('Margin %', last ? last.margin_pct : (dflt.margin_pct || GH_MARGIN), 0.5, 0, 99);
   const [dl, di] = field('Discount %', last ? last.discount_pct : 0, 0.5, 0, 100);
   const [cl, ci] = field('CF', last ? last.cf : (dflt.cf ?? 120), 1, 1);
   const vl = el('label', null, 'Valid till'), vi = el('input'); vi.type = 'date'; vi.disabled = !canQuote;
