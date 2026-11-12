@@ -364,6 +364,11 @@ h1:focus,h2:focus,[tabindex="-1"]:focus{outline:0}
 .aidx{position:sticky;top:0;z-index:4;background:var(--bg);padding:8px 0}
 .tdet.sub>summary{font-weight:600;cursor:pointer}
 #whoPill{color:var(--fg)}
+.btn.busy{position:relative;color:transparent!important}
+.btn.busy>*{visibility:hidden}
+.btn.busy::after{content:'';position:absolute;inset:0;margin:auto;width:18px;height:18px;border-radius:50%;border:2px solid var(--mute);border-top-color:transparent;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.skel+.skel{margin-top:10px}
 </style>
 </head>
 <body>
@@ -643,7 +648,7 @@ h1:focus,h2:focus,[tabindex="-1"]:focus{outline:0}
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 'use strict';
-const APP_VERSION = 'v2.5.0';
+const APP_VERSION = 'v2.6.0';
 
 /* ---------- Icons: every field, button, status and heading gets a picture ---------- */
 const ICONS = {
@@ -750,6 +755,12 @@ function decorate(e) {
 }
 // Haptics on phones: short ticks for toggles, a double tap for the big actions
 if (window.visualViewport) { const vv = window.visualViewport, base = () => window.innerHeight; vv.addEventListener('resize', () => document.body.classList.toggle('kb', vv.height < base() * 0.75)); }
+let LASTTAP = { b: null, t: 0 };
+document.addEventListener('click', e => { const b = e.target.closest('.btn'); if (b) LASTTAP = { b, t: Date.now() }; }, true);
+new MutationObserver(ms => ms.forEach(m => { const b = m.target; if (!b.classList || !b.classList.contains('btn')) return;
+  if (b.disabled && LASTTAP.b === b && Date.now() - LASTTAP.t < 600) { b.classList.add('busy'); b.setAttribute('aria-busy', 'true'); }
+  else if (!b.disabled && b.classList.contains('busy')) { b.classList.remove('busy'); b.removeAttribute('aria-busy'); }
+})).observe(document.documentElement, { attributes: true, attributeFilter: ['disabled'], subtree: true });
 const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 function buzz(p) { try { if (!REDUCED && 'vibrate' in navigator) navigator.vibrate(p); } catch (e) { } }
 document.addEventListener('click', e => {
@@ -992,7 +1003,8 @@ async function boot() {
 async function loadCases() {
   await flushAuto();
   show('vList'); setTab('cases'); $('search').hidden = false; $('listHead').hidden = false; $('inbox').hidden = true; route(''); LASTHASH = location.hash;
-  try { CASES = await rpc('qd_case_list'); } catch (e) { CASES = []; $('cases').replaceChildren(el('div', 'err', e.message)); return; }
+  if (!CASES.length) { const sk = [0, 1, 2].map(() => { const d = el('div', 'skel'); d.setAttribute('aria-hidden', 'true'); return d; }); $('cases').replaceChildren(...sk); }
+  try { CASES = await rpc('qd_case_list'); } catch (e) { CASES = []; $('cases').replaceChildren(el('div', 'err', 'Could not load your cases: ' + e.message + '. Check your connection, then tap Cases to try again.')); return; }
   drawList(); loadInbox();
   // keep the lead's side pane in step with the list
   if (ME.role !== 'presales' && window.innerWidth >= 900 && CUR && CASES.some(c => c.id === CUR)) { const R = ROUTING; ROUTING = true; try { await openReview(CUR); } finally { ROUTING = R; } }
@@ -1044,7 +1056,7 @@ function drawList() {
     h.onclick = () => { OPEN[key] = !open; drawList(); }; list.append(h);
     if (open) items.forEach(c => list.append(caseRow(c, lead)));
   });
-  if (q && !rows.length) list.append(el('div', 'card note', 'No case matches your search.'));
+  if (q && !rows.length) { const e = el('div', 'card empty'); e.append(icon('search'), el('b', null, `Nothing matches “${q}”`), el('span', 'note', 'Try a project, partner, end customer, tender no. or case number.')); list.append(e); }
   if (lead && window.innerWidth >= 900 && !$('sidePane').childElementCount) $('sidePane').append(el('div', 'card note', 'Select a case to review and quote.'));
 }
 /* ---------- Updates inbox: what others did on your cases since you last looked ---------- */
