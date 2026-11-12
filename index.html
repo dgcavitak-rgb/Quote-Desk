@@ -390,6 +390,10 @@ h1:focus,h2:focus,[tabindex="-1"]:focus{outline:0}
 .sheet.win>.card{border-radius:22px;width:min(360px,92vw);padding-bottom:24px}
 .sheet.win .artbg{animation:pop .5s var(--ease) both}
 @keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
+.bchip{font-size:11px}
+.stp button{width:34px;height:36px;font-size:18px}
+.stp div{gap:2px;justify-content:center;max-width:100%}
+.stp input{width:32px}
 </style>
 </head>
 <body>
@@ -672,7 +676,7 @@ h1:focus,h2:focus,[tabindex="-1"]:focus{outline:0}
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 'use strict';
-const APP_VERSION = 'v2.7.1';
+const APP_VERSION = 'v2.7.2';
 
 /* ---------- Icons: every field, button, status and heading gets a picture ---------- */
 const ICONS = {
@@ -838,7 +842,9 @@ async function rpc(name, args) {
   return data;
 }
 function errBox(id, e) { const b = $(id); b.setAttribute('role', 'alert'); b.hidden = !e; b.textContent = e ? (e.message || String(e)) : ''; }
-function toast(msg) { document.querySelectorAll('.toast').forEach(x => x.remove()); const t = el('div', 'toast'); t.append(icon('check'), el('span', null, msg)); t.setAttribute('role', 'status'); document.body.append(t); setTimeout(() => t.remove(), 3200); }
+function toast(msg) { document.querySelectorAll('.toast').forEach(x => x.remove()); const t = el('div', 'toast'); t.append(icon('check'), el('span', null, msg)); t.setAttribute('role', 'status'); document.body.append(t);
+  // float above whatever is fixed at the bottom (tab bar, phone action bar) so the toast never covers a button
+  { const tops = [...document.querySelectorAll('nav.tabs, .sticky')].filter(x => !x.closest('[hidden]') && x.getBoundingClientRect().height > 0 && getComputedStyle(x).position === 'fixed').map(x => x.getBoundingClientRect().top); if (tops.length) t.style.bottom = (innerHeight - Math.min(...tops) + 12) + 'px'; } setTimeout(() => t.remove(), 3200); }
 const isStale = e => /^STALE:/.test(e.message || '');
 const staleMsg = e => (e.message || '').replace(/^STALE:\s*/, '');
 let SET = {};
