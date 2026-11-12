@@ -255,6 +255,114 @@ summary>.ic{color:var(--accent);margin:0 6px 0 2px}
 .ports i.fhd{background:var(--accent)}
 .scr{display:flex;gap:3px;flex-wrap:wrap;justify-content:center;max-width:120px}
 .scr .ic{width:16px;height:16px;color:var(--fg);opacity:.75}
+
+/* ========== v2.4 design system (UI/UX review, 13 Nov 2026) ========== */
+:root{--e1:0 1px 2px rgb(0 0 0/.06),0 0 0 1px var(--line);--e2:0 6px 20px rgb(0 0 0/.10);--ease:cubic-bezier(.2,.8,.2,1)}
+@media (prefers-color-scheme: dark){:root{--e1:0 0 0 1px var(--line);--e2:0 6px 20px rgb(0 0 0/.45)}}
+body{font-size:15px;line-height:22px}
+h1{font:600 24px/30px var(--disp)}
+h2{font:600 18px/24px var(--disp)}
+h3{font:600 13px/18px var(--body);color:var(--fg)}
+.card h3{margin-top:8px}
+label{font-size:13px;line-height:18px}
+label em{font:500 11px var(--body);letter-spacing:0;text-transform:none;color:var(--mute)}
+.note{font-size:12.5px;line-height:18px}
+.chip{font:500 11px/16px var(--body);padding:3px 9px}
+.mono,.kv span:last-child{font-variant-numeric:tabular-nums}
+.card{border-radius:20px;box-shadow:var(--e1)}
+.card{padding:20px}
+@media (max-width:640px){.card{padding:16px}h1{font-size:22px}}
+input,select,textarea{border-radius:12px}
+/* icons */
+.ic{stroke-width:1.75}
+.btn .ic{width:18px;height:18px}
+.btn.sm .ic{width:16px;height:16px}
+h2>.ic{width:20px;height:20px;color:var(--mute);margin-right:8px}
+.chip>.ic{width:12px;height:12px;stroke-width:2}
+.banner>.ic,.err>.ic{width:18px;height:18px}
+.empty .ic{width:40px;height:40px;stroke-width:1.5}
+/* numbers: the quote total dominates */
+.total,.qtotal{flex-direction:column;align-items:flex-start;gap:2px}
+.total>span:first-child,.qtotal>span:first-child{font:500 11px/14px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.total b,.qtotal b{font:600 40px/44px var(--mono);color:var(--accent);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.kpi{text-align:left;padding:14px 16px}
+.kpi b{font-size:32px;line-height:36px}
+.kpi span{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+/* three action tiers */
+.btn{min-height:52px;border-radius:12px;font-size:16px;font-weight:600;box-shadow:0 2px 0 color-mix(in srgb,var(--accent) 60%,#000);transition:transform .12s var(--ease),box-shadow .12s,background-color .15s,filter .15s}
+@media (min-width:900px){.btn{min-height:48px}}
+.btn.ghost,.btn.sec{background:var(--panel2);color:var(--fg);border:0;box-shadow:none;min-height:44px;font-size:14px}
+.btn.ghost.sm{background:none;color:var(--accent);min-height:40px;padding:8px 6px;font-size:14px;font-weight:600;border-radius:10px}
+.btn.ghost.sm:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.btn:disabled,.btn[disabled]{background:var(--panel2)!important;color:var(--mute)!important;box-shadow:none!important;opacity:1;cursor:not-allowed;transform:none!important}
+.btn.ghost.sm:disabled{background:none!important}
+/* tactile */
+.btn:active:not(:disabled){transform:translateY(1px) scale(.97);box-shadow:0 0 0 transparent}
+.case,.brand,.ghopt,.opt,.prod{transition:transform .12s var(--ease),box-shadow .18s var(--ease)}
+.case:active,.brand:active{transform:scale(.985)}
+.seg button,.yn button,.filters button,.stp button,nav.tabs button{transition:transform .12s var(--ease),background-color .15s,color .15s}
+.seg button:active,.yn button:active,.filters button:active,.stp button:active,nav.tabs button:active{transform:scale(.95)}
+@media (hover:hover){.case:hover,.brand:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgb(0 0 0/.08)}.btn:hover:not(:disabled){filter:brightness(1.05)}}
+:focus{outline:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1:focus,h2:focus,[tabindex="-1"]:focus{outline:0}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card,.case{animation:rise .24s var(--ease) both}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;transform:none!important}}
+/* touch targets */
+.stp button{width:40px;height:40px;font-size:19px}
+.yn button{min-height:40px}
+.filters button{min-height:40px;padding:8px 14px}
+/* sticky action bar on phones: always reachable, above the tab bar */
+@media (max-width:899px){
+  .sticky{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));padding:12px max(16px,env(safe-area-inset-left));background:var(--panel);box-shadow:var(--e2);z-index:6}
+  .sticky .btn{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sticky .btn:not(.ghost){flex:2}
+  .wrap{padding-bottom:170px}
+  body.kb .sticky{display:none}
+  header.top .pill{max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+.wrap{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+/* Green Hippo option: chosen = accent ring */
+.ghopt.on{border-width:2px}
+/* brand cards: pressable rows on phones */
+.brand{box-shadow:var(--e1);position:relative}
+.brand::after{content:'';position:absolute;right:18px;top:22px;width:8px;height:8px;border-right:2px solid var(--mute);border-top:2px solid var(--mute);transform:rotate(45deg)}
+@media (max-width:640px){.brands{grid-template-columns:1fr}.brand{min-height:88px}}
+/* admin grid: inputs line up even when labels wrap */
+.adm{align-items:end}
+/* skeleton */
+.skel{background:linear-gradient(90deg,var(--panel2) 0%,color-mix(in srgb,var(--panel2) 60%,var(--panel)) 50%,var(--panel2) 100%);background-size:200% 100%;animation:shimmer 1.2s linear infinite;border-radius:18px;height:72px}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+
+/* ---------- journeys (v2.4) ---------- */
+.seg.steps{counter-reset:st}
+.seg.steps button{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;min-height:40px}
+.seg.steps button::before{counter-increment:st;content:counter(st);display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;font:600 11px var(--mono);background:var(--panel);color:var(--mute);flex:none}
+.seg.steps button[aria-pressed="true"]::before{background:var(--accent);color:var(--accent-ink)}
+.seg.steps button.done::before{content:'✓';background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.seg.steps button.need::after{content:'';position:absolute;top:6px;right:10px;width:6px;height:6px;border-radius:50%;background:var(--bad)}
+.seg.steps button[aria-pressed="true"]{box-shadow:inset 0 -3px 0 var(--accent),0 1px 2px rgb(0 0 0/.12)}
+.seg.bsteps button[aria-pressed="true"]{box-shadow:inset 0 -3px 0 var(--bs),0 1px 2px rgb(0 0 0/.12)}
+@media (max-width:420px){.seg.steps button{font-size:12px;gap:4px}.seg.steps button::before{width:18px;height:18px}}
+.docs .btn.wa{grid-column:1/-1;background:#1f9d55;color:#fff;box-shadow:0 2px 0 #12733c}
+.case .amt{font:600 16px var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+.case .r2 .chip{flex:none}
+.cwrap{display:flex;flex-direction:column;gap:0}
+.cwrap .case{border-bottom-left-radius:0;border-bottom-right-radius:0}
+.qact{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;background:var(--panel);padding:0 16px 14px;border-radius:0 0 18px 18px;box-shadow:var(--e1)}
+.qact .btn{min-height:40px}
+.sheet{position:fixed;inset:0;background:rgb(0 0 0/.35);display:flex;align-items:flex-end;justify-content:center;z-index:20;animation:fade .18s var(--ease)}
+.sheet>.card{width:min(560px,100%);max-height:88vh;overflow:auto;border-radius:22px 22px 0 0;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));animation:up .26s var(--ease)}
+@media (min-width:900px){.sheet{align-items:center}.sheet>.card{border-radius:22px}}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.opt[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.kpi.zero{opacity:.55}
+.kpi.zero b{color:var(--mute)}
+.nextbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:14px;background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.aidx{position:sticky;top:0;z-index:4;background:var(--bg);padding:8px 0}
+.tdet.sub>summary{font-weight:600;cursor:pointer}
 </style>
 </head>
 <body>
@@ -306,7 +414,7 @@ summary>.ic{color:var(--accent);margin:0 6px 0 2px}
   <section id="vEdit" class="list" hidden>
     <div class="row between"><button class="btn ghost sm" id="backFromEdit">Back to cases</button><span class="chip" id="eStatus"></span></div>
     <div class="banner" id="eReturned" hidden></div>
-    <div class="seg" role="group" aria-label="Case section">
+    <div class="seg steps" role="group" aria-label="Case steps">
       <button data-tab="details" aria-pressed="true">Details</button>
       <button data-tab="ports" aria-pressed="false">Ports</button>
       <button data-tab="calico" aria-pressed="false">Calico</button>
@@ -476,7 +584,7 @@ summary>.ic{color:var(--accent);margin:0 6px 0 2px}
     <div class="err" id="gErr" hidden></div>
     <div class="sticky">
       <button class="btn ghost" id="gSave">Save</button>
-      <button class="btn" id="gGo">Send to product lead</button>
+      <button class="btn" id="gGo">Send to lead</button>
     </div>
   </section>
 
@@ -484,7 +592,7 @@ summary>.ic{color:var(--accent);margin:0 6px 0 2px}
   <section id="vBs" class="list" hidden>
     <div class="row between"><button class="btn ghost sm" id="backFromBs">Back to cases</button><span class="chip" id="bStatus"></span></div>
     <div class="banner" id="bBanner" hidden></div>
-    <div class="seg" role="group" aria-label="Case section">
+    <div class="seg steps bsteps" role="group" aria-label="Case steps">
       <button data-btab="details" aria-pressed="true">Details</button>
       <button data-btab="products" aria-pressed="false">Products</button>
       <button data-btab="cms" aria-pressed="false">CMS</button>
@@ -534,7 +642,7 @@ summary>.ic{color:var(--accent);margin:0 6px 0 2px}
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 'use strict';
-const APP_VERSION = 'v2.3.0';
+const APP_VERSION = 'v2.4.0';
 
 /* ---------- Icons: every field, button, status and heading gets a picture ---------- */
 const ICONS = {
@@ -616,61 +724,41 @@ const ICONS = {
 const SVGNS = 'http://www.w3.org/2000/svg';
 function icon(name) { const s = document.createElementNS(SVGNS, 'svg'); s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('class', 'ic'); s.setAttribute('aria-hidden', 'true'); s.innerHTML = ICONS[name] || ''; return s; }
 const IC_RULES = {
-  button: [[/^back/i, 'back'], [/^saving|^saved$|^save$|^save changes|^save settings|^save rates/i, 'save'], [/^save and ask|^send|return with note|^resend/i, 'send'], [/generate (re-)?quote|update quote|re-quote|instant/i, 'spark'],
-    [/pdf/i, 'file'], [/excel|^export|backup/i, 'sheet'], [/whatsapp/i, 'chat'], [/^new case/i, 'plus'], [/^admin/i, 'cog'], [/^sign out/i, 'logout'], [/^sign in/i, 'login'],
-    [/copy as a new case/i, 'copy'], [/history/i, 'history'], [/^won$|close as won/i, 'trophy'], [/^lost$|close as lost/i, 'xcircle'], [/reopen/i, 'refresh'], [/reset password|forgot/i, 'key'],
-    [/switch (off|on)/i, 'power'], [/move cases/i, 'move'], [/^territory$/i, 'pin'], [/give access/i, 'userplus'], [/use this option/i, 'check'], [/add led/i, 'led'],
-    [/ask for (a )?discount/i, 'percent'], [/withdraw/i, 'undo'], [/^approve/i, 'check'], [/^decline/i, 'x'], [/^clear$/i, 'x'], [/upload|calico pdf/i, 'upload'], [/cms rates|^rates/i, 'cloud'],
-    [/^cases$/i, 'folder'], [/^ports$/i, 'monitor'], [/^calico$/i, 'cpu'], [/^submit$/i, 'send'], [/^save draft/i, 'save'], [/^add (screen|led)/i, 'led'], [/^remove/i, 'x'], [/^details$/i, 'info'], [/^products$/i, 'box'], [/^cms$/i, 'cloud'], [/^quote$/i, 'file'], [/tender spec/i, 'landmark'], [/set password|update password/i, 'lock']],
-  label: [[/^projectors/i, 'projector'], [/^partner's state|^billing state/i, 'pin'], [/^project/i, 'folder'], [/^partner/i, 'building'], [/^end customer/i, 'flag'], [/^consultant/i, 'brief'], [/^tender|gem bid no/i, 'hash'],
-    [/^bid due|^valid till|^period/i, 'calendar'], [/^emd/i, 'wallet'], [/^gem bid/i, 'landmark'], [/authorisation letter|^margin floor/i, 'shield'], [/margin/i, 'percent'], [/^discount/i, 'tag'],
-    [/\bcf\b/i, 'coins'], [/^projectors/i, 'projector'], [/^displays/i, 'monitor'], [/^width|^height/i, 'led'], [/^where it is used/i, 'truck'], [/^content/i, 'layers'],
-    [/backup server/i, 'copy'], [/live camera/i, 'video'], [/^why/i, 'help'], [/^competitor brand/i, 'swords'], [/^competitor price/i, 'rupee'], [/^note|^correct the outcome/i, 'note'],
-    [/email|^work email/i, 'mail'], [/password/i, 'lock'], [/^full name|^person/i, 'user'], [/^role/i, 'idcard'], [/^zone/i, 'compass'], [/^territory/i, 'pin'], [/^gst/i, 'percent'],
-    [/validity|days/i, 'clock'], [/^payment/i, 'wallet'], [/^delivery/i, 'truck'], [/^next follow-up/i, 'bell'], [/^qty|^quantity/i, 'hash'], [/^reason/i, 'note'], [/phone|mobile/i, 'phone']],
-  head: [[/missing/i, 'alert'], [/^new case/i, 'plus'], [/products/i, 'box'], [/servers must drive|led screens/i, 'led'], [/suggested setup|server options/i, 'server'], [/^re-quote|^quote/i, 'file'], [/close the case/i, 'flag'],
-    [/return to presales/i, 'undo'], [/revisions/i, 'history'], [/customer quote/i, 'filecheck'], [/follow-up/i, 'bell'], [/margin tracking/i, 'trend'], [/green hippo prices|prices/i, 'tag'],
-    [/missing/i, 'alert'], [/^people/i, 'users'], [/give someone access/i, 'userplus'], [/commercial|settings/i, 'wallet'], [/discount/i, 'percent'], [/cms/i, 'cloud'], [/tender/i, 'landmark'],
-    [/configuration|calico/i, 'cpu'], [/ports|requirement|what you need/i, 'monitor'], [/updates|inbox/i, 'inbox'], [/case|details/i, 'folder']],
-  chip: [[/^draft/i, 'pencil'], [/^submitted|waiting/i, 'send'], [/^returned/i, 'undo'], [/^quoted|^revised/i, 'filecheck'], [/^won/i, 'trophy'], [/^lost/i, 'xcircle'], [/bid/i, 'calendar'],
-    [/follow/i, 'bell'], [/expired/i, 'clock'], [/discount/i, 'percent'], [/^chosen|all priced|^ok/i, 'check'], [/no price|without price|missing/i, 'alert'], [/below floor/i, 'shield'], [/selected/i, 'box']],
-  kpi: [[/waiting|needs your action/i, 'inbox'], [/with product lead/i, 'send'], [/returned/i, 'undo'], [/pipeline/i, 'trend'], [/win rate/i, 'target'], [/4k outputs/i, 'monitor'], [/full hd/i, 'projector'], [/led/i, 'led'], [/margin/i, 'percent'], [/quoted/i, 'filecheck'], [/won/i, 'trophy']],
-  summary: [[/tender/i, 'landmark'], [/extras/i, 'plus']],
-  bchip: [[/tvone/i, 'cpu'], [/brightsign/i, 'play'], [/green hippo/i, 'server']]
+  // Buttons: only the actions people hunt for. Tertiary/ghost-small, tabs, filters and toggles stay text.
+  button: [[/^back/i, 'back'], [/^new case/i, 'plus'], [/excel|^export/i, 'sheet'], [/pdf/i, 'file'], [/whatsapp/i, 'chat'],
+    [/^send|^submit$|^save and ask|return with note/i, 'send'], [/generate (re-)?quote|update quote|re-quote/i, 'spark'], [/^won$|close as won/i, 'trophy'], [/^lost$|close as lost/i, 'xcircle'],
+    [/^sign out/i, 'logout'], [/upload|calico pdf/i, 'upload'], [/^approve/i, 'check'], [/^decline/i, 'x']],
+  head: [[/^quote|^re-quote|customer quote/i, 'file'], [/close the case/i, 'flag'], [/missing/i, 'alert'], [/return to presales/i, 'undo']],
+  chip: [[/^draft/i, 'pencil'], [/^submitted/i, 'send'], [/^returned/i, 'undo'], [/^quoted|^revised/i, 'filecheck'], [/^won/i, 'trophy'], [/^lost$/i, 'xcircle'],
+    [/expired|date passed/i, 'clock'], [/no price|without price/i, 'alert'], [/below floor/i, 'shield']]
 };
 const icFor = (kind, text) => { for (const [re, n] of IC_RULES[kind]) if (re.test(text)) return n; return null; };
 function decorate(e) {
   if (!(e instanceof HTMLElement)) return;
   let kind = null;
-  if (e.tagName === 'BUTTON') kind = e.closest('.prods, .stepper, .ghled, .seg.qty') || e.classList.contains('brand') ? null : 'button';
-  else if (e.tagName === 'LABEL') kind = 'label';
-  else if (e.tagName === 'H2' || e.tagName === 'H3') kind = 'head';
-  else if (e.tagName === 'SUMMARY') kind = 'summary';
-  else if (e.classList.contains('bchip')) kind = 'bchip';
+  if (e.tagName === 'BUTTON') kind = e.closest('.prods, .stepper, .ghled, .seg, nav.tabs, .filters, .yn, .opts, .stp') || e.classList.contains('brand') || (e.classList.contains('ghost') && e.classList.contains('sm') && !/^back/i.test(e.textContent.trim())) ? null : 'button';
+  else if (e.tagName === 'H2') kind = 'head';
   else if (e.classList.contains('chip')) kind = 'chip';
-  else if (e.classList.contains('kpi')) kind = 'kpi';
   else if (e.classList.contains('banner')) kind = 'banner';
   else if (e.classList.contains('err')) kind = 'err';
   if (!kind) return;
-  if (kind === 'banner' || kind === 'err') { if (!e.textContent.trim() || e.querySelector(':scope > .ic')) return; e.prepend(icon(kind === 'err' ? 'alert' : 'info')); return; }
-  if (kind === 'kpi') { if (e.querySelector(':scope > .ic')) return; const n = icFor('kpi', (e.querySelector('span') || e).textContent); if (n) e.prepend(icon(n)); return; }
-  if (kind === 'label') {
-    let host = e.querySelector(':scope > .lbl');
-    if (host && host.querySelector('.ic')) return;
-    const txt = (host ? host.textContent : [...e.childNodes].filter(x => x.nodeType === 3).map(x => x.textContent).join(' ')).trim();
-    const n = icFor('label', txt); if (!n) return;
-    if (!host) {
-      const t = [...e.childNodes].find(x => x.nodeType === 3 && x.textContent.trim()); if (!t) return;
-      host = document.createElement('span'); host.className = 'lbl'; e.insertBefore(host, t); host.append(t);
-      const em = host.nextSibling; if (em && em.tagName === 'EM') host.append(em);
-    }
-    host.prepend(icon(n)); return;
-  }
+  if (kind === 'banner' || kind === 'err') { if (!e.textContent.trim() || e.querySelector(':scope > .ic')) return; e.prepend(icon(kind === 'err' ? 'alert' : 'info')); if (kind === 'err' && !e.hidden) buzz(40); return; }
   if (e.querySelector(':scope > .ic')) return;
   const text = e.textContent.trim(); if (!text) return;
   const n = icFor(kind, text); if (n) e.prepend(icon(n));
 }
-const DECO_SEL = 'button, label, h2, h3, summary, .chip, .bchip, .kpi, .banner, .err';
+// Haptics on phones: short ticks for toggles, a double tap for the big actions
+if (window.visualViewport) { const vv = window.visualViewport, base = () => window.innerHeight; vv.addEventListener('resize', () => document.body.classList.toggle('kb', vv.height < base() * 0.75)); }
+const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function buzz(p) { try { if (!REDUCED && 'vibrate' in navigator) navigator.vibrate(p); } catch (e) { } }
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || b.disabled) return;
+  const t = b.textContent.trim();
+  if (b.closest('.stp, .yn, .seg, .opts, .filters') || /^[+−-]$/.test(t)) buzz(10);
+  else if (/^send|^submit|generate|re-quote|^won$|close as won|update quote/i.test(t)) buzz([15, 40, 15]);
+  else if (/^save/i.test(t)) buzz(20);
+}, true);
+const DECO_SEL = 'button, h2, .chip, .banner, .err';
 function decorateAll(root) { if (!(root instanceof Element)) return; if (root.matches(DECO_SEL)) decorate(root); root.querySelectorAll(DECO_SEL).forEach(decorate); }
 new MutationObserver(ms => ms.forEach(m => {
   if (m.type === 'childList') { m.addedNodes.forEach(x => decorateAll(x.nodeType === 3 ? x.parentElement : x)); const t = m.target instanceof Element ? m.target.closest(DECO_SEL) : null; if (t) decorate(t); }
@@ -684,8 +772,8 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSe
 
 const $ = id => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
-const usd = n => n == null ? '-' : Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const inr = n => n == null ? '-' : Math.round(Number(n)).toLocaleString('en-IN');
+const usd = n => n == null || !Number.isFinite(Number(n)) ? '—' : Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const inr = n => n == null || !Number.isFinite(Number(n)) ? '—' : Math.round(Number(n)).toLocaleString('en-IN');
 const STATUS = { draft: ['Draft', 'mut'], submitted: ['Submitted', 'info'], returned: ['Returned', 'warn'], quoted: ['Quoted', 'ok'], revised: ['Revised', 'ok'], won: ['Won', 'ok'], lost: ['Lost', 'mut'] };
 const FLAG_TEXT = {
   short_outputs: f => `Short on outputs: need ${f.need}, PDF has ${f.have}`,
@@ -774,7 +862,7 @@ function waShare(c, cq) {
   if (cq) t += `\nQuote R${cq.revision}: INR ${inr(cq.quote_inr)} + GST` + (cq.valid_till ? `, valid till ${fdate(cq.valid_till)}` : '');
   window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank', 'noopener');
 }
-function waButton(c, cq) { const b = el('button', 'btn ghost', 'Share on WhatsApp'); b.type = 'button'; b.onclick = () => waShare(c, cq); return b; }
+function waButton(c, cq) { const b = el('button', 'btn wa', 'Share on WhatsApp'); b.type = 'button'; b.onclick = () => waShare(c, cq); return b; }
 const plusDaysISO = n => { const d = new Date(); d.setDate(d.getDate() + Number(n)); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
 const todayISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
 
@@ -923,10 +1011,10 @@ function drawList() {
     const need = CASES.filter(c => c.status === 'submitted'), oldest = need.length ? Math.max(...need.map(c => ageDays(waitT(c)))) : 0;
     const pipe = CASES.filter(c => ['quoted', 'revised'].includes(c.status)).reduce((s, c) => s + Number(c.quote_inr || 0), 0);
     const cut = Date.now() - 90 * DAY, cl = CASES.filter(c => ['won', 'lost'].includes(c.status) && c.closed_at && new Date(c.closed_at) > cut), won = cl.filter(c => c.status === 'won').length;
-    k.replaceChildren(kpi(need.length, need.length ? `Waiting for you · oldest ${oldest}d` : 'Waiting for you'), kpi(CASES.filter(c => c.status === 'returned').length, 'Returned'),
+    k.replaceChildren(kpi(need.length, need.length ? `Waiting · oldest ${oldest}d` : 'Waiting'), kpi(CASES.filter(c => c.status === 'returned').length, 'Returned'),
       kpi(pipe ? lakh(pipe) : '0', 'Open pipeline, INR'), kpi(cl.length ? Math.round(won / cl.length * 100) + '%' : '-', 'Win rate, 90 days'));
   } else {
-    k.replaceChildren(kpi(CASES.filter(c => ['draft', 'returned'].includes(c.status)).length, 'Needs your action'), kpi(CASES.filter(c => c.status === 'submitted').length, 'With product lead'), kpi(CASES.filter(c => ['quoted', 'revised'].includes(c.status)).length, 'Quoted'));
+    k.replaceChildren(kpi(CASES.filter(c => ['draft', 'returned'].includes(c.status)).length, 'To do'), kpi(CASES.filter(c => c.status === 'submitted').length, 'With lead'), kpi(CASES.filter(c => ['quoted', 'revised'].includes(c.status)).length, 'Quoted'));
   }
   drawNotice(lead);
   const by = st => rows.filter(c => st.includes(c.status));
@@ -1022,11 +1110,11 @@ function drawNotice(lead) {
 }
 function caseRow(c, lead) {
   const b = el('button', 'case' + (CUR === c.id ? ' sel' : ''));
-  const l1 = el('div', 'r1'); l1.append(el('span', 'ttl', c.project_name + ' · ' + c.partner_name), c.status === 'submitted' ? (!lead && c.disc_request_pct != null ? el('span', 'chip info', 'Discount requested') : ageChip(ageDays(waitT(c)))) : chip(c.status));
+  const stc = c.status === 'submitted' ? (!lead && c.disc_request_pct != null ? el('span', 'chip info', 'Discount requested') : ageChip(ageDays(waitT(c)))) : chip(c.status);
+  const l1 = el('div', 'r1'); l1.append(el('span', 'ttl', c.project_name + ' · ' + c.partner_name), el('span', 'amt', c.quote_inr != null ? '₹ ' + inr(c.quote_inr) : c.quote_revision != null ? 'R' + c.quote_revision : '—'));
   const l2 = el('div', 'r2'), ini = (c.presales || '').split(' ').map(x => x[0]).join('').slice(0, 3);
   const bsc = c.brand === 'brightsign', lt = el('span', 'note'); lt.append(el('span', 'bchip' + (bsc ? ' bs' : c.brand === 'greenhippo' ? ' gh' : ''), BRAND[c.brand] || c.brand), document.createTextNode(' ' + c.case_no + (lead ? ' · ' + ini : '') + ' · ' + c.territory)); l2.append(lt);
-  if (lead && c.quote_inr != null) l2.append(el('span', 'mono', 'R' + c.quote_revision + ' · ' + inr(c.quote_inr)));
-  else if (c.quote_revision != null) l2.append(el('span', 'mono note', 'Quote R' + c.quote_revision));
+  l2.append(stc);
   b.append(l1, l2);
   if ((c.flags || []).some(x => FLAG_CLS[x.code] === 'bad')) b.append(el('span', 'chip bad', 'Short on ports'));
   if (c.status === 'returned' && c.return_note) b.append(el('span', 'note ellip', 'Note: ' + c.return_note));
@@ -1036,12 +1124,22 @@ function caseRow(c, lead) {
   if (['quoted', 'revised'].includes(c.status) && c.valid_till && c.valid_till < todayISO()) chips.append(el('span', 'chip bad', 'Quote expired'));
   if (['quoted', 'revised'].includes(c.status) && c.follow_up) { const d = daysTo(c.follow_up); chips.append(el('span', 'chip ' + (d < 0 ? 'bad' : d === 0 ? 'warn' : 'mut'), d < 0 ? 'Follow-up overdue' : d === 0 ? 'Follow up today' : 'Follow up ' + fdate(c.follow_up))); }
   if (c.status === 'lost' && c.competitor) chips.append(el('span', 'chip mut', 'Lost to ' + c.competitor));
+  [...chips.children].sort((x, y) => (/bad/.test(y.className) - /bad/.test(x.className)) || (/warn/.test(y.className) - /warn/.test(x.className))).forEach(x => chips.append(x));
+  if (chips.childElementCount > 1) { const more = chips.childElementCount - 1; [...chips.children].slice(1).forEach(x => x.remove()); chips.append(el('span', 'chip mut', '+' + more)); }
   if (chips.childElementCount) b.append(chips);
   if (c.status === 'submitted' && c.disc_request_pct != null) b.append(el('span', 'chip info', `Discount ask ${Number(c.disc_request_pct)}%` + (c.disc_request_note ? ' · ' + c.disc_request_note : '')));
   b.onclick = guarded(() => { CUR = c.id; if (lead && window.innerWidth >= 900) drawList(); openCase(c); });
+  // follow-ups due: close or snooze straight from the list
+  if (['quoted', 'revised'].includes(c.status) && c.follow_up && c.follow_up <= todayISO() && (ME.role === 'lead' || c.mine)) {
+    const w = el('div', 'cwrap'), a = el('div', 'qact');
+    const bw = el('button', 'btn sec sm', 'Won'), bl = el('button', 'btn sec sm', 'Lost'), bz = el('button', 'btn sec sm', '+3 days');
+    bw.onclick = () => closeSheet(c, 'won'); bl.onclick = () => closeSheet(c, 'lost');
+    bz.onclick = async () => { bz.disabled = true; try { await rpc('qd_case_follow_up', { p_case: c.id, p_date: plusDaysISO(3) }); toast('Follow-up moved to ' + fdate(plusDaysISO(3))); CASES = await rpc('qd_case_list'); drawList(); } catch (e) { alert(e.message); bz.disabled = false; } };
+    a.append(bw, bl, bz); w.append(b, a); return w;
+  }
   return b;
 }
-function kpi(v, l) { const d = el('div', 'kpi'); d.append(el('b', null, String(v)), el('span', null, l)); return d; }
+function kpi(v, l) { const d = el('div', 'kpi' + (v === 0 || v === '0' || v === '-' ? ' zero' : '')); d.append(el('b', null, String(v)), el('span', null, l)); return d; }
 function openCase(c) {
   if (c.brand === 'greenhippo') return ME.role === 'presales' || (c.mine && ['draft', 'returned'].includes(c.status)) ? openGhEditor(c.id) : openReview(c.id);
   if (c.brand === 'brightsign') return ME.role === 'presales' || (c.mine && c.status === 'draft' && c.quote_revision == null) ? openBsEditor(c.id) : openReview(c.id);
@@ -1310,7 +1408,7 @@ function wireQuote(o) {
     o.busy = true; go.disabled = true;
     try {
       const q = await rpc('qd_quote_create_v3', { p_case: c.id, p_margin_pct: +mi.value, p_discount_pct: +(di.value || 0), p_cf: +ci.value, p_valid_till: vi.value || null, p_seen: c.updated_at });
-      DIRTY.rev = false; toast(`Quote R${q.revision} issued · INR ${inr(q.quote_inr)}`); await refreshAfter(c.id);
+      DIRTY.rev = false; toast(`Quote R${q.revision} issued · INR ${inr(q.quote_inr)}`); await refreshAfter(c.id); nextWaiting(c.id);
     } catch (e) {
       o.busy = false;
       if (isStale(e)) { toast(staleMsg(e)); DIRTY.rev = false; await refreshAfter(c.id); return; }
@@ -1441,6 +1539,15 @@ async function openReview(id) {
   root.append(H, S, B); host.replaceChildren(root);
   if (!pane) window.scrollTo(0, 0);
   done();
+}
+// After quoting, offer the next case that is waiting for the lead, oldest first
+function nextWaiting(id) {
+  const nx = CASES.filter(x => x.status === 'submitted' && x.id !== id).sort((a, b) => new Date(waitT(a)) - new Date(waitT(b)))[0]; if (!nx) return;
+  const host = document.querySelector('.rvh') || document.querySelector('#vList .rv'); if (!host) return;
+  const bar = el('div', 'nextbar'), b = el('button', 'btn sm', 'Next waiting: ' + nx.project_name);
+  const left = CASES.filter(x => x.status === 'submitted').length;
+  bar.append(el('span', 'note', `${left} case${left > 1 ? 's' : ''} still waiting`), b); b.onclick = guarded(() => { CUR = nx.id; drawList(); openCase(nx); });
+  host.prepend(bar);
 }
 async function refreshAfter(id) { DIRTY.rev = false; CASES = await rpc('qd_case_list'); drawList(); await openReview(id); }
 
@@ -1938,14 +2045,14 @@ function drawBsQuoteBody() {
   if (Number(cq.discount_pct) > 0) box.append(el('p', 'note', `Includes the ${Number(cq.discount_pct)}% discount approved by the product lead.`));
   const g = el('div', 'docs'), ctx = { c: BS, cq, presales: BS.presales_name || ME.full_name };
   const mk = (label, fn) => { const b = el('button', 'btn ghost', label); b.onclick = async () => { b.disabled = true; try { await fn(ctx); } catch (e) { alert('Could not create the file: ' + e.message); } finally { b.disabled = false; } }; return b; };
-  g.append(mk('Quote Excel', bsQuoteXlsx), mk('Quote PDF', bsQuotePdf), waButton(BS, cq)); box.append(g);
+  g.append(waButton(BS, cq), mk('Quote PDF', bsQuotePdf), mk('Quote Excel', bsQuoteXlsx)); box.append(g);
   if (st === 'submitted') {
     const s = el('div', 'sub'); s.append(el('h3', null, 'Discount request sent'), el('p', 'note', `${Number(BS.disc_request_pct)}%` + (BS.disc_request_note ? ' · ' + BS.disc_request_note : '') + '. You get a revised quote here once the product lead approves.'));
     const w = el('button', 'btn ghost sm', 'Withdraw request');
     w.onclick = async () => { if (!confirm('Withdraw the discount request? You can then change products or ask again.')) return; w.disabled = true; try { await rpc('qd_bs_withdraw_discount', { p_case: BS.id }); toast('Discount request withdrawn'); await openBsEditor(BS.id, 'quote'); } catch (e) { alert(e.message); w.disabled = false; } };
     const rr = el('div', 'row'); rr.append(w); s.append(rr); box.append(s);
   } else if (['quoted', 'revised'].includes(st) && !bsDirty()) {
-    const s = el('div', 'sub'); s.append(el('h3', null, 'Need a better price?'));
+    const s = el('details', 'sub tdet'); s.append(el('summary', null, 'Need a better price? Ask for a discount'));
     const r = el('div', 'row'), pl = el('label', null, 'Discount %'), pi = el('input'), nl = el('label', null, 'Reason'), ni = el('input');
     pi.type = 'number'; pi.min = '0.5'; pi.max = '50'; pi.step = '0.5'; pi.placeholder = 'e.g. 5'; pl.append(pi);
     ni.maxLength = 300; ni.placeholder = 'e.g. competitor price, project size'; nl.append(ni); r.append(pl, nl);
@@ -2084,7 +2191,16 @@ async function openAdmin() {
   $('sGst').value = SET.gst_rate; $('sState').value = SET.billing_state; $('sValid').value = SET.valid_days; $('sCf').value = SET.bs_cf; $('sMargin').value = SET.bs_margin;
   $('sPay').value = SET.payment_terms || ''; $('sDel').value = SET.delivery_terms || ''; $('sFloorTv').value = SET.margin_floor_tvone ?? 0; $('sFloorBs').value = SET.margin_floor_bs ?? 0; $('sFloorGh').value = SET.margin_floor_gh ?? 0;
   show('vAdmin'); route('admin'); LASTHASH = location.hash;
-  drawMissing(); drawPeople(); drawMargins(); drawGhPrices();
+  drawMissing(); drawPeople(); drawMargins(); drawGhPrices(); adminIndex();
+}
+function adminIndex() {
+  const v = $('vAdmin'); if (v.querySelector('.aidx')) return;
+  const nav = el('div', 'aidx filters');
+  [...v.querySelectorAll(':scope > .card, :scope .card')].filter(c => c.querySelector('h2')).forEach((c, i) => {
+    const h = c.querySelector('h2').textContent.trim(); c.id = c.id || 'adm' + i;
+    const b = el('button', null, h.replace(/ settings$/i, '')); b.onclick = () => c.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' }); nav.append(b);
+  });
+  const first = v.querySelector('.card'); first.parentNode.insertBefore(nav, first);
 }
 async function drawMissing() {
   const box = $('mpBox'); box.replaceChildren(el('p', 'note', 'Loading…'));
@@ -2135,9 +2251,11 @@ $('backupBtn').onclick = async () => {
 
 /* ---------- Tender / GeM details ---------- */
 const tenderOf = c => ({ tender_no: c.tender_no || '', bid_due: c.bid_due || '', emd_inr: c.emd_inr ? Number(c.emd_inr) : null, gem: !!c.gem, maf_needed: !!c.maf_needed });
+// Consultant and tender details are optional: they live under one "More details" disclosure
+['e', 'b', 'g'].forEach(p => { const det = $(p + 'Tdet'), cons = $(p + 'Cons'); if (!det || !cons) return; det.querySelector('summary').textContent = 'More details: consultant, tender / GeM'; det.insertBefore(cons.closest('label'), det.children[1]); });
 function loadTender(p, c) {
   const t = tenderOf(c); $(p + 'Tender').value = t.tender_no; $(p + 'Bid').value = t.bid_due; $(p + 'Emd').value = t.emd_inr || ''; $(p + 'Gem').checked = t.gem; $(p + 'Maf').checked = t.maf_needed;
-  $(p + 'Tdet').open = !!(t.tender_no || t.bid_due || t.emd_inr || t.gem || t.maf_needed);
+  $(p + 'Tdet').open = !!(t.tender_no || t.bid_due || t.emd_inr || t.gem || t.maf_needed || c.consultant);
 }
 const tenderPayload = p => ({ tender_no: $(p + 'Tender').value.trim(), bid_due: $(p + 'Bid').value || '', emd_inr: +$(p + 'Emd').value > 0 ? +$(p + 'Emd').value : null, gem: $(p + 'Gem').checked, maf_needed: $(p + 'Maf').checked });
 const daysTo = d => Math.round((new Date(d + 'T00:00:00') - new Date(todayISO() + 'T00:00:00')) / DAY);
@@ -2164,7 +2282,9 @@ function caseTools(c, after) {
     i.type = 'date'; i.min = todayISO(); i.value = c.follow_up || ''; i.setAttribute('aria-label', 'Next follow-up date'); i.style.maxWidth = '190px';
     const set = async v => { sv.disabled = cl.disabled = true; try { const x = await rpc('qd_case_follow_up', { p_case: c.id, p_date: v || null }); c.follow_up = x.follow_up; toast(v ? 'Follow-up set for ' + fdate(v) : 'Follow-up cleared'); if (after) after(); } catch (e) { alert(e.message); } finally { sv.disabled = cl.disabled = false; } };
     sv.onclick = () => { if (!i.value) { i.classList.add('miss'); i.focus(); return; } set(i.value); }; cl.onclick = () => { i.value = ''; set(null); };
-    r.append(i, sv); if (c.follow_up) r.append(cl); w.append(r);
+    const quick = el('div', 'opts');
+    [3, 7, 14].forEach(n => { const b = el('button', 'opt', '+' + n + ' days'); b.type = 'button'; b.onclick = () => { i.value = plusDaysISO(n); set(i.value); }; quick.append(b); });
+    w.append(quick); i.setAttribute('aria-label', 'Or pick a date'); r.append(i, sv); if (c.follow_up) r.append(cl); w.append(r);
   }
   const r2 = el('div', 'row'), cp = el('button', 'btn ghost sm', 'Copy as a new case'), hb = el('button', 'btn ghost sm', 'Show history');
   cp.onclick = guarded(async () => {
@@ -2197,7 +2317,7 @@ function closeForm(c) {
   let outcome = null;
   const seg = el('div', 'row'), bw = el('button', 'btn ghost', 'Won'), bl = el('button', 'btn ghost', 'Lost'); seg.append(bw, bl);
   const form = el('div', 'list'); form.hidden = true; form.style.gap = '8px';
-  const cl = el('label', null, 'Why'), cat = el('select'); cl.append(cat);
+  const cl = el('label', null, 'Why'), cat = el('select'); cat.hidden = true; const whyBox = el('div', 'opts'); cl.append(cat, whyBox);
   const kl = el('label', null, 'Competitor brand'), comp = el('input'), dl = el('datalist'); dl.id = 'rv' + c.id.slice(0, 8);
   (RIVALS[c.brand] || []).forEach(x => { const o = el('option'); o.value = x; dl.append(o); }); comp.setAttribute('list', dl.id); comp.maxLength = 80; comp.placeholder = 'e.g. ' + (RIVALS[c.brand] || ['Other'])[0]; kl.append(comp, dl);
   const pl = el('label', null, 'Competitor price, INR (optional)'), price = el('input'); price.type = 'number'; price.min = '0'; pl.append(price);
@@ -2209,23 +2329,33 @@ function closeForm(c) {
     cat.replaceChildren(el('option', null, 'Choose…')); cat.firstChild.value = '';
     WHY[o].forEach(x => { const op = el('option', null, x); op.value = x; cat.append(op); });
     kl.firstChild.textContent = o === 'won' ? 'Competitor brand (optional)' : 'Competitor brand';
+    whyBox.replaceChildren(); WHY[o].forEach(x => { const b = el('button', 'opt', x); b.type = 'button'; b.setAttribute('aria-pressed', 'false');
+      b.onclick = () => { cat.value = x; cat.classList.remove('miss'); whyBox.querySelectorAll('.opt').forEach(y => y.setAttribute('aria-pressed', String(y === b))); err.hidden = true; }; whyBox.append(b); });
     go.textContent = o === 'won' ? 'Close as won' : 'Close as lost'; form.hidden = false; err.hidden = true;
   };
   bw.onclick = () => pick('won'); bl.onclick = () => pick('lost');
   go.onclick = async () => {
     const needComp = outcome === 'lost' && ['Price', 'Competitor brand preferred'].includes(cat.value);
     cat.classList.toggle('miss', !cat.value); comp.classList.toggle('miss', needComp && !comp.value.trim());
-    if (!cat.value) { err.hidden = false; err.textContent = 'Choose why the case was ' + outcome + '.'; return; }
+    if (!cat.value) { err.hidden = false; err.textContent = 'Tap why the case was ' + outcome + '.'; return; }
     if (needComp && !comp.value.trim()) { err.hidden = false; err.textContent = 'Name the competitor brand.'; comp.focus(); return; }
     go.disabled = true;
     try { await rpc('qd_case_close_v2', { p_case: c.id, p_outcome: outcome, p_category: cat.value, p_competitor: comp.value.trim() || null, p_competitor_price: +price.value > 0 ? +price.value : null, p_reason: note.value.trim() || null });
       DIRTY.rev = false; toast('Case closed as ' + outcome); await afterClose(c); }
     catch (e) { err.hidden = false; err.textContent = e.message; go.disabled = false; }
   };
-  form.append(cl, kl, pl, nl, err, go); w.append(seg, form);
+  form.append(cl, kl, pl, nl, err, go); w.append(seg, form); w._pick = pick;
   return w;
 }
+function closeSheet(c, outcome) {
+  document.querySelectorAll('.sheet').forEach(x => x.remove());
+  const sh = el('div', 'sheet'), card = el('div', 'card list'), top = el('div', 'row between'), x = el('button', 'btn ghost sm', 'Cancel');
+  x.onclick = () => sh.remove(); sh.onclick = e => { if (e.target === sh) sh.remove(); };
+  top.append(el('h2', null, c.project_name), x);
+  const f = closeForm(c); card.append(top, f); sh.append(card); document.body.append(sh); f._pick(outcome);
+}
 async function afterClose(c) {
+  document.querySelectorAll('.sheet').forEach(x => x.remove());
   if (ME.role !== 'presales') return refreshAfter(c.id);
   UNSAVED = false; CASES = await rpc('qd_case_list'); drawList();
   if (c.brand === 'greenhippo') await openGhEditor(c.id); else if (c.brand === 'brightsign') await openBsEditor(c.id, 'quote'); else await openEditor(c.id);
@@ -2242,6 +2372,25 @@ function closedNote(c) {
   if (!['won', 'lost'].includes(c.status)) return null;
   return el('div', 'note', `Closed as ${c.status}` + (c.close_category ? ' · ' + c.close_category : '') + (c.competitor ? ' · vs ' + c.competitor : '') + (c.competitor_price ? ' at INR ' + inr(c.competitor_price) : '') + (c.close_reason ? ' · ' + c.close_reason : ''));
 }
+
+
+/* ---------- Step marks: ✓ done, red dot = something required is missing ---------- */
+function stepMarks() {
+  const mark = (sel, st) => document.querySelectorAll(sel).forEach((b, i) => { b.classList.toggle('done', st[i] === 1); b.classList.toggle('need', st[i] === -1); });
+  if (!$('vEdit').hidden && ED) {
+    const named = !!$('eProject').value.trim() && !!ED.partner_id;
+    const ports = [...document.querySelectorAll('[data-pane="ports"] input')].some(i => +i.value > 0);
+    const sent = !['draft', 'returned'].includes(ED.status);
+    mark('#vEdit .seg button', [named ? 1 : -1, ports ? 1 : 0, ED.cfg ? 1 : (ports ? -1 : 0), sent ? 1 : 0]);
+  }
+  if (!$('vBs').hidden && BS) {
+    const named = !!$('bProject').value.trim() && !!BS.partner_id, n = parseInt(($('bCount').textContent || '0'), 10) || 0;
+    mark('#vBs .seg button', [named ? 1 : -1, n > 0 ? 1 : -1, n > 0 ? 1 : 0, BS.cq ? 1 : 0]);
+  }
+}
+let SMT = null; const stepSoon = () => { cancelAnimationFrame(SMT); SMT = requestAnimationFrame(stepMarks); };
+['input', 'click', 'change'].forEach(ev => document.addEventListener(ev, stepSoon, true));
+new MutationObserver(stepSoon).observe(document.body, { attributes: true, attributeFilter: ['hidden'], subtree: true });
 
 /* ---------- Margin tracking (lead) ---------- */
 document.addEventListener('change', e => { if (e.target && e.target.id === 'mgDays') drawMargins(); });
@@ -2440,7 +2589,7 @@ function drawGhPlan(box, p, lead) {
     if (pr) {
       c.append(el('div', 'kv', `Buy total: USD ${usd(pr.list_usd)}` + (Number(pr.list_inr) ? ` + INR ${inr(pr.list_inr)}` : '')));
       if (!pr.ok) c.append(el('span', 'chip bad', 'No price: ' + pr.missing_prices.join(', ')));
-      if (!on && lead.canPick) { const b = el('button', 'btn ghost sm', 'Use this option'); b.onclick = () => lead.onPick(o.key, b); c.append(b); }
+      if (!on && lead.canPick) { const b = el('button', 'btn sec', 'Use this option'); b.onclick = () => lead.onPick(o.key, b); c.append(b); }
     }
     box.append(c);
   });
@@ -2457,7 +2606,7 @@ function drawGhState() {
   else if (['quoted', 'revised'].includes(st)) bn = UNSAVED ? 'Saving this change sends the case back to the product lead for a new quote.' : 'Quoted. Changing the requirement sends it back to the product lead for a new quote.';
   ban.textContent = bn; ban.hidden = !bn;
   const go = $('gGo'); go.hidden = !ed || st === 'submitted' || (['quoted', 'revised'].includes(st) && !UNSAVED);
-  go.textContent = ['quoted', 'revised'].includes(st) ? 'Save and ask for a new quote' : 'Send to product lead';
+  go.textContent = ['quoted', 'revised'].includes(st) ? 'Save and re-quote' : 'Send to lead';
   $('gSave').hidden = !ed; $('gSave').textContent = UNSAVED ? 'Save' : 'Saved'; $('gSave').disabled = !UNSAVED;
   // quote and case tools
   const qc = $('gQuoteCard'), qb = $('gQuote'); qb.replaceChildren();
@@ -2465,7 +2614,7 @@ function drawGhState() {
     qb.append(el('h2', null, `Quote R${GH.cq.revision}`), bsQuoteTable(GH.cq.lines || [], GH.cq.quote_inr, GH.cq));
     const g = el('div', 'docs'), ctx = { c: GH, cq: GH.cq, presales: GH.presales_name || ME.full_name };
     const mk = (label, fn) => { const bt = el('button', 'btn ghost', label); bt.onclick = async () => { bt.disabled = true; try { await fn(ctx); } catch (e) { alert('Could not create the file: ' + e.message); } finally { bt.disabled = false; } }; return bt; };
-    g.append(mk('Quote Excel', bsQuoteXlsx), mk('Quote PDF', bsQuotePdf), waButton(GH, GH.cq)); qb.append(g);
+    g.append(waButton(GH, GH.cq), mk('Quote PDF', bsQuotePdf), mk('Quote Excel', bsQuoteXlsx)); qb.append(g);
   }
   if (GH.id && ME.role === 'presales' && ['quoted', 'revised'].includes(st) && !UNSAVED) { const sb2 = el('div', 'sub'); sb2.append(closeForm(GH)); qb.append(sb2); }
   if (GH.id && closedNote(GH)) qb.append(closedNote(GH));
@@ -2570,7 +2719,7 @@ function reviewGh(r, pane, host) {
     const dc = el('div', 'card'); dc.append(el('h3', null, 'Customer quote'), bsQuoteTable(r.customer_quote.lines || [], r.customer_quote.quote_inr, r.customer_quote));
     const g = el('div', 'docs'), ctx = { c, cq: r.customer_quote, presales: r.presales_name };
     const mk = (label, fn) => { const bt = el('button', 'btn ghost', label); bt.onclick = async () => { bt.disabled = true; try { await fn(ctx); } catch (e) { alert('Could not create the file: ' + e.message); } finally { bt.disabled = false; } }; return bt; };
-    g.append(mk('Quote Excel', bsQuoteXlsx), mk('Quote PDF', bsQuotePdf), waButton(c, r.customer_quote)); dc.append(g); B.append(dc);
+    g.append(waButton(c, r.customer_quote), mk('Quote PDF', bsQuotePdf), mk('Quote Excel', bsQuoteXlsx)); dc.append(g); B.append(dc);
   }
   root.append(H, S, B); host.replaceChildren(root);
   if (!pane) window.scrollTo(0, 0);
@@ -2590,7 +2739,9 @@ async function drawGhPrices() {
     const cu = el('select'); ['USD', 'INR'].forEach(x => { const o = el('option', null, x); o.value = x; cu.append(o); }); cu.value = i.currency; cu.setAttribute('aria-label', i.model + ' currency');
     const pr = el('input'); pr.type = 'number'; pr.min = '0'; pr.step = '0.01'; pr.placeholder = 'Buy price'; pr.value = i.buy_price ?? ''; pr.setAttribute('aria-label', i.model + ' buy price');
     const sv = el('button', 'btn ghost sm', 'Save');
-    [sk, cu, pr].forEach(x => x.addEventListener('input', () => { DIRTY.admin = true; sv.className = 'btn sm'; }));
+    [sk, cu, pr].forEach(x => x.addEventListener('input', () => { DIRTY.admin = true; sv.hidden = false; }));
+    [sk, cu, pr].forEach(x => x.addEventListener('change', () => sv.click()));
+    sv.hidden = true;
     sv.onclick = async () => {
       if (pr.value !== '' && !(+pr.value > 0)) { pr.classList.add('miss'); return; }
       sv.disabled = true;
@@ -2684,7 +2835,7 @@ function reviewBs(r, pane, host) {
     const dc = el('div', 'card'); dc.append(el('h3', null, 'Customer quote'), bsQuoteTable(r.customer_quote.lines || [], r.customer_quote.quote_inr, r.customer_quote));
     const g = el('div', 'docs'), ctx = { c, cq: r.customer_quote, presales: r.presales_name };
     const mk = (label, fn) => { const bt = el('button', 'btn ghost', label); bt.onclick = async () => { bt.disabled = true; try { await fn(ctx); } catch (e) { alert('Could not create the file: ' + e.message); } finally { bt.disabled = false; } }; return bt; };
-    g.append(mk('Quote Excel', bsQuoteXlsx), mk('Quote PDF', bsQuotePdf), waButton(c, r.customer_quote)); dc.append(g); B.append(dc);
+    g.append(waButton(c, r.customer_quote), mk('Quote PDF', bsQuotePdf), mk('Quote Excel', bsQuoteXlsx)); dc.append(g); B.append(dc);
   }
   root.append(H, S, B); host.replaceChildren(root);
   if (!pane) window.scrollTo(0, 0);
