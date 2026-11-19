@@ -667,7 +667,7 @@ h1:focus,h2:focus,[tabindex="-1"]:focus{outline:0}
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 'use strict';
-const APP_VERSION = 'v2.7.3';
+const APP_VERSION = 'v2.7.4';
 
 /* ---------- Icons: every field, button, status and heading gets a picture ---------- */
 const ICONS = {
@@ -1538,7 +1538,7 @@ async function openReview(id) {
     const canQuote = ['submitted', 'quoted', 'revised'].includes(c.status);
     const qp = el('div', 'card'); qp.append(el('h3', null, last ? `Re-quote (current R${last.revision})` : 'Quote'));
     const field = (label, val, step, min, max) => { const l = el('label', null, label), i = el('input'); i.type = 'number'; i.step = step; i.min = min; if (max != null) i.max = max; i.value = val; i.disabled = !canQuote; l.append(i); return [l, i]; };
-    const [ml, mi] = field('Margin %', last && last.margin_pct != null ? last.margin_pct : '', 0.5, 0, 99); if (!last) mi.placeholder = 'Enter margin';
+    const [ml, mi] = field('Margin %', last && last.margin_pct != null ? last.margin_pct : ((r.defaults && Number(r.defaults.margin_pct)) || ''), 0.5, 0, 99); if (!mi.value) mi.placeholder = 'Enter margin';
     const [dl, di] = field('Discount %', last ? last.discount_pct : 0, 0.5, 0, 100);
     const [cl, ci] = field('CF', last ? last.cf : (b.default_cf || 120), 1, 1);
     const vl = el('label', null, 'Valid till'), vi = el('input'); vi.type = 'date'; vi.disabled = !canQuote;
