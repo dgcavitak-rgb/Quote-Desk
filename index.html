@@ -466,6 +466,8 @@ h1:focus,h2:focus,[tabindex="-1"]:focus{outline:0}
 
     <div class="card" data-pane="ports" hidden>
       <h2>Port calculation</h2>
+      <div class="row between"><h3>Processor</h3>
+        <div class="yn" id="eProc" role="group" aria-label="Processor"><button type="button" data-proc="calico" aria-pressed="true">Calico PRO 2U</button><button type="button" data-proc="corio" aria-pressed="false">CORIOmaster micro</button></div></div>
       <div class="counts">
         <div class="stp"><span>LED screens</span><div><button type="button" data-step="-1" data-for="eLed" aria-label="Fewer LED screens">&minus;</button><input type="number" id="eLed" min="0" max="20" value="0" aria-label="LED screens"><button type="button" data-step="1" data-for="eLed" aria-label="More LED screens">+</button></div></div>
         <div class="stp"><span>Displays</span><div><button type="button" data-step="-1" data-for="eDisp" aria-label="Fewer displays">&minus;</button><input type="number" id="eDisp" min="0" max="200" value="0" aria-label="Displays"><button type="button" data-step="1" data-for="eDisp" aria-label="More displays">+</button></div></div>
@@ -473,8 +475,8 @@ h1:focus,h2:focus,[tabindex="-1"]:focus{outline:0}
       </div>
       <div class="list" id="eLeds"></div>
       <div class="row">
-        <label>Sources at 4K@60<input type="number" id="eIn60" min="0" max="200" value="0"></label>
-        <label>Sources at 4K@30<input type="number" id="eIn30" min="0" max="200" value="0"></label>
+        <label><span id="eIn60L">Sources at 4K@60</span><input type="number" id="eIn60" min="0" max="200" value="0"></label>
+        <label><span id="eIn30L">Sources at 4K@30</span><input type="number" id="eIn30" min="0" max="200" value="0"></label>
       </div>
       <div class="sub">
         <div class="row between"><h3>Audio ports required?</h3>
@@ -485,15 +487,16 @@ h1:focus,h2:focus,[tabindex="-1"]:focus{outline:0}
       <div class="eyebrow">Total ports required</div>
       <div class="k3">
         <div class="kpi"><b id="tOut">0</b><span>Outputs</span></div>
-        <div class="kpi"><b id="tIn60">0</b><span>Inputs 4K@60</span></div>
-        <div class="kpi"><b id="tIn30">0</b><span>Inputs 4K@30</span></div>
+        <div class="kpi"><b id="tIn60">0</b><span id="tIn60L">Inputs 4K@60</span></div>
+        <div class="kpi"><b id="tIn30">0</b><span id="tIn30L">Inputs 4K@30</span></div>
       </div>
       <p class="note">One 4K@60 output drives up to 3840 × 2160 pixels of an LED screen; each display or projector takes one output.</p>
     </div>
 
     <div class="card" data-pane="calico" hidden>
-      <h2>Calico PDF</h2>
-      <label class="drop" for="ePdf"><b id="ePdfName">Choose the PDF exported from the Calico software</b><span class="note">Enter the project and partner names first; the case saves itself when you upload</span><input type="file" id="ePdf" accept="application/pdf,.pdf" hidden></label>
+      <h2 id="eProcH">Calico PDF</h2>
+      <div class="list" id="eCorio" hidden></div>
+      <label class="drop" id="eDrop" for="ePdf"><b id="ePdfName">Choose the PDF exported from the Calico software</b><span class="note">Enter the project and partner names first; the case saves itself when you upload</span><input type="file" id="ePdf" accept="application/pdf,.pdf" hidden></label>
       <div class="err" id="ePdfErr" hidden></div>
       <div class="sub" id="eCfg" hidden></div>
       <div class="list" id="eChecks"></div>
@@ -667,7 +670,7 @@ h1:focus,h2:focus,[tabindex="-1"]:focus{outline:0}
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 'use strict';
-const APP_VERSION = 'v2.7.4';
+const APP_VERSION = 'v2.8.0';
 
 /* ---------- Icons: every field, button, status and heading gets a picture ---------- */
 const ICONS = {
@@ -822,7 +825,36 @@ const FLAG_TEXT = {
 };
 const FLAG_CLS = { short_outputs: 'bad', short_in_4k60: 'bad', short_in_4k30: 'bad', audio_missing: 'bad' };
 const BRAND = { tvone: 'tvONE', brightsign: 'BrightSign', greenhippo: 'Green Hippo' };
-const hasAudio = cfg => !!cfg && (cfg.other_lines || []).some(x => /S\/PDIF|analog audio/i.test(x));
+const hasAudio = cfg => !!cfg && (!!cfg.corio || (cfg.other_lines || []).some(x => /S\/PDIF|analog audio/i.test(x)));
+
+/* ---------- CORIOmaster micro (card picker) ---------- */
+let CORIO_CARDS = null, PROC = 'calico', CSEL = { slots: [null, null, null], https: false };
+async function corioCards() { if (!CORIO_CARDS || !CORIO_CARDS.length) { const r = await rpc('qd_corio_cards', {}); CORIO_CARDS = Array.isArray(r) ? r : []; } return CORIO_CARDS; }
+function corioInfo(sel) {
+  const by = Object.fromEntries((CORIO_CARDS || []).map(k => [k.item, k]));
+  const slots = sel.slots.map((it, i) => ({ slot: i + 1, item: it || null, ...(it && by[it] ? by[it] : {}) }));
+  const sum = f => slots.filter(f).reduce((t, x) => t + (x.ports || 0), 0);
+  return { model: 'C3-503', name: 'CORIOmaster micro', https: !!sel.https, slots, cards: slots.filter(x => x.item).length,
+    in_total: sum(x => x.kind === 'in'), in_4k: sum(x => x.kind === 'in' && x.res === '4K'), out_total: sum(x => x.kind === 'out'), out_4k: sum(x => x.kind === 'out' && x.res === '4K') };
+}
+// A CORIOmaster micro set-up presented as a configuration, so the review, quote and tender-spec code can read it.
+function corioCfg(info, c) {
+  return { corio: info, model: 'C3-503', product_code: 'C3-503', config_name: c ? c.project_name : '', out_4k60: info.out_total, in_4k60: info.in_total, in_4k30: 0, reflock: 0, fan_filter: false, psu: '', redundant_psu: '', other_lines: [], flags: [] };
+}
+function corioPorts(info, kind) {
+  const g = {}; info.slots.filter(x => x.kind === kind).forEach(x => { const k = x.res + '|' + x.signal; g[k] = (g[k] || 0) + x.ports; });
+  return Object.entries(g).map(([k, n]) => { const [res, sig] = k.split('|'); return `${n}x ${res === '4K' ? '4K' : '1080p'} ${sig} ${kind === 'in' ? 'input' : 'output'}${n === 1 ? '' : 's'}`; }).join(' + ') || (kind === 'in' ? 'no inputs' : 'no outputs');
+}
+const corioDesc = info => `tvONE CORIOmaster micro C3-503 (${corioPorts(info, 'in')} & ${corioPorts(info, 'out')}, S/PDIF audio output${info.https ? ', secure HTTPS CPU' : ''})`;
+// What the cards do not cover; c holds the requirement (out, in60 = 4K sources, in30 = Full HD sources, led = 4K outputs the LED screens need).
+function corioShort(i, r) {
+  const p = [];
+  if (i.out_total < r.out) p.push(`Outputs: need ${r.out}, cards give ${i.out_total}`);
+  if (i.out_4k < r.led) p.push(`LED screens need ${r.led} 4K outputs, cards give ${i.out_4k}`);
+  if (i.in_total < r.in60 + r.in30) p.push(`Inputs: need ${r.in60 + r.in30}, cards give ${i.in_total}`);
+  if (i.in_4k < r.in60) p.push(`4K inputs: need ${r.in60}, cards give ${i.in_4k}`);
+  return p;
+}
 let ME = null, CASES = [], FILTER = 'all', ED = null;
 
 function show(view) { ['vAuth', 'vNoAccess', 'vList', 'vEdit', 'vBrand', 'vBs', 'vGh', 'vRates', 'vAdmin'].forEach(v => $(v).hidden = v !== view); window.scrollTo(0, 0); }
@@ -1218,6 +1250,9 @@ async function openEditor(id) {
     try { const r = await rpc('qd_case_get', { p_case: id }); ED = r.case; cfg = r.config; ED.cq = r.customer_quote; ED.presales_name = r.presales_name; } catch (e) { alert(e.message); return; }
   } else ED = blankCase();
   ED.cfg = cfg;
+  try { await corioCards(); } catch (e) { /* the card list loads again on the next open */ }
+  PROC = ED.corio ? 'corio' : 'calico';
+  CSEL = ED.corio ? { slots: [0, 1, 2].map(i => (ED.corio.slots || [])[i] || null), https: !!ED.corio.https } : { slots: [null, null, null], https: false };
   const editable = isEditable(ED.status);
   $('eCaseNo').textContent = ED.case_no || 'New case';
   $('eTerritory').textContent = 'Territory · ' + (ED.territory || ME.territory);
@@ -1230,7 +1265,7 @@ async function openEditor(id) {
   $('ePdf').disabled = !editable; $('eSave').hidden = !editable; $('eSubmit').hidden = !['draft', 'returned'].includes(ED.status);
   $('eSave').textContent = ['draft', 'returned'].includes(ED.status) ? 'Save draft' : 'Save changes';
   ED.ledList = (ED.led || []).map(l => ({ p: Number(l.pixel_pitch), w: l.width_px, h: l.height_px }));
-  drawLeds(); calcTotals(); drawCfg(); drawDocs($('eDocs'), { c: ED, cfg: ED.cfg, cq: ED.cq, presales: ED.presales_name || ME.full_name });
+  drawLeds(); drawCorio(); calcTotals(); drawCfg(); drawCorio(); drawDocs($('eDocs'), { c: ED, cfg: PROC === 'corio' ? corioCfg(corioInfo(CSEL), ED) : ED.cfg, cq: ED.cq, presales: ED.presales_name || ME.full_name });
   $('eExtra').replaceChildren(); if (ED.id) { if (ME.role === 'presales' && ['quoted', 'revised'].includes(ED.status)) $('eExtra').append(closeForm(ED)); if (closedNote(ED)) $('eExtra').append(closedNote(ED)); $('eExtra').append(caseTools(ED)); } setPane('details'); show('vEdit'); setTab(id ? 'cases' : 'new'); navTo(id, 'new/tvone'); LASTHASH = location.hash;
 }
 const ledOut = l => Math.ceil((l.w || 0) / 3840) * Math.ceil((l.h || 0) / 2160);
@@ -1273,12 +1308,50 @@ function calcTotals() {
   // 2U fit: base 8 in + 4 out; slot 10 outputs, slot 11 standard input or audio, slot 12 any input
   const x60 = Math.max(0, Math.ceil((ED.req.in60 - 8) / 4)), x30 = Math.ceil(ED.req.in30 / 2), inSlots = AUD ? 1 : 2;
   const msgs = [];
-  if (ED.req.out > 12) msgs.push(`${ED.req.out} outputs is more than the 2U maximum of 12.`);
+  if (PROC === 'corio') { /* the Cards step checks the micro */ }
+  else if (ED.req.out > 12) msgs.push(`${ED.req.out} outputs is more than the 2U maximum of 12.`);
   if (x60 > 1) msgs.push(`${ED.req.in60} inputs at 4K@60 is more than the 2U maximum of 12.`);
   else if (x60 + x30 > inSlots) msgs.push(AUD ? 'With the audio card in slot 11, only slot 12 is left for an extra input card (4 × 4K@60 or 2 × 4K@30). These sources need more.' : 'These sources need more input cards than the 2U has slots for.');
   $('eFit').hidden = !msgs.length; $('eFit').textContent = msgs.length ? msgs.join(' ') + ' Consider the 4U.' : '';
-  drawChecks(); drawSummary();
+  drawChecks(); corioChecks(); drawSummary();
 }
+function drawCorio() {
+  const on = PROC === 'corio', box = $('eCorio');
+  box.hidden = !on; $('eDrop').hidden = on; $('eCfg').hidden = on || !ED.cfg; $('eChecks').hidden = on; $('ePdfErr').hidden = on || $('ePdfErr').hidden;
+  $('eProcH').textContent = on ? 'CORIOmaster micro cards' : 'Calico PDF';
+  const tb = document.querySelector('#vEdit .seg button[data-tab="calico"]'); if (tb) tb.textContent = on ? 'Cards' : 'Calico';
+  $('eProc').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.proc === PROC));
+  $('eIn60L').textContent = on ? 'Sources at 4K' : 'Sources at 4K@60'; $('eIn30L').textContent = on ? 'Sources at Full HD (1080p)' : 'Sources at 4K@30';
+  $('tIn60L').textContent = on ? '4K inputs' : 'Inputs 4K@60'; $('tIn30L').textContent = on ? 'Full HD inputs' : 'Inputs 4K@30';
+  $('eAudNote').textContent = on ? 'The micro has an S/PDIF audio output in slot 4; no extra card is needed.' : 'If yes, add the AUDIO 2-IN 4-OUT card in slot 11 in the Calico software (S/PDIF and analogue audio).';
+  if (!on) return;
+  box.replaceChildren();
+  const editable = isEditable(ED.status), cards = CORIO_CARDS || [];
+  box.append(el('p', 'note', 'Pick one card per slot, as in CORIOgrapher. Slot 4 is the built-in S/PDIF audio output.'));
+  if (!cards.length) box.append(el('div', 'err', 'The card list did not load. Check the connection and open the case again.'));
+  for (let i = 0; i < 3; i++) {
+    const lb = el('label', null, 'Slot ' + (i + 1)), sel = el('select'); sel.id = 'cSlot' + i; sel.disabled = !editable;
+    const o0 = el('option', null, 'Empty'); o0.value = ''; sel.append(o0);
+    [['in', 'Input cards'], ['out', 'Output cards']].forEach(([k, t]) => { const g = document.createElement('optgroup'); g.label = t; cards.filter(c => c.kind === k).forEach(c => { const o = el('option', null, c.label + ' · ' + c.item); o.value = c.item; g.append(o); }); sel.append(g); });
+    sel.value = CSEL.slots[i] || ''; sel.onchange = () => { CSEL.slots[i] = sel.value || null; touched('tv'); corioChecks(); drawSummary(); };
+    lb.append(sel); box.append(lb);
+  }
+  const s4 = el('div', 'kv'); s4.append(el('span', null, 'Slot 4'), el('span', null, 'S/PDIF 1-OUT (built in)')); box.append(s4);
+  const hl = el('label', 'chk'), hc = el('input'); hc.type = 'checkbox'; hc.id = 'cHttps'; hc.checked = !!CSEL.https; hc.disabled = !editable;
+  hc.onchange = () => { CSEL.https = hc.checked; touched('tv'); drawSummary(); };
+  hl.append(hc, el('span', null, 'Secure (HTTPS) CPU, only if the client asks for it')); box.append(hl);
+  const ck = el('div', 'list'); ck.id = 'cChecks'; box.append(ck); corioChecks();
+}
+function corioReq() { return { out: ED.req.out, in60: ED.req.in60, in30: ED.req.in30, led: ED.ledList.reduce((t, l) => t + ledOut(l), 0) }; }
+function corioChecks() {
+  const box = $('cChecks'); if (!box || !ED.req || PROC !== 'corio') return; box.replaceChildren();
+  const i = corioInfo(CSEL), r = corioReq();
+  box.append(el('h3', null, 'Checks against your calculation'), meter('Outputs', r.out, i.out_total, 'cards give'));
+  if (r.led) box.append(meter('4K outputs for the LED screens', r.led, i.out_4k, 'cards give'));
+  box.append(meter('Inputs', r.in60 + r.in30, i.in_total, 'cards give'));
+  if (r.in60) box.append(meter('4K inputs', r.in60, i.in_4k, 'cards give'));
+}
+$('eProc').querySelectorAll('button').forEach(b => b.onclick = () => { if (b.disabled || PROC === b.dataset.proc) return; PROC = b.dataset.proc; touched('tv'); drawCorio(); calcTotals(); });
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-step]'); if (!b || b.disabled) return;
   const inp = $(b.dataset.for); inp.value = Math.max(0, Math.min(+inp.max || 99, (+inp.value || 0) + +b.dataset.step));
@@ -1297,7 +1370,8 @@ $('eAudNo').onclick = () => { setAudio(false); calcTotals(); };
 function payload() {
   return { id: ED.id, project_name: $('eProject').value.trim(), partner_name: $('ePartner').value.trim(), partner_id: ED.partner_id || null,
     partner_state: $('eState').value, end_customer: $('eEnd').value.trim(), consultant: $('eCons').value.trim(), ...tenderPayload('e'), n_display: num('eDisp'), n_projector: num('eProj'),
-    req_in_4k60: num('eIn60'), req_in_4k30: num('eIn30'), audio_required: AUD, led: ED.ledList.map(l => ({ pixel_pitch: l.p, width_px: l.w, height_px: l.h })) };
+    req_in_4k60: num('eIn60'), req_in_4k30: num('eIn30'), audio_required: AUD, led: ED.ledList.map(l => ({ pixel_pitch: l.p, width_px: l.w, height_px: l.h })),
+    corio: PROC === 'corio' ? { model: 'C3-503', slots: CSEL.slots, https: !!CSEL.https } : null };
 }
 function namesOk() {
   const p = $('eProject').value.trim(), q = !!ED.partner_id;
@@ -1324,8 +1398,9 @@ $('eSave').onclick = async () => { const lbl = $('eSave').textContent; if (await
 $('eSubmit').onclick = async () => {
   if (!namesOk()) return;
   if (!(await saveCase())) return;
-  if (!ED.cfg) { setPane('calico'); errBox('eErr', new Error('Upload the Calico PDF before submitting.')); return; }
-  if (cfgProblems().length && !ED.ack) { setPane('submit'); errBox('eErr', new Error('The configuration does not match your requirement. Tick the box on the Review tab to send it anyway, or upload a corrected PDF.')); return; }
+  if (PROC === 'corio') { const ci = corioInfo(CSEL); if (!ci.cards || !ci.out_total) { setPane('calico'); errBox('eErr', new Error(!ci.cards ? 'Pick the cards for the CORIOmaster micro before sending.' : 'Add at least one output card to the CORIOmaster micro.')); return; } }
+  else if (!ED.cfg) { setPane('calico'); errBox('eErr', new Error('Upload the Calico PDF before submitting.')); return; }
+  if (cfgProblems().length && !ED.ack) { setPane('submit'); errBox('eErr', new Error(`The configuration does not match your requirement. Tick the box on the Review tab to send it anyway, or correct the ${PROC === 'corio' ? 'cards' : 'PDF'}.`)); return; }
   if ($('eSubmit').disabled) return;
   $('eSubmit').disabled = true;
   try { await rpc('qd_case_submit', { p_case: ED.id }); toast('Sent to the product lead'); await loadCases(); } catch (e) { errBox('eErr', e); }
@@ -1381,13 +1456,13 @@ function drawCfg() {
   [['Configuration name', c.config_name || 'blank'], ['Product code', c.product_code], ['Outputs', c.out_4k60 + ' × 4K@60 HDMI'], ['Inputs', c.in_4k60 + ' × 4K@60 + ' + c.in_4k30 + ' × 4K@30 HDMI'], ['Options', opts || 'none']]
     .forEach(([k, v]) => { const d = el('div', 'kv'); d.append(el('span', null, k), el('span', null, v)); box.append(d); });
 }
-function meter(name, need, have) {
+function meter(name, need, have, src = 'PDF has') {
   const st = have < need ? ['bad', 'Short'] : have === need ? ['ok', 'Match'] : have - need > 4 ? ['warn', 'Over'] : ['ok', 'Spare'];
   const max = Math.max(need, have, 1), m = el('div', 'meter');
   const h = el('div', 'row between'); h.append(el('span', null, name), el('span', 'chip ' + st[0], st[1]));
   const bar = el('div', 'bar'), fill = el('i'), mark = el('u');
   fill.style.cssText = `width:${have / max * 100}%;background:var(--${st[0]})`; mark.style.left = (need / max * 100) + '%'; bar.append(fill, mark);
-  m.append(h, bar, el('div', 'note', `Need ${need} (marker) · PDF has ${have} (bar)`)); return m;
+  m.append(h, bar, el('div', 'note', `Need ${need} (marker) · ${src} ${have} (bar)`)); return m;
 }
 function drawChecks() {
   const box = $('eChecks'); box.replaceChildren(); const c = ED.cfg; if (!c || !ED.req) return;
@@ -1399,7 +1474,9 @@ function drawChecks() {
 function drawSummary() {
   const box = $('eSummary'); if (!box || !ED) return; box.replaceChildren();
   const s = el('div', 'sub');
-  [['Project', $('eProject').value.trim() || 'missing'], ['Partner', $('ePartner').value.trim() || 'missing'], ['Required', (ED.req ? `${ED.req.out} out · ${ED.req.in60} in 4K@60 · ${ED.req.in30} in 4K@30` : '-')], ['Audio ports', AUD ? 'Required (slot 11)' : 'Not required'], ['Calico PDF', ED.cfg ? ED.cfg.product_code : 'not uploaded']]
+  [['Project', $('eProject').value.trim() || 'missing'], ['Partner', $('ePartner').value.trim() || 'missing'], ['Required', (ED.req ? (PROC === 'corio' ? `${ED.req.out} out · ${ED.req.in60} in 4K · ${ED.req.in30} in Full HD` : `${ED.req.out} out · ${ED.req.in60} in 4K@60 · ${ED.req.in30} in 4K@30`) : '-')]]
+    .concat(PROC === 'corio' ? [['Audio ports', AUD ? 'Required · S/PDIF out in slot 4' : 'Not required'], ['Processor', corioInfo(CSEL).cards ? corioDesc(corioInfo(CSEL)) : 'no cards picked']]
+                             : [['Audio ports', AUD ? 'Required (slot 11)' : 'Not required'], ['Calico PDF', ED.cfg ? ED.cfg.product_code : 'not uploaded']])
     .forEach(([k, v]) => { const d = el('div', 'kv'); d.append(el('span', null, k), el('span', null, v)); s.append(d); });
   box.append(s);
   const probs = cfgProblems();
@@ -1412,6 +1489,7 @@ function drawSummary() {
 }
 // What does not match between the port calculation and the uploaded PDF.
 function cfgProblems() {
+  if (ED && ED.req && PROC === 'corio') { const i = corioInfo(CSEL); return i.cards ? corioShort(i, corioReq()) : []; }
   const c = ED && ED.cfg; if (!c || !ED.req) return [];
   const p = [];
   if (c.out_4k60 < ED.req.out) p.push(`Outputs: need ${ED.req.out}, PDF has ${c.out_4k60}`);
@@ -1492,7 +1570,7 @@ async function openReview(id) {
   const done = () => { const root = host.firstElementChild; if (!root) return; root.addEventListener('input', () => { DIRTY.rev = true; }); const h = root.querySelector('h2'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } };
   if (r.case.brand === 'brightsign') { reviewBs(r, pane, host); return done(); }
   if (r.case.brand === 'greenhippo') { reviewGh(r, pane, host); return done(); }
-  const c = r.case, cfg = r.config, b = r.build, quotes = r.quotes || [], last = quotes[0];
+  const c = r.case, cfg = r.corio ? corioCfg(r.corio, r.case) : r.config, b = r.build, quotes = r.quotes || [], last = quotes[0];
   const root = el('div', 'rv'), H = el('div', 'list rvh'), S = el('div', 'list rvside'), B = el('div', 'list rvbody');
 
   /* header */
@@ -1503,14 +1581,27 @@ async function openReview(id) {
   head.append(t, el('div', 'note', `${c.partner_name}${c.partner_state ? ' (' + c.partner_state + ')' : ''} · ${c.case_no} · ${r.presales_name || ''} · ${c.territory}${wait}`));
   if (c.end_customer || c.consultant) head.append(el('div', 'note', [c.end_customer ? 'End customer: ' + c.end_customer : '', c.consultant ? 'Consultant: ' + c.consultant : ''].filter(Boolean).join(' · ')));
   if (c.tender_no || c.bid_due || c.gem) head.append(el('div', 'note', [c.gem ? 'GeM bid' : 'Tender', c.tender_no, c.bid_due ? 'due ' + fdate(c.bid_due) : '', c.emd_inr ? 'EMD INR ' + inr(c.emd_inr) : '', c.maf_needed ? 'MAF needed' : ''].filter(Boolean).join(' · ')));
-  const req = el('div', 'k3'); req.append(kpi(c.req_out, 'Outputs needed'), kpi(c.req_in_4k60, 'Inputs 4K@60'), kpi(c.req_in_4k30, 'Inputs 4K@30')); head.append(req);
-  head.append(el('span', 'chip ' + (c.audio_required ? (hasAudio(cfg) ? 'ok' : 'bad') : 'mut'), c.audio_required ? (hasAudio(cfg) ? 'Audio required · card in PDF' : 'Audio required · no card in PDF') : 'Audio not required'));
+  const req = el('div', 'k3'); req.append(kpi(c.req_out, 'Outputs needed'), kpi(c.req_in_4k60, r.corio ? '4K inputs' : 'Inputs 4K@60'), kpi(c.req_in_4k30, r.corio ? 'Full HD inputs' : 'Inputs 4K@30')); head.append(req);
+  head.append(el('span', 'chip ' + (c.audio_required ? (hasAudio(cfg) ? 'ok' : 'bad') : 'mut'), c.audio_required ? (hasAudio(cfg) ? (r.corio ? 'Audio required · S/PDIF out in slot 4' : 'Audio required · card in PDF') : 'Audio required · no card in PDF') : 'Audio not required'));
   if (c.return_note) head.append(el('div', 'banner', 'Returned: ' + c.return_note));
   if (isEditable(c.status)) { const eb = el('button', 'btn ghost sm', 'Edit case'); eb.onclick = guarded(() => openEditor(c.id)); const rr = el('div', 'row'); rr.append(eb); head.append(rr); }
   H.append(head);
 
   /* configuration */
-  if (cfg) {
+  if (cfg && cfg.corio) {
+    const ci = cfg.corio, pc = el('div', 'card'), ph = el('div', 'row between'); ph.append(el('h3', null, 'CORIOmaster micro'), el('span', 'mono note', 'C3-503')); pc.append(ph);
+    ci.slots.forEach(x => { const d = el('div', 'kv'); d.append(el('span', null, 'Slot ' + x.slot), el('span', null, x.item ? x.label + ' · ' + x.item : 'Empty')); pc.append(d); });
+    const d4 = el('div', 'kv'); d4.append(el('span', null, 'Slot 4'), el('span', null, 'S/PDIF 1-OUT (built in)')); pc.append(d4);
+    if (ci.https) pc.append(el('div', 'chip info', 'Secure HTTPS CPU'));
+    const pg = el('div', 'row');
+    [['Outputs', ci.out_total, 'var(--accent)'], ['Inputs', ci.in_total, 'var(--info)']].forEach(([l, n, col]) => {
+      const g = el('div', 'grp'), d = el('div', 'dots'); for (let i = 0; i < n; i++) { const x = el('i'); x.style.background = col; d.append(x); }
+      g.append(d, el('b', 'mono', String(n)), el('span', 'note', l)); pg.append(g);
+    });
+    pc.append(pg);
+    corioShort(ci, { out: c.req_out, in60: c.req_in_4k60, in30: c.req_in_4k30, led: (c.led || []).reduce((t, l) => t + (l.outputs || 0), 0) }).forEach(t => pc.append(el('div', 'chip bad', t)));
+    B.append(pc);
+  } else if (cfg) {
     const pc = el('div', 'card'); const ph = el('div', 'row between'); ph.append(el('h3', null, 'Configuration'), el('span', 'mono note', cfg.product_code)); pc.append(ph);
     const pg = el('div', 'row');
     [['Outputs 4K@60', cfg.out_4k60, 'var(--accent)'], ['Inputs 4K@60', cfg.in_4k60, 'var(--info)'], ['Inputs 4K@30', cfg.in_4k30, 'var(--warn)']].forEach(([l, n, col]) => {
@@ -1639,6 +1730,7 @@ function tenderFor(cfg) {
   return { name: base.name, make: base.make, short, long, rows, changes };
 }
 function shortDesc(cfg, name) {
+  if (cfg.corio) return corioDesc(cfg.corio);
   name = (name || (SPECS[cfg.model] || {}).name || ('CALICO PRO ' + cfg.model)).replace('CALICO PRO', 'Calico Pro');
   return `${name} (${cfg.in_4k60}x 4K60 HDMI inputs${cfg.in_4k30 ? ` + ${cfg.in_4k30}x 4K30 HDMI inputs` : ''} & ${cfg.out_4k60}x 4K60 HDMI outputs${hasAudio(cfg) ? ', audio I/O card (2 in, 4 out)' : ''}${cfg.redundant_psu ? ' along with redundant power supply' : ''})`;
 }
@@ -1655,6 +1747,7 @@ async function need(name) {
   throw new Error('the ' + (name === 'jspdf' ? 'PDF' : 'Excel') + ' library could not be loaded. Check the internet connection and try again.');
 }
 function specRows(cfg) {
+  if (cfg.corio) return [['Make and model', 'tvONE CORIOmaster micro C3-503'], ['Video inputs', 'Minimum ' + corioPorts(cfg.corio, 'in')], ['Video outputs', 'Minimum ' + corioPorts(cfg.corio, 'out')], ['Audio', 'S/PDIF digital audio output'], ['Warranty', 'Five-year manufacturer warranty']].map(([k, v]) => `${k}: ${v}`);
   return [['Make and model', `tvONE CALICO PRO ${cfg.model}`], ['Video inputs', `Minimum ${cfg.in_4k60}x HDMI inputs at 4K@60` + (cfg.in_4k30 ? ` and ${cfg.in_4k30}x HDMI inputs at 4K@30` : '')],
     ['Video outputs', `Minimum ${cfg.out_4k60}x HDMI outputs at 4K@60`], ['Power', [cfg.psu, cfg.redundant_psu].filter(Boolean).join(' with ') || 'As per manufacturer'], ['Warranty', 'Five-year manufacturer warranty']]
     .map(([k, v]) => `${k}: ${v}`);
@@ -1713,7 +1806,7 @@ function pdfFooter(d) {
 function pdfPorts(d, cfg, y) {
   d.setFont('helvetica', 'bold'); d.setFontSize(9.5); d.setTextColor(...PG.ink); d.text('Processor configuration', PG.m, y); y += 3;
   d.setFillColor(...PG.soft); d.roundedRect(PG.m, y, CW, 30, 2.5, 2.5, 'F');
-  const groups = [['Outputs 4K@60', cfg.out_4k60, PG.amber], ['Inputs 4K@60', cfg.in_4k60, [31, 111, 208]], ['Inputs 4K@30', cfg.in_4k30, [154, 114, 0]]];
+  const groups = cfg.corio ? [['Outputs', cfg.corio.out_total, PG.amber], ['Inputs', cfg.corio.in_total, [31, 111, 208]]] : [['Outputs 4K@60', cfg.out_4k60, PG.amber], ['Inputs 4K@60', cfg.in_4k60, [31, 111, 208]], ['Inputs 4K@30', cfg.in_4k30, [154, 114, 0]]];
   const gw = CW / 3;
   groups.forEach(([l, n, col], gi) => {
     const x0 = PG.m + 6 + gi * gw; d.setFillColor(...col);
@@ -1721,7 +1814,7 @@ function pdfPorts(d, cfg, y) {
     d.setTextColor(...PG.ink); d.setFont('helvetica', 'bold'); d.setFontSize(11); d.text(String(n), x0, y + 21);
     d.setFont('helvetica', 'normal'); d.setFontSize(8); d.setTextColor(...PG.mute); d.text(l, x0 + 8, y + 21);
   });
-  d.setFontSize(7.5); d.text([cfg.product_code, hasAudio(cfg) ? 'Audio I/O card' : '', cfg.reflock ? 'RefLock' : '', cfg.redundant_psu ? 'Redundant PSU' : '', cfg.fan_filter || is2U(cfg.model) ? 'Fan filter' : ''].filter(Boolean).join('   |   '), PG.m + 6, y + 27);
+  d.setFontSize(7.5); if (cfg.corio) d.text(['CORIOmaster micro C3-503'].concat(cfg.corio.slots.filter(x => x.item).map(x => 'Slot ' + x.slot + ': ' + x.label), ['Slot 4: S/PDIF out'], cfg.corio.https ? ['HTTPS CPU'] : []).join('   |   '), PG.m + 6, y + 27); else d.text([cfg.product_code, hasAudio(cfg) ? 'Audio I/O card' : '', cfg.reflock ? 'RefLock' : '', cfg.redundant_psu ? 'Redundant PSU' : '', cfg.fan_filter || is2U(cfg.model) ? 'Fan filter' : ''].filter(Boolean).join('   |   '), PG.m + 6, y + 27);
   return y + 36;
 }
 function pdfTable(d, y, cols, rows, opt = {}) {
@@ -1836,7 +1929,7 @@ async function quoteXlsx(ctx) {
   [4, 5].forEach(c => { lr.getCell(c).numFmt = INRFMT; lr.getCell(c).alignment = { horizontal: 'right', vertical: 'top' }; }); lr.height = estLines(Q.desc + '\nx', 62) * 15 + 8;
   r = xlTotals(ws, r, 4, 'E', gstRows(Q.amt, ctx.cq.gst_rate), `SUM(E${first}:E${first})`);
   r += 2; ws.getCell(r, 1).value = 'Processor configuration'; ws.getCell(r, 1).font = { bold: true };
-  const cfg = ctx.cfg; [['Item code', cfg.product_code], ['Outputs 4K@60 HDMI', cfg.out_4k60], ['Inputs 4K@60 HDMI', cfg.in_4k60], ['Inputs 4K@30 HDMI', cfg.in_4k30], ['RefLock inputs', cfg.reflock], ['Audio I/O card (slot 11)', hasAudio(cfg) ? 'Yes' : 'No'], ['Redundant power supply', cfg.redundant_psu ? 'Yes' : 'No'], ['Fan filter', cfg.fan_filter || is2U(cfg.model) ? 'Yes' : 'No']]
+  const cfg = ctx.cfg; (cfg.corio ? [['Item code', 'C3-503 CORIOmaster micro']].concat(cfg.corio.slots.map(x => ['Slot ' + x.slot, x.item ? x.label + ' (' + x.item + ')' : 'Empty']), [['Slot 4', 'S/PDIF 1-OUT (built in)'], ['Inputs', corioPorts(cfg.corio, 'in')], ['Outputs', corioPorts(cfg.corio, 'out')], ['Secure HTTPS CPU', cfg.corio.https ? 'Yes' : 'No']]) : [['Item code', cfg.product_code], ['Outputs 4K@60 HDMI', cfg.out_4k60], ['Inputs 4K@60 HDMI', cfg.in_4k60], ['Inputs 4K@30 HDMI', cfg.in_4k30], ['RefLock inputs', cfg.reflock], ['Audio I/O card (slot 11)', hasAudio(cfg) ? 'Yes' : 'No'], ['Redundant power supply', cfg.redundant_psu ? 'Yes' : 'No'], ['Fan filter', cfg.fan_filter || is2U(cfg.model) ? 'Yes' : 'No']])
     .forEach(([k, v]) => { r++; ws.getCell(r, 1).value = k; ws.mergeCells(r, 1, r, 2); ws.getCell(r, 1).font = { color: { argb: XL.mute } }; ws.mergeCells(r, 3, r, 5); ws.getCell(r, 3).value = v; ws.getCell(r, 3).alignment = { horizontal: 'left' }; ws.getCell(r, 3).font = { bold: true }; ws.getRow(r).eachCell({ includeEmpty: true }, cl => cl.border = { bottom: thin }); });
   r += 2; ws.getCell(r, 1).value = 'Terms'; ws.getCell(r, 1).font = { bold: true };
   Q.terms.forEach(t => { r++; ws.mergeCells(r, 1, r, 5); ws.getCell(r, 1).value = '•  ' + t; ws.getCell(r, 1).font = { size: 9, color: { argb: XL.mute } }; });
@@ -1848,7 +1941,7 @@ async function quoteXlsx(ctx) {
 /* ---------- Output 3 and 4: tender spec (summary + itemised table) ---------- */
 async function tenderXlsx(ctx) {
   await need('exceljs'); const cfg = ctx.cfg, c = ctx.c, T = tenderFor(cfg), wb = new ExcelJS.Workbook(); wb.creator = 'Quote Desk';
-  const name = T ? T.name : 'CALICO PRO ' + cfg.model, short = T ? T.short : shortDesc(cfg), long = T ? T.long : specRows(cfg).join(' '), rows = T ? T.rows : specRows(cfg);
+  const name = T ? T.name : (cfg.corio ? 'tvONE CORIOmaster micro' : 'CALICO PRO ' + cfg.model), short = T ? T.short : shortDesc(cfg), long = T ? T.long : specRows(cfg).join(' '), rows = T ? T.rows : specRows(cfg);
   const su = wb.addWorksheet('Summary', { views: [{ state: 'frozen', ySplit: 1, showGridLines: false }], pageSetup: { paperSize: 9, orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
   su.columns = [{ header: 'Sr. No.', width: 8 }, { header: 'Model', width: 16 }, { header: 'Item Code', width: 15 }, { header: 'Short Description', width: 34 }, { header: 'Long Tender Specification', width: 165 }, { header: 'Make', width: 20 }];
   xlHead(su.getRow(1));
@@ -1870,7 +1963,7 @@ async function tenderXlsx(ctx) {
 }
 async function tenderPdf(ctx) {
   await need('jspdf'); const d = pdfNew(), c = ctx.c, cfg = ctx.cfg, T = tenderFor(cfg);
-  const name = T ? T.name : 'CALICO PRO ' + cfg.model, short = T ? T.short : shortDesc(cfg), long = T ? T.long : specRows(cfg).join(' '), rows = T ? T.rows : specRows(cfg);
+  const name = T ? T.name : (cfg.corio ? 'tvONE CORIOmaster micro' : 'CALICO PRO ' + cfg.model), short = T ? T.short : shortDesc(cfg), long = T ? T.long : specRows(cfg).join(' '), rows = T ? T.rows : specRows(cfg);
   let y = pdfHeader(d, 'TENDER SPECIFICATION', c.case_no);
   y = pdfMeta(d, [['Project', c.project_name], ['Date', today()], ['Model', name], ['Item code', cfg.model], ['Make', T ? T.make : 'tvONE'], ['Partner', c.partner_name]], y) + 2;
   // short description band
@@ -2449,7 +2542,7 @@ function stepMarks() {
     const named = !!$('eProject').value.trim() && !!ED.partner_id;
     const ports = [...document.querySelectorAll('[data-pane="ports"] input')].some(i => +i.value > 0);
     const sent = !['draft', 'returned'].includes(ED.status);
-    mark('#vEdit .seg button', [named ? 1 : -1, ports ? 1 : 0, ED.cfg ? 1 : (ports ? -1 : 0), sent ? 1 : 0]);
+    mark('#vEdit .seg button', [named ? 1 : -1, ports ? 1 : 0, (PROC === 'corio' ? corioInfo(CSEL).cards > 0 : !!ED.cfg) ? 1 : (ports ? -1 : 0), sent ? 1 : 0]);
   }
   if (!$('vBs').hidden && BS) {
     const named = !!$('bProject').value.trim() && !!BS.partner_id, n = parseInt(($('bCount').textContent || '0'), 10) || 0;
